@@ -1,0 +1,14 @@
+<!doctype html>
+<head>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.js" ></script>
+  <title>Render testing</title>
+</head>
+
+<body>
+  <script src="{{ url_for('static', filename='js/pme.js') }}" ></script>
+  <script>
+  {% for tile in bounds %}
+  addRect({{tile.minX}}, {{tile.minY}}, {{tile.maxX}}, {{tile.maxY}});
+  {% endfor %}
+  </script>
+</body>
