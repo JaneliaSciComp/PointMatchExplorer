@@ -40,8 +40,8 @@
 			}
 
 			.element {
-				width: 160px;
-				height: 160px;
+				/*width: 500px;
+				height: 500px;*/
 				box-shadow: 0px 0px 12px rgba(0,255,255,0.5);
 				border: 1px solid rgba(127,255,255,0.25);
 				text-align: center;
@@ -50,7 +50,7 @@
 
 			.element:hover {
 				box-shadow: 0px 0px 12px rgba(0,255,255,0.75);
-				border: 1px solid rgba(127,255,255,0.75);
+				border: 10px solid rgba(127,255,255,0.75);
 			}
 
 				.element .number {
@@ -105,12 +105,6 @@
 		<script src="{{ url_for('static', filename='vendor/CSS3DRenderer.js') }}"></script>
 
 		<div id="container"></div>
-		<div id="menu">
-			<button id="table">TABLE</button>
-			<button id="sphere">SPHERE</button>
-			<button id="helix">HELIX</button>
-			<button id="grid">GRID</button>
-		</div>
 		<script>
 
 			class Tile{
@@ -241,7 +235,6 @@
 			];
 
 
-
 			var camera, scene, renderer;
 			var controls;
 
@@ -258,28 +251,50 @@
       function initTiles(){
 
         camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 1, 10000 );
-				camera.position.z = 5000;
+				camera.position.z = 7000;
 
 				scene = new THREE.Scene();
-
+        //
+        // {% for tile in tiledata %}
+        // console.log({{tile.z}})
+        //   {% for tilepos in tile.tileGridPositions %}
+        //     console.log({{tilepos[0]}} + ", " + {{tilepos[0]}});
+        //     var tiledraw = document.createElement( 'div' );
+        //     tiledraw.className = 'element';
+        //     tiledraw.style.backgroundColor = 'rgba(42,186,102,' + ( Math.random() * 0.5 + 0.4 ) + ')';
+        //     var css3dtile = new THREE.CSS3DObject( tiledraw );
+        //     scene.add(css3dtile);
+        //     alltiles.push(css3dtile);
+        //
+        //     //push table targets
+        //     var targetloc = new THREE.Object3D();
+  			// 		targetloc.position.x = ( {{tilepos[0]}} * 200) - 4000;
+  			// 		targetloc.position.y = - ( {{tilepos[1]}} * 200 ) + 4000;
+  			// 		tileTargets.table.push( targetloc );
+        //   {% endfor %}
+        // {% endfor %}
+        var zOffsetCount = 0;
         {% for tile in tiledata %}
-        console.log({{tile.z}})
-          {% for tilepos in tile.tileGridPositions %}
-            console.log({{tilepos[0]}} + ", " + {{tilepos[0]}});
+          {% for tilepos in tile.tilePosition %}
             var tiledraw = document.createElement( 'div' );
             tiledraw.className = 'element';
-            tiledraw.style.backgroundColor = 'rgba(42,186,102,' + ( Math.random() * 0.5 + 0.4 ) + ')';
+            tiledraw.style.width = ({{tilepos.maxX}} - {{tilepos.minX}}) / 20 + 'px';
+            tiledraw.style.height = ({{tilepos.maxY}} - {{tilepos.minY}}) / 20 + 'px';
+            tiledraw.style.backgroundColor = 'rgba(42,186,102,0.7)';
             var css3dtile = new THREE.CSS3DObject( tiledraw );
             scene.add(css3dtile);
             alltiles.push(css3dtile);
 
             //push table targets
             var targetloc = new THREE.Object3D();
-  					targetloc.position.x = ( {{tilepos[0]}} * 200 ) ;
-  					targetloc.position.y = - ( {{tilepos[1]}} * 200 ) ;
-  					tileTargets.table.push( targetloc );
+            targetloc.position.x = {{tilepos.minX}}/10
+            targetloc.position.y = {{tilepos.minY}}/10
+            targetloc.position.z = zOffsetCount;
+            tileTargets.table.push( targetloc );
           {% endfor %}
+          zOffsetCount = zOffsetCount + 500;
         {% endfor %}
+
 
 
         // add target locations for the grid view (5x5 grid)
@@ -297,40 +312,40 @@
           alltiles[i].position.z = ( Math.floor( i / 25 ) ) * 300 + 5000;
         }
 
-          //
+        //
 
-  				renderer = new THREE.CSS3DRenderer();
-  				renderer.setSize( window.innerWidth, window.innerHeight );
-  				renderer.domElement.style.position = 'absolute';
-  				document.getElementById( 'container' ).appendChild( renderer.domElement );
+				renderer = new THREE.CSS3DRenderer();
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.domElement.style.position = 'absolute';
+				document.getElementById( 'container' ).appendChild( renderer.domElement );
 
-  				//
+				//
 
-  				controls = new THREE.TrackballControls( camera, renderer.domElement );
-  				controls.rotateSpeed = 2;
-  				controls.minDistance = 500;
-  				controls.maxDistance = 50000;
-  				controls.addEventListener( 'change', render );
+				controls = new THREE.TrackballControls( camera, renderer.domElement );
+				controls.rotateSpeed = 2;
+				controls.minDistance = 500;
+				controls.maxDistance = 5000000;
+				controls.addEventListener( 'change', render );
 
-  				var transitionDuration = 2000;
-  				var button = document.getElementById( 'table' );
-  				button.addEventListener( 'click', function ( event ) {
+				var transitionDuration = 2000;
+				// var button = document.getElementById( 'table' );
+				// button.addEventListener( 'click', function ( event ) {
+        //
+				// 	transform( tileTargets.table, transitionDuration );
+        //
+				// }, false );
+        //
+				// var button = document.getElementById( 'grid' );
+				// button.addEventListener( 'click', function ( event ) {
+        //
+				// 	transform( tileTargets.grid, transitionDuration );
+        //
+				// }, false );
 
-  					transform( tileTargets.table, transitionDuration );
+				//start in table view
+				transform( tileTargets.table, 1200 );
 
-  				}, false );
-
-  				var button = document.getElementById( 'grid' );
-  				button.addEventListener( 'click', function ( event ) {
-
-  					transform( tileTargets.grid, transitionDuration );
-
-  				}, false );
-
-  				//start in table view
-  				transform( tileTargets.table, 1200 );
-
-  				window.addEventListener( 'resize', onWindowResize, false );
+				window.addEventListener( 'resize', onWindowResize, false );
 
       }
 			function init() {
@@ -373,7 +388,6 @@
 					scene.add( etile );
 
 					objects.push( etile );
-
 
 					var targetloc = new THREE.Object3D();
 
@@ -460,10 +474,10 @@
 						.easing( TWEEN.Easing.Exponential.InOut )
 						.start();
 
-					new TWEEN.Tween( object.rotation )
-						.to( { x: target.rotation.x, y: target.rotation.y, z: target.rotation.z }, Math.random() * duration + duration )
-						.easing( TWEEN.Easing.Exponential.InOut )
-						.start();
+					// new TWEEN.Tween( object.rotation )
+					// 	.to( { x: target.rotation.x, y: target.rotation.y, z: target.rotation.z }, Math.random() * duration + duration )
+					// 	.easing( TWEEN.Easing.Exponential.InOut )
+					// 	.start();
 
 				}
 
