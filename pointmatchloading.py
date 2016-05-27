@@ -101,6 +101,7 @@ def getSectionData(owner, project, stack):
     r = requests.get(url, headers =  headers)
     return r.json()
 
+#gets specs for all tiles in a z layer
 def getTileSpecs(owner, project, stack, z):
     url = "/owner/%s/project/%s/stack/%s/z/%d/tile-specs" % (owner, project, stack, z)
     url = base_URL + url
@@ -118,6 +119,17 @@ def getTileBounds(owner, project, stack, z):
     }
     r = requests.get(url, headers =  headers)
     return r.json()
+
+#gets specs for one tile
+def getTileSpec(owner, project, stack, tileId):
+    url = "/owner/%s/project/%s/stack/%s/tile/%s/" % (owner, project, stack, tileId)
+    url = base_URL + url
+    headers = {
+    "Accept": "application/json"
+    }
+    r = requests.get(url, headers =  headers)
+    return r.json()
+
 #nfirst and nlast are zvalue of sections in rc
 #rc and pm are objects with specification for accessing collections of tile-specs and point-patches (required for the API)
 #nbr is the number of neighboring sections to consider
@@ -135,17 +147,23 @@ def load_point_matches(nfirst, nlast, rc, pm, nbr = 4, min_points = 0, xs_weight
     # print len(uniqueZs)
     # print uniqueZs
     retval = None
+    #this only runs once for now
     for z in uniqueZs:
         # print z
-        tileSpecs = getTileSpecs(rc.owner, rc.project, rc.stack, z)
-        tileIDs = [tile['tileId'] for tile in tileSpecs]
+        # tileSpecs = getTileSpecs(rc.owner, rc.project, rc.stack, z)
+        # tileIDs = [tile['tileId'] for tile in tileSpecs]
         tileBounds = getTileBounds(rc.owner, rc.project, rc.stack, z)
-        tileIDsfrombounds = [tile['tileId'] for tile in tileBounds]
+        # tileIDsfrombounds = [tile['tileId'] for tile in tileBounds]
+        #these are from GET /v1/owner/{owner}/project/{project}/stack/{stack}/z/{z}/bounds
         for tile in tileBounds:
             tile['minX'] = tile['minX'] -109201
             tile['minY'] = tile['minY'] -215357
             tile['maxX'] = tile['maxX'] -109201
             tile['maxY'] = tile['maxY'] -215357
+            print tile["tileId"]
+            tileSpec = getTileSpec(rc.owner, rc.project, rc.stack, tile["tileId"])
+            rctup = (tileSpec["layout"]["imageRow"], tileSpec["layout"]["imageCol"])
+            print rctup
         retval = tileBounds
         # print len(tileIDs)
         # print len(tileIDsfrombounds)
@@ -154,4 +172,20 @@ def load_point_matches(nfirst, nlast, rc, pm, nbr = 4, min_points = 0, xs_weight
     # 151210090232041025.501.0
 
     # print sectionIDs
+    return retval
+
+def getTileData(nfirst, nlast, rc, pm, nbr = 4, min_points = 0, xs_weight = 1):
+    sectionData = getSectionData(rc.owner, rc.project, rc.stack)
+    sectionIDs = [val['sectionId'] for val in sectionData if val['z'] >= nfirst and val['z'] <= nlast]
+    zs = [val['z'] for val in sectionData if val['z'] >= nfirst and val['z'] <= nlast]
+    uniqueZs = list(set(zs))
+    retval = []
+    for z in uniqueZs:
+        layerData = {}
+        layerData['z'] = str(z)
+        tileSpecs = getTileSpecs(rc.owner, rc.project, rc.stack, z)
+        tileRC = [(tile["layout"]["imageRow"], tile["layout"]["imageCol"]) for tile in tileSpecs]
+        layerData['tileGridPositions'] = tileRC
+        retval.append(layerData)
+    # print retval
     return retval
