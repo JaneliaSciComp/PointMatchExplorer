@@ -145,58 +145,32 @@ def getStackBounds(owner, project, stack, z):
 #nbr is the number of neighboring sections to consider
 #min_points is the minimum number of points between two tiles
 #xs_weight is the weight factor for cross-section point matches
-
-#only returns bounding box data with tile ID for each z layer
-def load_point_matches(nfirst, nlast, rc, pm, nbr = 4, min_points = 0, xs_weight = 1):
-    sectionData = getSectionData(rc.owner, rc.project, rc.stack)
-    #determine the list of section IDs that
-    sectionIDs = [val['sectionId'] for val in sectionData if val['z'] >= nfirst and val['z'] <= nlast]
-    zs = [val['z'] for val in sectionData if val['z'] >= nfirst and val['z'] <= nlast]
-    # print len(zs)
-    uniqueZs = list(set(zs))
-    # print len(uniqueZs)
-    # print uniqueZs
-    retval = []
-    #this only runs once for now
-    for z in uniqueZs:
-        layerData = {}
-        layerData['z'] = str(z)
-        # print z
-        # tileSpecs = getTileSpecs(rc.owner, rc.project, rc.stack, z)
-        # tileIDs = [tile['tileId'] for tile in tileSpecs]
-        tileBounds = getTileBounds(rc.owner, rc.project, rc.stack, z)
-        stackBounds = getStackBounds(rc.owner, rc.project, rc.stack, z)
-        # tileIDsfrombounds = [tile['tileId'] for tile in tileBounds]
-        #these are from GET /v1/owner/{owner}/project/{project}/stack/{stack}/z/{z}/bounds
-        for tile in tileBounds:
-            tile['minX'] = tile['minX'] - stackBounds['minX']
-            tile['minY'] = tile['minY'] - stackBounds['minY']
-            tile['maxX'] = tile['maxX'] - stackBounds['minX']
-            tile['maxY'] = tile['maxY'] - stackBounds['minY']
-        layerData['tilePosition'] = tileBounds
-        retval.append(layerData)
-        # print len(tileIDs)
-        # print len(tileIDsfrombounds)
-        # print tileIDs
-    # print set([x for x in zs if zs.count(x) > 1])
-    # 151210090232041025.501.0
-
-    # print sectionIDs
-    # print retval
-    return retval
-
-def getTileData(nfirst, nlast, rc, pm, nbr = 4, min_points = 0, xs_weight = 1):
+#yet to be written
+def load_point_matches(nfirst, nlast, rc, pm, nbr = 4, min_points = 0, xs_weight = 1, samplingRate = 1):
     sectionData = getSectionData(rc.owner, rc.project, rc.stack)
     sectionIDs = [val['sectionId'] for val in sectionData if val['z'] >= nfirst and val['z'] <= nlast]
     zs = [val['z'] for val in sectionData if val['z'] >= nfirst and val['z'] <= nlast]
     uniqueZs = list(set(zs))
-    retval = []
+    return None
+
+#returns coordinate data with tile ID for each z layer
+def getTileData(nfirst, nlast, rc, pm, samplingRate = 1):
+    sectionData = getSectionData(rc.owner, rc.project, rc.stack)
+    zs = [val['z'] for val in sectionData if val['z'] >= nfirst and val['z'] <= nlast]
+    uniqueZs = list(set(zs))
+    tileData = []
     for z in uniqueZs:
-        layerData = {}
-        layerData['z'] = str(z)
-        tileSpecs = getTileSpecs(rc.owner, rc.project, rc.stack, z)
-        tileRC = [(tile["layout"]["imageRow"], tile["layout"]["imageCol"]) for tile in tileSpecs]
-        layerData['tileGridPositions'] = tileRC
-        retval.append(layerData)
-    # print retval
-    return retval
+        if ( z % samplingRate == 0 ) :
+            layerData = {}
+            layerData['z'] = str(z)
+            tileBounds = getTileBounds(rc.owner, rc.project, rc.stack, z)
+            stackBounds = getStackBounds(rc.owner, rc.project, rc.stack, z)
+            # adjust the coordinates of the tiles so that they are centered around (0,0)\
+            for tile in tileBounds:
+                tile['minX'] = tile['minX'] - 0.5 * (stackBounds['minX'] + stackBounds['maxX'])
+                tile['minY'] = tile['minY'] - 0.5 * (stackBounds['minY'] + stackBounds['maxY'])
+                tile['maxX'] = tile['maxX'] - 0.5 * (stackBounds['minX'] + stackBounds['maxX'])
+                tile['maxY'] = tile['maxY'] - 0.5 * (stackBounds['minY'] + stackBounds['maxY'])
+            layerData['tilePosition'] = tileBounds
+            tileData.append(layerData)
+    return tileData
