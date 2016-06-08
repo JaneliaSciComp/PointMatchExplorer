@@ -7,15 +7,16 @@
 	</head>
 	<body>
 		<script src="{{ url_for('static', filename='vendor/three.min.js') }}"></script>
-		<script src="{{ url_for('static', filename='vendor/tween.min.js') }}"></script>
 		<script src="{{ url_for('static', filename='vendor/TrackballControls.js') }}"></script>
-		<script src="{{ url_for('static', filename='vendor/CSS3DRenderer.js') }}"></script>
 		<script>
 
 		var container, controls;
-		var camera, scene, renderer, raycaster;
-		var mouse = new THREE.Vector2(), INTERSECTED;
+		var camera, scene, renderer;
 		var z_spacing = 500; //distance between each layer
+
+		var mouse = new THREE.Vector2();
+		var raycaster = new THREE.Raycaster();
+		var intersected, oldcolor;
 
 		init();
 		animate();
@@ -28,7 +29,7 @@
 			scene = new THREE.Scene();
 
 			camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 1, 100000 );
-			camera.position.set( 0, 0, 25000 );
+			camera.position.set( 0, 0, 10000 );
 
 			scene.add( camera );
 
@@ -77,19 +78,19 @@
 
 			//adjusts Z so that the beginning offset is negative in order to center tiles with respect to (0,0,0)
 			var z_offset = -0.5 * {{tiledata|length}} * z_spacing;
-
-			var parent_geometry = new THREE.Geometry();
-			var parent_material = new THREE.MeshLambertMaterial({color: 0xffffff, transparent: true, opacity: 0.5, side: THREE.DoubleSide, shading: THREE.SmoothShading, vertexColors: THREE.VertexColors});
-			var parent_mesh = new THREE.Mesh(parent_geometry, parent_material);
-
 			var gradient_hex_values = rgbGradient("#fc00ff", "#00dbde", {{tiledata|length}});
 
+			//******* merging of geometries *********//
+			var parent_geometry = new THREE.Geometry();
+			var parent_material = new THREE.MeshLambertMaterial({color: 0xffffff, transparent: false, opacity: 0.5, side: THREE.DoubleSide, shading: THREE.SmoothShading, vertexColors: THREE.FaceColors});
+			var parent_mesh = new THREE.Mesh(parent_geometry, parent_material);
+
 			{% for tile in tiledata %}
-			var layer_color = gradient_hex_values[{{loop.index0}}];
+				var layer_color = gradient_hex_values[{{loop.index0}}];
 				{% for tilepos in tile.tilePosition %}
 					var tile_Geometry = new THREE.PlaneGeometry(({{tilepos.maxX}} - {{tilepos.minX}}) / 20, ({{tilepos.maxY}} - {{tilepos.minY}}) / 20);
 					for (var i = 0; i < tile_Geometry.faces.length; i++) {
-							tile_Geometry.faces[i].color.set(layer_color);
+							tile_Geometry.faces[i].color = new THREE.Color( layer_color )
 					}
 					var tileMesh = new THREE.Mesh(tile_Geometry);
 					tileMesh.position.x = {{tilepos.minX}}/10;
@@ -103,13 +104,11 @@
 
 			scene.add(parent_mesh);
 
-			raycaster = new THREE.Raycaster();
-
 			renderer = new THREE.WebGLRenderer( { antialias: true } );
 			renderer.setClearColor( 0xf0f0f0 );
 			renderer.setPixelRatio( window.devicePixelRatio );
 			renderer.setSize( window.innerWidth, window.innerHeight );
-			container.appendChild( renderer.domElement);
+			container.appendChild( renderer.domElement );
 
 			controls = new THREE.TrackballControls( camera, renderer.domElement );
 			controls.rotateSpeed = 2;
@@ -128,46 +127,52 @@
 			renderer.setSize( window.innerWidth, window.innerHeight );
 		}
 
+		var oldintersected;
 		function onDocumentMouseMove( event ) {
-
 			event.preventDefault();
-
 			mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
 			mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+			raycaster.setFromCamera( mouse, camera );
+
+			var intersections = raycaster.intersectObjects( scene.children );
+
+			if ( intersections.length > 0 ) {
+				if (intersected){
+					oldintersected = $.extend( true, {}, intersected );
+					//recolor old object
+					intersected.object.geometry.faces[intersected.faceIndex].color.set(new THREE.Color(oldcolor));
+					var adjacent_face_index = intersected.faceIndex % 2 == 0 ? intersected.faceIndex + 1 : intersected.faceIndex -1;
+					intersected.object.geometry.faces[adjacent_face_index].color.set(new THREE.Color(oldcolor));
+					oldcolor = null;
+				}
+				intersected = intersections[ 0 ];
+				if (!oldcolor){ //only set oldcolor once
+					oldcolor = intersected.object.geometry.faces[intersected.faceIndex].color.getHex()
+				}
+				intersected.object.geometry.faces[intersected.faceIndex].color.set(new THREE.Color(0xff0000));
+				var adjacent_face_index = intersected.faceIndex % 2 == 0 ? intersected.faceIndex + 1 : intersected.faceIndex -1;
+				intersected.object.geometry.faces[adjacent_face_index].color.set(new THREE.Color(0xff0000));
+				intersected.object.geometry.colorsNeedUpdate = true;
+
+			}else if (intersected){
+				intersected.object.geometry.faces[intersected.faceIndex].color.set(new THREE.Color(oldcolor));
+				var adjacent_face_index = intersected.faceIndex % 2 == 0 ? intersected.faceIndex + 1 : intersected.faceIndex -1;
+				intersected.object.geometry.faces[adjacent_face_index].color.set(new THREE.Color(oldcolor));
+				intersected.object.geometry.colorsNeedUpdate = true;
+				intersected = null;
+				oldcolor = null;
+
+			}
 
 		}
 
 		function animate() {
 			requestAnimationFrame( animate );
-			controls.update();
 			render();
+			controls.update();
 		}
 
 		function render() {
-
-			raycaster.setFromCamera( mouse, camera );
-			var intersects = raycaster.intersectObjects( scene.children );
-
-			if ( intersects.length > 0 ) {
-
-				if ( INTERSECTED != intersects[ 0 ].object ) {
-
-					if ( INTERSECTED ) INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
-
-					INTERSECTED = intersects[ 0 ].object;
-					console.log(INTERSECTED);
-					INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
-					INTERSECTED.material.emissive.setHex( 0xff0000 );
-
-				}
-
-			} else {
-
-				if ( INTERSECTED ) INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
-
-				INTERSECTED = null;
-
-			}
 			renderer.render( scene, camera );
 		}
 		</script>
