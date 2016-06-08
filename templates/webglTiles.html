@@ -127,7 +127,6 @@
 			renderer.setSize( window.innerWidth, window.innerHeight );
 		}
 
-		var oldintersected;
 		function onDocumentMouseMove( event ) {
 			event.preventDefault();
 			mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
@@ -138,7 +137,6 @@
 
 			if ( intersections.length > 0 ) {
 				if (intersected){
-					oldintersected = $.extend( true, {}, intersected );
 					//recolor old object
 					intersected.object.geometry.faces[intersected.faceIndex].color.set(new THREE.Color(oldcolor));
 					var adjacent_face_index = intersected.faceIndex % 2 == 0 ? intersected.faceIndex + 1 : intersected.faceIndex -1;
@@ -161,7 +159,6 @@
 				intersected.object.geometry.colorsNeedUpdate = true;
 				intersected = null;
 				oldcolor = null;
-
 			}
 
 		}
