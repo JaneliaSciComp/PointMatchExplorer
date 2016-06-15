@@ -39,6 +39,10 @@ def getMatchesWithinGroup(groupId):
     url = "/owner/{}/matchCollection/{}/group/{}/matchesWithinGroup".format(app.config["OWNER"], app.config["MATCH_COLLECTION"], groupId)
     return getJSONfromURL(url)
 
+def getMatchesOutsideGroup(groupId):
+    url = "/owner/{}/matchCollection/{}/group/{}/matchesOutsideGroup".format(app.config["OWNER"], app.config["MATCH_COLLECTION"], groupId)
+    return getJSONfromURL(url)
+
 #nfirst and nlast are zvalue of sections in rc
 #rc and pm are objects with specification for accessing collections of tile-specs and point-patches (required for the API)
 #nbr is the number of neighboring sections to consider
@@ -58,6 +62,23 @@ def getUniqueZs(nfirst, nlast):
     uniqueZs = list(set(zs))
     return uniqueZs
 
+def getTileCoordinates(z):
+    tileBounds = getTileBounds(z)
+    stackBounds = getStackBounds(z)
+    for tile in tileBounds:
+        #translate the coordinates to center around (0,0)
+        tile['minX'] = tile['minX'] - 0.5 * (stackBounds['minX'] + stackBounds['maxX'])
+        tile['minY'] = tile['minY'] - 0.5 * (stackBounds['minY'] + stackBounds['maxY'])
+        tile['maxX'] = tile['maxX'] - 0.5 * (stackBounds['minX'] + stackBounds['maxX'])
+        tile['maxY'] = tile['maxY'] - 0.5 * (stackBounds['minY'] + stackBounds['maxY'])
+    return tileBounds
+
+def getPointMatches(z):
+    pointMatches = {}
+    pointMatches["matchesWithinGroup"] = getMatchesWithinGroup(z)
+    pointMatches["matchesOutsideGroup"] = getMatchesOutsideGroup(z)
+    return pointMatches
+
 #returns coordinate data with tile ID for each z layer
 #sampling rate limits the number of layers when the whole stack is generated
 def getTileData(nfirst, nlast, samplingRate = 1):
@@ -66,14 +87,7 @@ def getTileData(nfirst, nlast, samplingRate = 1):
         if ( z % samplingRate == 0 ) :
             layerData = {}
             layerData['z'] = str(z)
-            tileBounds = getTileBounds(z)
-            stackBounds = getStackBounds(z)
-            for tile in tileBounds:
-                #translate the coordinates to center around (0,0)
-                tile['minX'] = tile['minX'] - 0.5 * (stackBounds['minX'] + stackBounds['maxX'])
-                tile['minY'] = tile['minY'] - 0.5 * (stackBounds['minY'] + stackBounds['maxY'])
-                tile['maxX'] = tile['maxX'] - 0.5 * (stackBounds['minX'] + stackBounds['maxX'])
-                tile['maxY'] = tile['maxY'] - 0.5 * (stackBounds['minY'] + stackBounds['maxY'])
-            layerData['tilePosition'] = tileBounds
+            layerData['tileCoordinates'] = getTileCoordinates(z)
+            layerData['pointMatches'] = getPointMatches(z)
             tileData.append(layerData)
     return tileData
