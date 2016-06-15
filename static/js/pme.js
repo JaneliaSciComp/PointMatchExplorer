@@ -138,17 +138,34 @@ function renderPME(){
 				);
 			}
 		});
-		_.forEach(layer.pointMatches.matchesOutsideGroup, function(m){
-			var pTileCoordinates = getTileCoordinates(m.pGroupId, m.pId);
-			var qTileCoordinates = getTileCoordinates(m.qGroupId, m.qId);
-			if (pTileCoordinates && qTileCoordinates){
-				line_geometry.vertices.push(
-					new THREE.Vector3( pTileCoordinates.xPos, pTileCoordinates.yPos, pTileCoordinates.zPos ),
-					new THREE.Vector3( qTileCoordinates.xPos, qTileCoordinates.yPos, qTileCoordinates.zPos )
-				);
-			}
-		});
 	});
+
+  var all_interlayer_point_matches = [];
+  //combine all interlayer matches so there are no duplicates
+  _.forEach(tileData, function(layer){
+    console.log("len", layer.pointMatches.matchesOutsideGroup.length)
+    _.forEach(layer.pointMatches.matchesOutsideGroup, function(m){
+      var alreadyFound = _.find(all_interlayer_point_matches, function (m2){
+        return m2.pId == m.pId && m2.qId == m.qId;
+      });
+      if (!alreadyFound){
+        all_interlayer_point_matches.push(m);
+      }
+    });
+  });
+
+  _.forEach(all_interlayer_point_matches, function(m){
+    var pTileCoordinates = getTileCoordinates(m.pGroupId, m.pId);
+    var qTileCoordinates = getTileCoordinates(m.qGroupId, m.qId);
+    if (pTileCoordinates && qTileCoordinates){
+      line_geometry.vertices.push(
+        new THREE.Vector3( pTileCoordinates.xPos, pTileCoordinates.yPos, pTileCoordinates.zPos ),
+        new THREE.Vector3( qTileCoordinates.xPos, qTileCoordinates.yPos, qTileCoordinates.zPos )
+      );
+    }
+  });
+
+  // parent_mesh.userData.tileId = "spc"
 
 	scene.add(point_match_lines);
 	scene.add(parent_mesh);
