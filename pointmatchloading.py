@@ -60,6 +60,7 @@ def getUniqueZs(nfirst, nlast):
     sectionData = getSectionData()
     zs = [val['z'] for val in sectionData if val['z'] >= nfirst and val['z'] <= nlast]
     uniqueZs = list(set(zs))
+    uniqueZs.sort()
     return uniqueZs
 
 def getTileCoordinates(z):
