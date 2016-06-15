@@ -18,6 +18,9 @@ var z_offset = -0.5 * tileData.length * z_spacing;
 var highlight_color = 0xff0000;
 var gradient_hex_values = rgbGradient("#fc00ff", "#00dbde", tileData.length);
 
+//number of units to shorten both sides of the intra-layer point match lines by
+var line_shorten_factor = 45;
+
 init();
 animate();
 
@@ -122,9 +125,16 @@ function renderPME(){
 			var pTileCoordinates = getTileCoordinates(m.pGroupId, m.pId);
 			var qTileCoordinates = getTileCoordinates(m.qGroupId, m.qId);
 			if (pTileCoordinates && qTileCoordinates){
+        //calculates new coordinates to draw the intra-layer lines so that the do not begin and start in the middle of the tile
+        var xlen = qTileCoordinates.xPos - pTileCoordinates.xPos;
+        var ylen = qTileCoordinates.yPos - pTileCoordinates.yPos;
+        var hlen = Math.sqrt(Math.pow(xlen,2) + Math.pow(ylen,2));
+        var ratio = line_shorten_factor / hlen;
+        var smallerXLen = xlen * ratio;
+        var smallerYLen = ylen * ratio;
 				line_geometry.vertices.push(
-					new THREE.Vector3( pTileCoordinates.xPos, pTileCoordinates.yPos, pTileCoordinates.zPos ),
-					new THREE.Vector3( qTileCoordinates.xPos, qTileCoordinates.yPos, qTileCoordinates.zPos )
+					new THREE.Vector3( pTileCoordinates.xPos + smallerXLen, pTileCoordinates.yPos + smallerYLen, pTileCoordinates.zPos ),
+					new THREE.Vector3( qTileCoordinates.xPos - smallerXLen, qTileCoordinates.yPos - smallerYLen, qTileCoordinates.zPos )
 				);
 			}
 		});
@@ -165,7 +175,8 @@ function onDocumentMouseMove( event ) {
 		intersected.object.geometry.colorsNeedUpdate = true;
 	}
 
-	if ( intersections.length > 0 ) {
+  //only highlight tiles, not point match lines
+	if ( intersections.length > 0 && intersections[0].object.type != "LineSegments") {
 		if (intersected){
 			//revert old object to its original color
 			setFaceColor(intersected.faceIndex, old_color);
