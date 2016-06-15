@@ -1,14 +1,17 @@
-<!doctype html>
-<head>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.js" ></script>
-  <title>Render testing</title>
-</head>
-
-<body>
-  <script src="{{ url_for('static', filename='js/pme.js') }}" ></script>
-  <script>
-  {% for tile in bounds %}
-  addRect({{tile.minX}}, {{tile.minY}}, {{tile.maxX}}, {{tile.maxY}});
-  {% endfor %}
-  </script>
-</body>
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Point Match Explorer</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+	</head>
+	<body>
+		<script src="{{ url_for('static', filename='vendor/three.min.js') }}"></script>
+		<script src="{{ url_for('static', filename='vendor/TrackballControls.js') }}"></script>
+		<script src="{{ url_for('static', filename='vendor/lodash.core.js') }}"></script>
+		<script>
+			var tileData = {{tiledata|tojson}};
+		</script>
+		<script src="{{ url_for('static', filename='js/pme.js') }}" ></script>
+	</body>
+</html>
