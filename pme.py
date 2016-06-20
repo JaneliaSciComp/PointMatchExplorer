@@ -8,7 +8,6 @@ app.config.from_object('config')
 
 @app.route('/')
 def render():
-
     return render_template('pme.html')
 
 @app.route('/getdata')
