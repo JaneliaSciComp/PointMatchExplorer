@@ -4,14 +4,67 @@
 		<title>Point Match Explorer</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+		body {
+			margin: 0px;
+			overflow: hidden;
+		}
+		#metaDataContainer {
+			position: absolute;
+			top: 0px; width: 100%;
+			padding: 5px;
+			font-family:Monospace;
+			font-size:20px;
+			font-weight: bold;
+			text-align:left;
+		}
+		#layerInput {
+			position: absolute;
+			top: 0px; width: 100%;
+			padding-right: 50px;
+			font-family:Monospace;
+			font-size:20px;
+			font-weight: bold;
+			text-align:right;
+		}
+		</style>
 	</head>
 	<body>
+		<script   src="https://code.jquery.com/jquery-3.0.0.min.js"   integrity="sha256-JmvOoLtYsmqlsWxa7mDSLMwa6dZ9rrIdtrrVYRnDRH0="   crossorigin="anonymous"></script>
 		<script src="{{ url_for('static', filename='vendor/three.min.js') }}"></script>
 		<script src="{{ url_for('static', filename='vendor/TrackballControls.js') }}"></script>
 		<script src="{{ url_for('static', filename='vendor/lodash.core.js') }}"></script>
-		<script>
-			var tileData = {{tiledata|tojson}};
-		</script>
+		<script src="{{ url_for('static', filename='vendor/chroma.min.js') }}"></script>
 		<script src="{{ url_for('static', filename='js/pme.js') }}" ></script>
+
+		<div id="container"></div>
+		<div id="metaDataContainer">
+			<div id="selected_tile_metadata"></div>
+			<div id="metadata"></div>
+		</div>
+		<div id="layerInput">
+			Start Z: <input type="number" name="nfirst">
+			<br/>
+	    End Z: <input type="number" name="nlast">
+			<br/>
+			<a href="javascript:void();" id="render">Render Layers</a>
+		</div>
+
+		<script>
+			var tileData;
+			$(function() {
+				$('a#render').bind('click', function() {
+					$.getJSON('getdata', {
+						nfirst: $('input[name="nfirst"]').val(),
+						nlast: $('input[name="nlast"]').val()
+					}, function(data) {
+						tileData = data.tiledata;
+						loadPME();
+					});
+					return false;
+				});
+			});
+		</script>
+
 	</body>
 </html>
