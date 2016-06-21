@@ -29,7 +29,8 @@ function loadPME(){
   var point_match_line_group = new THREE.Group();
   var tile_border_group = new THREE.Group();
 
-  var gradient_hex_values = rgbGradient("#fc00ff", "#00dbde", tileData.length);
+  //get a list of colors representing the interpolated gradient
+  var gradient_hex_values = chroma.scale(['#fc00ff', '#00dbde']).colors(tileData.length);
 
   var line_color = 0xaaaaaa;
   var line_width = 0.5;
@@ -387,45 +388,4 @@ function loadPME(){
   	renderer.render( scene, camera );
   }
 
-  //TODO use a library for this
-  //returns a list of hex values representing the interpolated gradient
-  function rgbGradient(start_color, end_color, steps){
-  	// Converts a hex string into an [r,g,b] array
-  	var h2r = function(hex) {
-  		var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  		return result ? [
-  			parseInt(result[1], 16),
-  			parseInt(result[2], 16),
-  			parseInt(result[3], 16)
-  		] : null;
-  	};
-
-  	// Inverse of the above
-  	var r2h = function(rgb) {
-  		return "#" + ((1 << 24) + (rgb[0] << 16) + (rgb[1] << 8) + rgb[2]).toString(16).slice(1);
-  	};
-
-  	var _interpolateColor = function(color1, color2, factor) {
-  		if (arguments.length < 3) {
-  			factor = 0.5;
-  		}
-  		var result = color1.slice();
-  		for (var i = 0; i < 3; i++) {
-  			result[i] = Math.round(result[i] + factor * (color2[i] - color1[i]));
-  		}
-  		return result;
-  	};
-
-  	var scol = h2r(start_color);
-  	var	ecol = h2r(end_color);
-
-  	var retval = [];
-  	var factor_step = 1/(steps-1);
-  	for ( var idx = 0; idx < steps; idx ++ ) {
-  			var icol = _interpolateColor(scol, ecol, factor_step * idx);
-  			var hcol = r2h(icol);
-  			retval.push(hcol);
-  	}
-  	return retval;
-  }
 }
