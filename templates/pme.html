@@ -53,7 +53,7 @@
 			var tileData;
 			$(function() {
 				$('a#render').bind('click', function() {
-					$.getJSON('/getdata', {
+					$.getJSON('getdata', {
 						nfirst: $('input[name="nfirst"]').val(),
 						nlast: $('input[name="nlast"]').val()
 					}, function(data) {

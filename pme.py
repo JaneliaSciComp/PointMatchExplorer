@@ -3,8 +3,9 @@ from flask import Flask, request, session, g, redirect, url_for, \
 from pointmatchloading import getTileData
 
 
+
 app = Flask(__name__)
-app.config.from_object('config')
+app.config.from_pyfile('config.cfg')
 
 @app.route('/')
 def render():
