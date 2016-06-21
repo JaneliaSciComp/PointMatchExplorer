@@ -1,8 +1,6 @@
 from flask import Flask, request, session, g, redirect, url_for, \
      abort, render_template, flash, jsonify
-from pointmatchloading import getTileData
-
-
+from getStackData import getTileData
 
 app = Flask(__name__)
 app.config.from_pyfile('config.cfg')
