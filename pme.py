@@ -14,7 +14,7 @@ def getData():
     nfirst = request.args.get('nfirst', 0, type=int)
     nlast = request.args.get('nlast', 0, type=int)
     tiledata = getTileData(nfirst, nlast)
-    # tiledata = getTileData(25, 30) #something funky going on here
+    # tiledata = getTileData(60, 90) #no point matches drawn at all!
     # tiledata = getTileData(4, 9)
     # tiledata = getTileData(1, 7062, samplingRate = 50)
     # tiledata = getTileData(270, 272) #issue: 271 has merged data and the merged tiles are drawn as well, creating overlaps (also causes z-fighting)

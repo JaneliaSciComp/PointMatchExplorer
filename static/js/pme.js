@@ -411,8 +411,8 @@ function loadPME(){
         dmin = Math.min(dom[0], dom[dom.length-1]),
         dmax = Math.max(dom[dom.length-1], dom[0]);
     s += '<span class="label">'+"Point match strength"+'</span>';
-    for (var i=0;i<=100;i++) {
-        s += '<span class="grad-step" style="background-color:'+gradient(dmin + i/100 * (dmax - dmin))+'"></span>';
+    for (var i=0;i<=20;i++) {
+        s += '<span class="grad-step" style="background-color:'+gradient(dmin + i/20 * (dmax - dmin))+'"></span>';
     }
     s += '<span class="domain-min">'+dmin+'</span>';
     s += '<span class="domain-med">'+((dmin + dmax)*0.5)+'</span>';
