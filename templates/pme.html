@@ -4,33 +4,10 @@
 		<title>Point Match Explorer</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-		<style>
-		body {
-			margin: 0px;
-			overflow: hidden;
-		}
-		#metaDataContainer {
-			position: absolute;
-			top: 0px; width: 100%;
-			padding: 5px;
-			font-family:Monospace;
-			font-size:20px;
-			font-weight: bold;
-			text-align:left;
-		}
-		#layerInput {
-			position: absolute;
-			top: 0px; width: 100%;
-			padding-right: 50px;
-			font-family:Monospace;
-			font-size:20px;
-			font-weight: bold;
-			text-align:right;
-		}
-		</style>
+		<link href="{{ url_for('static', filename='css/pme.css') }}" rel="stylesheet">
 	</head>
 	<body>
-		<script   src="https://code.jquery.com/jquery-3.0.0.min.js"   integrity="sha256-JmvOoLtYsmqlsWxa7mDSLMwa6dZ9rrIdtrrVYRnDRH0="   crossorigin="anonymous"></script>
+		<script src="https://code.jquery.com/jquery-3.0.0.min.js"   integrity="sha256-JmvOoLtYsmqlsWxa7mDSLMwa6dZ9rrIdtrrVYRnDRH0="   crossorigin="anonymous"></script>
 		<script src="{{ url_for('static', filename='vendor/three.min.js') }}"></script>
 		<script src="{{ url_for('static', filename='vendor/TrackballControls.js') }}"></script>
 		<script src="{{ url_for('static', filename='vendor/lodash.core.js') }}"></script>
@@ -49,9 +26,13 @@
 			<br/>
 			<a href="javascript:void();" id="render">Render Layers</a>
 		</div>
+		<div class="gradient" id="pmStrengthGradient"></div>
 
 		<script>
 			var tileData;
+			var maxWeight = 0;
+			var minWeight = Number.MAX_VALUE;
+
 			$(function() {
 				$('a#render').bind('click', function() {
 					$.getJSON('getdata', {
@@ -59,6 +40,21 @@
 						nlast: $('input[name="nlast"]').val()
 					}, function(data) {
 						tileData = data.tiledata;
+						console.log(tileData);
+
+						//calculate max and min connection strength based on number of point matches
+						//for use in selecting the color indicating the strength
+						_.forEach(tileData, function(layer){
+							_.forEach(layer.pointMatches.matchesWithinGroup, function(m){
+								maxWeight = Math.max(maxWeight, m.matches.w.length);
+								minWeight = Math.min(maxWeight, m.matches.w.length);
+							});
+							_.forEach(layer.pointMatches.matchesOutsideGroup, function(m){
+								maxWeight = Math.max(maxWeight, m.matches.w.length);
+								minWeight = Math.min(maxWeight, m.matches.w.length);
+							});
+						});
+
 						loadPME();
 					});
 					return false;

@@ -1,8 +1,9 @@
+var camera, scene, renderer;
 function loadPME(){
   //TODO make div that shows loading information
   //TODO make template inheritance
   var container, controls, metadata_container, selected_tile_metadata_container;
-  var camera, scene, renderer;
+  // var camera, scene, renderer;
 
   var mouse = new THREE.Vector2();
   var raycaster = new THREE.Raycaster();
@@ -29,13 +30,13 @@ function loadPME(){
   var point_match_line_group = new THREE.Group();
   var tile_border_group = new THREE.Group();
 
-  //get a list of colors representing the interpolated gradient
-  var gradient_hex_values = chroma.scale(['#fc00ff', '#00dbde']).colors(tileData.length);
+  //get a list of colors representing the interpolated gradient for tiles and connection strength
+  var tile_gradient_chroma_scale = chroma.scale(['#fc00ff', '#00dbde']).colors(tileData.length);
+  var pm_connection_strength_chroma_scale = chroma.scale(['#c33f2e', '#fc9d59', '#fee08b', '#e0f381', '#76c76f', '#3288bd']).domain([minWeight, maxWeight])
 
   var line_color = 0xaaaaaa;
   var line_width = 0.5;
-  var line_highlight_color = 0x0000ff;
-  var line_highlight_width = 3;
+  var line_highlight_width = 4;
 
   var tile_opacity = 0.5;
   var tile_highlight_opacity = 0.9;
@@ -50,11 +51,16 @@ function loadPME(){
     container = document.getElementById( 'container' );
     metadata_container = document.getElementById( 'metadata' );
     selected_tile_metadata_container = document.getElementById( 'selected_tile_metadata' );
+    var pmStrengthGradientKey = document.getElementById( 'pmStrengthGradient' );
+
     //TODO issue: rendering a lot of tiles (over 1000) then changing the Zs causes slowness even when there are less tiles in the second query
     //clear old rendering if a new start and end Z are entered
     $('#container').empty();
     metadata_container.innerHTML = "";
     selected_tile_metadata_container.innerHTML = "";
+    pmStrengthGradientKey.innerHTML = "";
+    pmStrengthGradientKey.innerHTML = generateGradientBar(pm_connection_strength_chroma_scale)
+
   	scene = new THREE.Scene();
 
   	//TODO set maxZ dynamically using bounding box
@@ -93,7 +99,7 @@ function loadPME(){
   function renderPME(){
     //draw tiles
   	_.forEach(tileData, function(layer, index){
-  		var layer_color = gradient_hex_values[index];
+  		var layer_color = tile_gradient_chroma_scale[index];
       var tile_group = new THREE.Group();
       tile_group.userData.zLayer = layer.z;
 
@@ -164,6 +170,8 @@ function loadPME(){
   					new THREE.Vector3( pTileCoordinates.xPos + smallerXLen, pTileCoordinates.yPos + smallerYLen, pTileCoordinates.zPos ),
   					new THREE.Vector3( qTileCoordinates.xPos - smallerXLen, qTileCoordinates.yPos - smallerYLen, qTileCoordinates.zPos )
   				);
+          line.userData.connectionStrength = m.matches.w.length;
+          line.userData.strength_color = pm_connection_strength_chroma_scale(line.userData.connectionStrength);
           point_match_line_group.add(line);
           addPointMatchLineUUIDsToTiles(line.uuid, m.pGroupId, m.pId);
           addPointMatchLineUUIDsToTiles(line.uuid, m.qGroupId, m.qId);
@@ -188,6 +196,8 @@ function loadPME(){
           new THREE.Vector3( pTileCoordinates.xPos, pTileCoordinates.yPos, pTileCoordinates.zPos ),
           new THREE.Vector3( qTileCoordinates.xPos, qTileCoordinates.yPos, qTileCoordinates.zPos )
         );
+        line.userData.connectionStrength = m.matches.w.length;
+        line.userData.strength_color = pm_connection_strength_chroma_scale(line.userData.connectionStrength);
         point_match_line_group.add(line);
         addPointMatchLineUUIDsToTiles(line.uuid, m.pGroupId, m.pId);
         addPointMatchLineUUIDsToTiles(line.uuid, m.qGroupId, m.qId);
@@ -200,12 +210,15 @@ function loadPME(){
 
   //adds the UUID of the point match line to the appropriate tile (so they can be highlighted later)
   function addPointMatchLineUUIDsToTiles(lineUUID, groupId, tileId){
+    //find the group of the tile
     var p_tile_group = _.find(all_tile_groups, function(g){
       return g.userData.zLayer == groupId;
     });
+    //find the tile object3D
     var p_tile = _.find(p_tile_group.children, function(c){
       return c.userData.tileId == tileId;
     });
+    //create empty array if the list does not yet exist
     if (!p_tile.userData.point_match_line_UUIDs){
       p_tile.userData.point_match_line_UUIDs = []
     }
@@ -356,7 +369,7 @@ function loadPME(){
     //show tile border
     if (intersected.object.tileBorder) intersected.object.tileBorder.material.visible = true;
     //increase width and change color of all of the tile's point match lines
-    highlightLines(intersected, line_highlight_width, line_highlight_color)
+    highlightLines(intersected, line_highlight_width)
   }
 
   function dehighlight(intersected){
@@ -365,17 +378,21 @@ function loadPME(){
     //hide tile border
     if (intersected.object.tileBorder) intersected.object.tileBorder.material.visible = false;
     //revert style of the tile's point match lines
-    highlightLines(intersected, line_width, line_color)
+    highlightLines(intersected, line_width, true)
   }
 
   //highlights and unhighlights the point match lines of the moused over tile
-  function highlightLines(intersectedTile, linewidth, lineColor){
+  function highlightLines(intersectedTile, linewidth, dehighlight){
     _.each(intersectedTile.object.userData.point_match_line_UUIDs, function(u){
       var pm_line = _.find(point_match_line_group.children, function(c){
         return c.uuid == u;
       });
       pm_line.material.linewidth = linewidth;
-      pm_line.material.color.set(lineColor);
+      if (dehighlight){
+        pm_line.material.color.set(line_color);
+      }else{
+        pm_line.material.color.set(pm_line.userData.strength_color.hex());
+      }
     });
   }
   function animate() {
@@ -388,4 +405,18 @@ function loadPME(){
   	renderer.render( scene, camera );
   }
 
+  function generateGradientBar(gradient){
+    var s = '';
+    var dom = gradient.domain ? gradient.domain() : [0,1],
+        dmin = Math.min(dom[0], dom[dom.length-1]),
+        dmax = Math.max(dom[dom.length-1], dom[0]);
+    s += '<span class="label">'+"Point match strength"+'</span>';
+    for (var i=0;i<=100;i++) {
+        s += '<span class="grad-step" style="background-color:'+gradient(dmin + i/100 * (dmax - dmin))+'"></span>';
+    }
+    s += '<span class="domain-min">'+dmin+'</span>';
+    s += '<span class="domain-med">'+((dmin + dmax)*0.5)+'</span>';
+    s += '<span class="domain-max">'+dmax+'</span>';
+    return s;
+  }
 }
