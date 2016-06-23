@@ -148,8 +148,8 @@ function loadPME(){
     //draw intralayer lines
   	_.forEach(tileData, function(layer){
   		_.forEach(layer.pointMatches.matchesWithinGroup, function(m){
-  			var pTileCoordinates = getTileCoordinates(m.pGroupId, m.pId);
-  			var qTileCoordinates = getTileCoordinates(m.qGroupId, m.qId);
+  			var pTileCoordinates = getTileCoordinates(m.pId);
+  			var qTileCoordinates = getTileCoordinates(m.qId);
   			if (pTileCoordinates && qTileCoordinates){
           //calculates new coordinates to draw the intra-layer lines so that they do not begin and start in the middle of the tile
           var xlen = qTileCoordinates.xPos - pTileCoordinates.xPos;
@@ -173,16 +173,16 @@ function loadPME(){
           line.userData.connectionStrength = m.matches.w.length;
           line.userData.strength_color = pm_connection_strength_chroma_scale(line.userData.connectionStrength);
           point_match_line_group.add(line);
-          addPointMatchLineUUIDsToTiles(line.uuid, m.pGroupId, m.pId);
-          addPointMatchLineUUIDsToTiles(line.uuid, m.qGroupId, m.qId);
+          addPointMatchLineUUIDsToTiles(line.uuid, m.pId);
+          addPointMatchLineUUIDsToTiles(line.uuid, m.qId);
   			}
   		});
   	});
 
     //draw interlayer lines
     _.forEach(removeDuplicatePMs(), function(m){
-      var pTileCoordinates = getTileCoordinates(m.pGroupId, m.pId);
-      var qTileCoordinates = getTileCoordinates(m.qGroupId, m.qId);
+      var pTileCoordinates = getTileCoordinates(m.pId);
+      var qTileCoordinates = getTileCoordinates(m.qId);
       if (pTileCoordinates && qTileCoordinates){
         var line_geometry = new THREE.Geometry();
         //TODO this will eventually be customized once point matches are separated into different categories
@@ -199,8 +199,8 @@ function loadPME(){
         line.userData.connectionStrength = m.matches.w.length;
         line.userData.strength_color = pm_connection_strength_chroma_scale(line.userData.connectionStrength);
         point_match_line_group.add(line);
-        addPointMatchLineUUIDsToTiles(line.uuid, m.pGroupId, m.pId);
-        addPointMatchLineUUIDsToTiles(line.uuid, m.qGroupId, m.qId);
+        addPointMatchLineUUIDsToTiles(line.uuid, m.pId);
+        addPointMatchLineUUIDsToTiles(line.uuid, m.qId);
       }
     });
 
@@ -209,15 +209,17 @@ function loadPME(){
   }
 
   //adds the UUID of the point match line to the appropriate tile (so they can be highlighted later)
-  function addPointMatchLineUUIDsToTiles(lineUUID, groupId, tileId){
-    //find the group of the tile
-    var p_tile_group = _.find(all_tile_groups, function(g){
-      return g.userData.zLayer == groupId;
-    });
+  function addPointMatchLineUUIDsToTiles(lineUUID, tileId){
     //find the tile object3D
-    var p_tile = _.find(p_tile_group.children, function(c){
-      return c.userData.tileId == tileId;
-    });
+    var p_tile;
+    _.each(all_tile_groups, function(g){
+      p_tile = _.find(g.children, function(c){
+        return c.userData.tileId == tileId;
+      });
+      if (p_tile){ //the tile was found
+        return false;
+      }
+    })
     //create empty array if the list does not yet exist
     if (!p_tile.userData.point_match_line_UUIDs){
       p_tile.userData.point_match_line_UUIDs = []
@@ -242,20 +244,8 @@ function loadPME(){
     return all_interlayer_point_matches;
   }
 
-  function getTileCoordinates(groupId, tileId){
-  	var layerData = _.find(tileData, function(l){
-  		return l.z == groupId;
-  	});
-  	//the layer could be undefined if the match was in a layer not rendered
-  	if (layerData){
-  		var tileCoordinates = _.find(layerData.tileCoordinates, function (t){
   			return t.tileId == tileId;
   		});
-  		//the tile with ID m.pId might not exist when tileBounds were generated???
-  		if (tileCoordinates){
-  			return tileCoordinates;
-  		}
-  	}
   }
 
   function onDocumentMouseMove( event ) {

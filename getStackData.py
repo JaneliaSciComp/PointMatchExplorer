@@ -14,19 +14,19 @@ def getSectionData():
     url = "/owner/{}/project/{}/stack/{}/sectionData".format(app.config["OWNER"], app.config["PROJECT"], app.config["STACK"])
     return getJSONfromURL(url)
 
-#gets specs for all tiles in a z layer
-def getTileSpecs(z):
-    url = "/owner/{}/project/{}/stack/{}/z/{}/tile-specs".format(app.config["OWNER"], app.config["PROJECT"], app.config["STACK"], z)
-    return getJSONfromURL(url)
+# #gets specs for all tiles in a z layer
+# def getTileSpecs(z):
+#     url = "/owner/{}/project/{}/stack/{}/z/{}/tile-specs".format(app.config["OWNER"], app.config["PROJECT"], app.config["STACK"], z)
+#     return getJSONfromURL(url)
+#
+# #gets specs for one tile
+# def getTileSpec(tileId):
+#     url = "/owner/{}/project/{}/stack/{}/tile/{}/".format(app.config["OWNER"], app.config["PROJECT"], app.config["STACK"], tileId)
+#     return getJSONfromURL(url)
 
 #gets coordinates for bounding boxes of all tiles in a z layer
 def getTileBounds(z):
     url = "/owner/{}/project/{}/stack/{}/z/{}/tileBounds".format(app.config["OWNER"], app.config["PROJECT"], app.config["STACK"], z)
-    return getJSONfromURL(url)
-
-#gets specs for one tile
-def getTileSpec(tileId):
-    url = "/owner/{}/project/{}/stack/{}/tile/{}/".format(app.config["OWNER"], app.config["PROJECT"], app.config["STACK"], tileId)
     return getJSONfromURL(url)
 
 #get bounds for a single stack
@@ -43,13 +43,9 @@ def getMatchesOutsideGroup(groupId):
     url = "/owner/{}/matchCollection/{}/group/{}/matchesOutsideGroup".format(app.config["OWNER"], app.config["MATCH_COLLECTION"], groupId)
     return getJSONfromURL(url)
 
-#TODO not sure if this doing the right thing.
-def getUniqueZs(nfirst, nlast):
+def getSectionsForZ(z):
     sectionData = getSectionData()
-    zs = [val['z'] for val in sectionData if val['z'] >= nfirst and val['z'] <= nlast]
-    uniqueZs = list(set(zs))
-    uniqueZs.sort()
-    return uniqueZs
+    return [val['sectionId'] for val in sectionData if val['z'] == z]
 
 #returns (x,y) that indicates how much the X and Y should be translated to center all of the sections around (0,0)
 def calculateTranslation(nfirst, nlast):
@@ -57,7 +53,7 @@ def calculateTranslation(nfirst, nlast):
     minY = sys.maxint
     maxX = 0
     maxY = 0
-    for z in getUniqueZs(nfirst, nlast):
+    for z in range(nfirst, nlast+1):
         sectionBounds = getSectionBounds(z)
         minX = min(minX, sectionBounds['minX'])
         minY = min(minY, sectionBounds['minY'])
@@ -77,8 +73,13 @@ def getTileCoordinates(z, translation):
 
 def getPointMatches(z):
     pointMatches = {}
-    pointMatches["matchesWithinGroup"] = getMatchesWithinGroup(z)
-    pointMatches["matchesOutsideGroup"] = getMatchesOutsideGroup(z)
+    matchesWithinGroup = []
+    matchesOutsideGroup = []
+    for section in getSectionsForZ(z):
+        matchesWithinGroup.extend(getMatchesWithinGroup(section))
+        matchesOutsideGroup.extend(getMatchesOutsideGroup(section))
+    pointMatches["matchesWithinGroup"] = matchesWithinGroup
+    pointMatches["matchesOutsideGroup"] = matchesOutsideGroup
     return pointMatches
 
 #returns coordinate data with tile ID for each z layer
@@ -86,10 +87,10 @@ def getPointMatches(z):
 def getTileData(nfirst, nlast, samplingRate = 1):
     tileData = []
     translation = calculateTranslation(nfirst, nlast)
-    for z in getUniqueZs(nfirst, nlast):
+    for z in range(nfirst, nlast+1):
         if ( z % samplingRate == 0 ) :
             layerData = {}
-            layerData['z'] = str(z)
+            layerData['z'] = float(z)
             layerData['tileCoordinates'] = getTileCoordinates(z, translation)
             layerData['pointMatches'] = getPointMatches(z)
             tileData.append(layerData)
