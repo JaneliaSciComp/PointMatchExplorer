@@ -244,8 +244,19 @@ function loadPME(){
     return all_interlayer_point_matches;
   }
 
+  function getTileCoordinates(tileId){
+    var tileCoordinates;
+    //loop through all tiles in each layer to find tile with tileId = tileId
+    _.forEach(tileData, function(layer){
+       tileCoordinates = _.find(layer.tileCoordinates, function (t){
   			return t.tileId == tileId;
   		});
+      //tile was found
+      if (tileCoordinates){
+        return false;
+      }
+    });
+    return tileCoordinates;
   }
 
   function onDocumentMouseMove( event ) {
