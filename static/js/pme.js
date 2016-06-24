@@ -1,4 +1,6 @@
 var camera, scene, renderer;
+var intersected, selected;
+
 function loadPME(){
   //TODO make div that shows loading information
   //TODO make template inheritance
@@ -7,7 +9,7 @@ function loadPME(){
 
   var mouse = new THREE.Vector2();
   var raycaster = new THREE.Raycaster();
-  var intersected, selected;
+  // var intersected, selected;
   var downobj, upobj;
   var downmouseX, upmouseX, downmouseY, upmouseY;
 
@@ -46,6 +48,8 @@ function loadPME(){
 
   var tile_border_color = 0x4B4E4F;
   var tile_border_width = 2;
+
+  var isShiftDown = false;
 
   init();
   animate();
@@ -93,7 +97,8 @@ function loadPME(){
     renderer.domElement.addEventListener( 'mousemove', onDocumentMouseMove, false );
     renderer.domElement.addEventListener( 'mousedown', onDocumentMouseDown, false );
     renderer.domElement.addEventListener( 'mouseup', onDocumentMouseUp, false );
-
+    document.addEventListener( 'keydown', onDocumentKeyDown, false );
+    document.addEventListener( 'keyup', onDocumentKeyUp, false );
   	renderPME();
   }
 
@@ -175,8 +180,6 @@ function loadPME(){
         miw = Math.min(miw, m.matches.w.length);
       });
     });
-    console.log("max and min for pms of only drawn tiles", maxWeight, minWeight)
-    console.log("max and min of all pointmatches", maw, miw)
     pm_connection_strength_chroma_scale = chroma.scale(['#c33f2e', '#fc9d59', '#fee08b', '#e0f381', '#76c76f', '#3288bd']).domain([minWeight, maxWeight])
     pmStrengthGradientKey.innerHTML = generateGradientBar(pm_connection_strength_chroma_scale)
 
@@ -247,7 +250,7 @@ function loadPME(){
   function addPointMatchLineUUIDsToTiles(lineUUID, tileId){
     //find the tile object3D
     var p_tile;
-    _.each(all_tile_groups, function(g){
+    _.forEach(all_tile_groups, function(g){
       p_tile = _.find(g.children, function(c){
         return c.userData.tileId == tileId;
       });
@@ -342,7 +345,6 @@ function loadPME(){
       downmouseY = mouse.y;
     }
   }
-
   function onDocumentMouseUp( event ) {
     event.preventDefault();
     mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
@@ -364,15 +366,22 @@ function loadPME(){
           dehighlight(selected);
           selected_tile_metadata_container.innerHTML = "";
         }
+        if (isShiftDown){
+          //the entire layer will be selected.
+          selected = upobj.object.parent
+        }else{
+          //only a tile is selected
+          selected = upobj;
+        }
         //highlight new selected tile
-        selected = upobj; //can also be downobj since they are the same
+        //can also be downobj since they are the same
         highlight(selected);
         updateSelectedMetadata(selected);
       }
     }
     if (!downobj && !upobj){ //if the mouse is clicked outside
       //only dehighlight selected tile if mouse was clicked, not when it is dragged for panning
-      if(downmouseX == upmouseX && downmouseY == upmouseY ){
+      if(downmouseX == upmouseX && downmouseY == upmouseY){
         if (selected){
           dehighlight(selected);
           selected = null;
@@ -382,7 +391,6 @@ function loadPME(){
     }
     downobj = null;
     upobj = null;
-
   }
 
   function updateMetadata(tile){
@@ -392,44 +400,87 @@ function loadPME(){
     metadata_container.innerHTML = "<br/>" +  tileZText + "<br/>" + tileIDText + "<br/>" + tileNumPointMatchesText;
   }
 
-  function updateSelectedMetadata(tile){
-    var tileZText = "Tile Z: " + tile.object.parent.userData.zLayer;
-    var tileIDText = "Tile ID: " + tile.object.userData.tileId;
-    var tileNumPointMatchesText = "Number of tiles with point matches: " + tile.object.userData.point_match_line_UUIDs.length;
-    selected_tile_metadata_container.innerHTML = tileZText + "<br/>" + tileIDText + "<br/>" + tileNumPointMatchesText;
+  function updateSelectedMetadata(selected){
+    if (selected instanceof THREE.Group){
+        var tileZText = "Selected Z: " + selected.userData.zLayer;
+        var numTilesText = "Tile Count: " + selected.children.length;
+        var pointMatchSetsCount = 0;
+        _.forEach(selected.children, function(c){
+          pointMatchSetsCount += c.userData.point_match_line_UUIDs.length;
+        })
+        var pointMatchSetsCountText = "Number of point match sets: " + pointMatchSetsCount;
+        selected_tile_metadata_container.innerHTML = tileZText + "<br/>" + numTilesText + "<br/>" + pointMatchSetsCountText;
+    }else{
+      var tileZText = "Tile Z: " + selected.object.parent.userData.zLayer;
+      var tileIDText = "Tile ID: " + selected.object.userData.tileId;
+      var tileNumPointMatchesText = "Number of tiles with point matches: " + selected.object.userData.point_match_line_UUIDs.length;
+      selected_tile_metadata_container.innerHTML = tileZText + "<br/>" + tileIDText + "<br/>" + tileNumPointMatchesText;
+    }
   }
 
   function highlight(intersected){
-    //increase opacity of tile
-    intersected.object.material.opacity = tile_highlight_opacity;
-    //show tile border
-    if (intersected.object.tileBorder) intersected.object.tileBorder.material.visible = true;
+    //if an entire layer is selected, highlight all tiles and their connections of that layer
+    if (intersected instanceof THREE.Group){
+      _.forEach(intersected.children, function(t){
+        t.material.opacity = tile_highlight_opacity;
+        if (t.tileBorder) t.tileBorder.material.visible = true;
+      })
+    }else{
+      //increase opacity of tile
+      intersected.object.material.opacity = tile_highlight_opacity;
+      //show tile border
+      if (intersected.object.tileBorder) intersected.object.tileBorder.material.visible = true;
+    }
     //increase width and change color of all of the tile's point match lines
     highlightLines(intersected, line_highlight_width)
   }
 
   function dehighlight(intersected){
-    //revert opacity of tile
-    intersected.object.material.opacity = tile_opacity;
-    //hide tile border
-    if (intersected.object.tileBorder) intersected.object.tileBorder.material.visible = false;
+    //if an entire layer is selected, dehighlight all tiles and their connections of that layer
+    if (intersected instanceof THREE.Group){
+      _.forEach(intersected.children, function(t){
+        t.material.opacity = tile_opacity;
+        if (t.tileBorder) t.tileBorder.material.visible = false;
+      })
+    }else{
+      //revert opacity of tile
+      intersected.object.material.opacity = tile_opacity;
+      //hide tile border
+      if (intersected.object.tileBorder) intersected.object.tileBorder.material.visible = false;
+    }
     //revert style of the tile's point match lines
     highlightLines(intersected, line_width, true)
   }
 
   //highlights and unhighlights the point match lines of the moused over tile
-  function highlightLines(intersectedTile, linewidth, dehighlight){
-    _.each(intersectedTile.object.userData.point_match_line_UUIDs, function(u){
-      var pm_line = _.find(point_match_line_group.children, function(c){
-        return c.uuid == u;
+  function highlightLines(intersected, linewidth, dehighlight){
+    if (intersected instanceof THREE.Group){
+      _.forEach(intersected.children, function(t){
+        _.forEach(t.userData.point_match_line_UUIDs, function(u){
+          var pm_line = _.find(point_match_line_group.children, function(c){
+            return c.uuid == u;
+          });
+          pm_line.material.linewidth = linewidth;
+          if (dehighlight){
+            pm_line.material.color.set(line_color);
+          }else{
+            pm_line.material.color.set(pm_line.userData.strength_color.hex());
+          }
+        });
+      })
+    }else{
+      _.forEach(intersected.object.userData.point_match_line_UUIDs, function(u){
+        var pm_line = _.find(point_match_line_group.children, function(c){
+          return c.uuid == u;
+        });
+        pm_line.material.linewidth = linewidth;
+        if (dehighlight){
+          pm_line.material.color.set(line_color);
+        }else{
+          pm_line.material.color.set(pm_line.userData.strength_color.hex());
+        }
       });
-      pm_line.material.linewidth = linewidth;
-      if (dehighlight){
-        pm_line.material.color.set(line_color);
-      }else{
-        pm_line.material.color.set(pm_line.userData.strength_color.hex());
-      }
-    });
+    }
   }
   function animate() {
   	requestAnimationFrame( animate );
@@ -454,5 +505,17 @@ function loadPME(){
     s += '<span class="domain-med">'+((dmin + dmax)*0.5)+'</span>';
     s += '<span class="domain-max">'+dmax+'</span>';
     return s;
+  }
+
+  function onDocumentKeyDown( event ) {
+    switch( event.keyCode ) {
+      case 16: isShiftDown = true; break;
+    }
+  }
+
+  function onDocumentKeyUp( event ) {
+    switch ( event.keyCode ) {
+      case 16: isShiftDown = false; break;
+    }
   }
 }
