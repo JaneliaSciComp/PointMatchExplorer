@@ -17,7 +17,7 @@ function loadPME(){
   //distance between each layer
   var z_spacing = 700;
   //adjusts Z so that the beginning offset is negative in order to center tiles with respect to (0,0,0)
-  var z_offset = -0.5 * tileData.length * z_spacing;
+  var z_offset = 0.5 * tileData.length * z_spacing;
 
   //number of units to shorten both sides of the intra-layer point match lines by
   var line_shorten_factor = 45;
@@ -139,7 +139,7 @@ function loadPME(){
         tile_mesh.tileBorder = tile_border;
         tile_border_group.add(tile_border);
   		});
-  		z_offset = z_offset + z_spacing;
+  		z_offset = z_offset - z_spacing;
       all_tile_groups.push(tile_group);
       scene.add(tile_group);
   	});
