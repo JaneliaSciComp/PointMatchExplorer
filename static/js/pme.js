@@ -2,7 +2,7 @@ var camera, scene, renderer;
 function loadPME(){
   //TODO make div that shows loading information
   //TODO make template inheritance
-  var container, controls, metadata_container, selected_tile_metadata_container;
+  var container, controls, metadata_container, selected_tile_metadata_container, pmStrengthGradientKey;
   // var camera, scene, renderer;
 
   var mouse = new THREE.Vector2();
@@ -30,9 +30,12 @@ function loadPME(){
   var point_match_line_group = new THREE.Group();
   var tile_border_group = new THREE.Group();
 
+  //max and min strength of pm connections
+  var maxWeight, minWeight;
+
   //get a list of colors representing the interpolated gradient for tiles and connection strength
   var tile_gradient_chroma_scale = chroma.scale(['#fc00ff', '#00dbde']).colors(tileData.length);
-  var pm_connection_strength_chroma_scale = chroma.scale(['#c33f2e', '#fc9d59', '#fee08b', '#e0f381', '#76c76f', '#3288bd']).domain([minWeight, maxWeight])
+  var pm_connection_strength_chroma_scale;
 
   var line_color = 0xaaaaaa;
   var line_width = 0.5;
@@ -51,15 +54,13 @@ function loadPME(){
     container = document.getElementById( 'container' );
     metadata_container = document.getElementById( 'metadata' );
     selected_tile_metadata_container = document.getElementById( 'selected_tile_metadata' );
-    var pmStrengthGradientKey = document.getElementById( 'pmStrengthGradient' );
-
+    pmStrengthGradientKey = document.getElementById( 'pmStrengthGradient' )
     //TODO issue: rendering a lot of tiles (over 1000) then changing the Zs causes slowness even when there are less tiles in the second query
     //clear old rendering if a new start and end Z are entered
     $('#container').empty();
     metadata_container.innerHTML = "";
     selected_tile_metadata_container.innerHTML = "";
     pmStrengthGradientKey.innerHTML = "";
-    pmStrengthGradientKey.innerHTML = generateGradientBar(pm_connection_strength_chroma_scale)
 
   	scene = new THREE.Scene();
 
@@ -144,6 +145,40 @@ function loadPME(){
   	});
 
     scene.add(tile_border_group);
+
+    //calculate max and min connection strength based on number of point matches
+    //for use in selecting the color indicating the strength
+    //TODO should be moved somewhere else
+    maxWeight = 0;
+    minWeight = Number.MAX_VALUE;
+    var maw = 0;
+    var miw = Number.MAX_VALUE;
+    _.forEach(tileData, function(layer){
+      _.forEach(layer.pointMatches.matchesWithinGroup, function(m){
+        var pTileCoordinates = getTileCoordinates(m.pId);
+  			var qTileCoordinates = getTileCoordinates(m.qId);
+  			if (pTileCoordinates && qTileCoordinates){
+          maxWeight = Math.max(maxWeight, m.matches.w.length);
+          minWeight = Math.min(minWeight, m.matches.w.length);
+        }
+        maw = Math.max(maw, m.matches.w.length);
+        miw = Math.min(miw, m.matches.w.length);
+      });
+      _.forEach(layer.pointMatches.matchesOutsideGroup, function(m){
+        var pTileCoordinates = getTileCoordinates(m.pId);
+  			var qTileCoordinates = getTileCoordinates(m.qId);
+  			if (pTileCoordinates && qTileCoordinates){
+          maxWeight = Math.max(maxWeight, m.matches.w.length);
+          minWeight = Math.min(minWeight, m.matches.w.length);
+        }
+        maw = Math.max(maw, m.matches.w.length);
+        miw = Math.min(miw, m.matches.w.length);
+      });
+    });
+    console.log("max and min for pms of only drawn tiles", maxWeight, minWeight)
+    console.log("max and min of all pointmatches", maw, miw)
+    pm_connection_strength_chroma_scale = chroma.scale(['#c33f2e', '#fc9d59', '#fee08b', '#e0f381', '#76c76f', '#3288bd']).domain([minWeight, maxWeight])
+    pmStrengthGradientKey.innerHTML = generateGradientBar(pm_connection_strength_chroma_scale)
 
     //draw intralayer lines
   	_.forEach(tileData, function(layer){

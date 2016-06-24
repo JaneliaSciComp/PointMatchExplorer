@@ -30,7 +30,6 @@
 
 		<script>
 			var tileData;
-			var maxWeight, minWeight;
 
 			$(function() {
 				$('a#render').bind('click', function() {
@@ -40,22 +39,6 @@
 					}, function(data) {
 						tileData = data.tiledata;
 						console.log(tileData);
-						maxWeight = 0;
-						minWeight = Number.MAX_VALUE;
-						//calculate max and min connection strength based on number of point matches
-						//for use in selecting the color indicating the strength
-						//TODO this accounts for point matches that are NOT drawn in the final rendering
-						_.forEach(tileData, function(layer){
-							_.forEach(layer.pointMatches.matchesWithinGroup, function(m){
-								maxWeight = Math.max(maxWeight, m.matches.w.length);
-								minWeight = Math.min(maxWeight, m.matches.w.length);
-							});
-							_.forEach(layer.pointMatches.matchesOutsideGroup, function(m){
-								maxWeight = Math.max(maxWeight, m.matches.w.length);
-								minWeight = Math.min(maxWeight, m.matches.w.length);
-							});
-						});
-
 						loadPME();
 					});
 					return false;
