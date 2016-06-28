@@ -7,12 +7,16 @@
 		<link href="{{ url_for('static', filename='css/pme.css') }}" rel="stylesheet">
 	</head>
 	<body>
-		<script src="https://code.jquery.com/jquery-3.0.0.min.js"   integrity="sha256-JmvOoLtYsmqlsWxa7mDSLMwa6dZ9rrIdtrrVYRnDRH0="   crossorigin="anonymous"></script>
+		<script src="https://code.jquery.com/jquery-3.0.0.min.js" integrity="sha256-JmvOoLtYsmqlsWxa7mDSLMwa6dZ9rrIdtrrVYRnDRH0="   crossorigin="anonymous"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.7/react.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.7/react-dom.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.24/browser.min.js"></script>
 		<script src="{{ url_for('static', filename='vendor/three.min.js') }}"></script>
 		<script src="{{ url_for('static', filename='vendor/TrackballControls.js') }}"></script>
 		<script src="{{ url_for('static', filename='vendor/lodash.core.js') }}"></script>
 		<script src="{{ url_for('static', filename='vendor/chroma.min.js') }}"></script>
-		<script src="{{ url_for('static', filename='js/pme.js') }}" ></script>
+		<script type="text/babel" src="{{ url_for('static', filename='js/pme-react.js') }}"></script>
+		<script src="{{ url_for('static', filename='js/pme.js') }}"></script>
 
 		<div id="container"></div>
 		<div id="metaDataContainer">
@@ -26,7 +30,7 @@
 			<br/>
 			<a href="javascript:void();" id="render">Render Layers</a>
 		</div>
-		<div class="gradient" id="pmStrengthGradient"></div>
+		<div id="gradientContainer"></div>
 
 		<script>
 			var tileData;
@@ -44,6 +48,21 @@
 					return false;
 				});
 			});
+
+			// document.addEventListener('DOMContentLoaded', function(e) {
+			// 	document.getElementById('loadPME').addEventListener("click", function(e){
+			// 			console.log("yay");
+			// 		// $.getJSON('getdata', {
+			// 		// 	nfirst: $('input[name="nfirst"]').val(),
+			// 		// 	nlast: $('input[name="nlast"]').val()
+			// 		// }, function(data) {
+			// 		// 	tileData = data.tiledata;
+			// 		// 	console.log(tileData);
+			// 		// 	loadPME();
+			// 		// });
+			// 		return false;
+			// 	});
+			// });
 		</script>
 
 	</body>
