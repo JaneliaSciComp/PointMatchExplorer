@@ -9,6 +9,10 @@ app.config.from_pyfile('config.cfg')
 def render():
     return render_template('pme.html')
 
+@app.route('/opt')
+def renderOpt():
+    return render_template('pmeopt.html')
+
 @app.route('/getdata')
 def getData():
     nfirst = request.args.get('nfirst', 0, type=int)
