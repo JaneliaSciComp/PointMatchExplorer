@@ -10,7 +10,7 @@ var PMStrengthGradient = React.createClass({
         <PMStrengthGradientBar gradient={this.generateGradient()} numSteps={this.props.numSteps} dmin={this.props.dmin} dmax={this.props.dmax}/>
         <PMStrengthGradientDomainLabels dmin={this.props.dmin} dmax={this.props.dmax}/>
       </div>
-  );
+    );
   }
 });
 
@@ -245,22 +245,59 @@ var generateVisualization = function(canvas, tileData){
   //get a list of colors representing the interpolated gradient for tiles and connection strength
   tile_gradient_chroma_scale = chroma.scale(tile_gradient_colors).colors(tileData.length);
 
+  var start = new Date().getTime();
+  console.log("started filterPointMatches");
+  filterPointMatches(tileData);
+  console.log("filterPointMatches time: " + (new Date().getTime() - start)/1000);
   var weightRange = calculateWeightRange(tileData);
   pm_connection_strength_chroma_scale = chroma.scale(pm_connection_strength_gradient_colors).domain([minWeight, maxWeight]);
 
-  var start = new Date().getTime();
-  console.log("started rendering")
+  start = new Date().getTime();
+  console.log("started rendering");
   drawTiles(tileData);
   drawPMLines(tileData);
-  var end = new Date().getTime();
-  var time = end - start;
-  console.log('Render time: ' + time/1000);
+  console.log("Render time: " + (new Date().getTime() - start)/1000);
+  console.log("number of tiles: ", tile_border_group.children.length);
   animate();
 
   return {
     minWeight: weightRange.minWeight,
     maxWeight: weightRange.maxWeight
   };
+};
+
+//remove point matches of tiles that are not drawn
+var filterPointMatches = function(tileData){
+  var allTileIds = _.map(tileData, function(l){
+    return _.keys(l.tileCoordinates);
+  });
+  var combinedTileIds = _.concat.apply(_, allTileIds);
+  _.forEach(tileData, function(layer){
+    _.remove(layer.pointMatches.matchesWithinGroup, function(match){
+      return combinedTileIds.indexOf(match.pId) < 0 || combinedTileIds.indexOf(match.qId) < 0;
+    });
+    _.remove(layer.pointMatches.matchesOutsideGroup, function(match){
+      return combinedTileIds.indexOf(match.pId) < 0 || combinedTileIds.indexOf(match.qId) < 0;
+    });
+  });
+};
+
+//calculate max and min connection strength based on number of point matches
+//for use in selecting the color indicating the strength
+var calculateWeightRange = function(tileData){
+  maxWeight = 0;
+  minWeight = Number.MAX_VALUE;
+  _.forEach(tileData, function(layer){
+    _.forEach(layer.pointMatches.matchesWithinGroup, function(m){
+        maxWeight = Math.max(maxWeight, m.matches.w.length);
+        minWeight = Math.min(minWeight, m.matches.w.length);
+    });
+    _.forEach(layer.pointMatches.matchesOutsideGroup, function(m){
+        maxWeight = Math.max(maxWeight, m.matches.w.length);
+        minWeight = Math.min(minWeight, m.matches.w.length);
+    });
+  });
+  return {minWeight: minWeight, maxWeight: maxWeight};
 };
 
 var drawTiles = function(tileData){
@@ -319,6 +356,7 @@ var drawTiles = function(tileData){
       tile_mesh_individual.userData.tileId = c.tileId;
       tile_mesh_individual.userData.color = c.color;
       tile_group.add(tile_mesh_individual);
+      c.mesh = tile_mesh_individual;
       //adds an invisible border to the tile. the opacity will be adjusted to show the border when the tile is highlighted
       var tile_border = new THREE.EdgesHelper(tile_mesh_individual, tile_border_color);
       tile_border.material.linewidth = tile_border_width;
@@ -328,7 +366,7 @@ var drawTiles = function(tileData){
     });
     z_offset = z_offset - z_spacing;
     all_tile_groups.push(tile_group);
-    //tile_group is NOT drawn on the canvas!! it needes to be added to the scene in order to use raycasting
+    //tile_group is NOT drawn on the canvas!! it needs to be added to the scene in order to use raycasting
     // scene.add(tile_group);
   });
 
@@ -336,7 +374,7 @@ var drawTiles = function(tileData){
   var parent_tile_mesh = new THREE.Mesh(merged_tile_geometry, merged_tile_material);
   scene.add(parent_tile_mesh);
   // scene.add(tile_border_group);
-}
+};
 
 var drawPMLines = function(tileData){
   var merged_line_geometry = new THREE.Geometry();
@@ -348,47 +386,16 @@ var drawPMLines = function(tileData){
   //create intralayer lines
   _.forEach(tileData, function(layer){
     _.forEach(layer.pointMatches.matchesWithinGroup, function(m){
-      var pTileCoordinates = getTileCoordinates(m.pId, tileData);
-      var qTileCoordinates = getTileCoordinates(m.qId, tileData);
-      if (pTileCoordinates && qTileCoordinates){
-        //calculates new coordinates to draw the intra-layer lines so that they do not begin and start in the middle of the tile
-        var xlen = qTileCoordinates.xPos - pTileCoordinates.xPos;
-        var ylen = qTileCoordinates.yPos - pTileCoordinates.yPos;
-        var hlen = Math.sqrt(Math.pow(xlen,2) + Math.pow(ylen,2));
-        var ratio = line_shorten_factor / hlen;
-        var smallerXLen = xlen * ratio;
-        var smallerYLen = ylen * ratio;
+      m.pTile = getTileCoordinates(m.pId, tileData);
+      m.qTile = getTileCoordinates(m.qId, tileData);
+      //calculates new coordinates to draw the intra-layer lines so that they do not begin and start in the middle of the tile
+      var xlen = m.qTile.xPos - m.pTile.xPos;
+      var ylen = m.qTile.yPos - m.pTile.yPos;
+      var hlen = Math.sqrt(Math.pow(xlen,2) + Math.pow(ylen,2));
+      var ratio = line_shorten_factor / hlen;
+      var smallerXLen = xlen * ratio;
+      var smallerYLen = ylen * ratio;
 
-        var line_geometry = new THREE.Geometry();
-        //TODO this will eventually be customized once point matches are separated into different categories
-        var line_material = new THREE.LineBasicMaterial({
-          color: line_color,
-          linewidth: line_width,
-          visible: false
-        });
-        line_geometry.vertices.push(
-          new THREE.Vector3(pTileCoordinates.xPos + smallerXLen, pTileCoordinates.yPos + smallerYLen, pTileCoordinates.zPos),
-          new THREE.Vector3(qTileCoordinates.xPos - smallerXLen, qTileCoordinates.yPos - smallerYLen, qTileCoordinates.zPos)
-        );
-        merged_line_geometry.vertices.push(
-          new THREE.Vector3(pTileCoordinates.xPos + smallerXLen, pTileCoordinates.yPos + smallerYLen, pTileCoordinates.zPos),
-          new THREE.Vector3(qTileCoordinates.xPos - smallerXLen, qTileCoordinates.yPos - smallerYLen, qTileCoordinates.zPos)
-        );
-        var line = new THREE.Line(line_geometry, line_material);
-        line.userData.connectionStrength = m.matches.w.length;
-        line.userData.strength_color = pm_connection_strength_chroma_scale(line.userData.connectionStrength);
-        point_match_line_group.add(line);
-        addPointMatchLineUUIDsToTiles(line.uuid, m.pId);
-        addPointMatchLineUUIDsToTiles(line.uuid, m.qId);
-      }
-    });
-  });
-
-  //create interlayer lines
-  _.forEach(removeDuplicatePMs(tileData), function(m){
-    var pTileCoordinates = getTileCoordinates(m.pId, tileData);
-    var qTileCoordinates = getTileCoordinates(m.qId, tileData);
-    if (pTileCoordinates && qTileCoordinates){
       var line_geometry = new THREE.Geometry();
       //TODO this will eventually be customized once point matches are separated into different categories
       var line_material = new THREE.LineBasicMaterial({
@@ -397,20 +404,49 @@ var drawPMLines = function(tileData){
         visible: false
       });
       line_geometry.vertices.push(
-        new THREE.Vector3(pTileCoordinates.xPos, pTileCoordinates.yPos, pTileCoordinates.zPos),
-        new THREE.Vector3(qTileCoordinates.xPos, qTileCoordinates.yPos, qTileCoordinates.zPos)
+        new THREE.Vector3(m.pTile.xPos + smallerXLen, m.pTile.yPos + smallerYLen, m.pTile.zPos),
+        new THREE.Vector3(m.qTile.xPos - smallerXLen, m.qTile.yPos - smallerYLen, m.qTile.zPos)
       );
       merged_line_geometry.vertices.push(
-        new THREE.Vector3(pTileCoordinates.xPos, pTileCoordinates.yPos, pTileCoordinates.zPos),
-        new THREE.Vector3(qTileCoordinates.xPos, qTileCoordinates.yPos, qTileCoordinates.zPos)
+        new THREE.Vector3(m.pTile.xPos + smallerXLen, m.pTile.yPos + smallerYLen, m.pTile.zPos),
+        new THREE.Vector3(m.qTile.xPos - smallerXLen, m.qTile.yPos - smallerYLen, m.qTile.zPos)
       );
       var line = new THREE.Line(line_geometry, line_material);
+      m.mesh = line;
       line.userData.connectionStrength = m.matches.w.length;
       line.userData.strength_color = pm_connection_strength_chroma_scale(line.userData.connectionStrength);
       point_match_line_group.add(line);
-      addPointMatchLineUUIDsToTiles(line.uuid, m.pId);
-      addPointMatchLineUUIDsToTiles(line.uuid, m.qId);
-    }
+      addPointMatchLineUUIDsToTiles(line.uuid, m.pTile);
+      addPointMatchLineUUIDsToTiles(line.uuid, m.qTile);
+    });
+  });
+
+  //create interlayer lines
+  _.forEach(removeDuplicatePMs(tileData), function(m){
+    m.pTile = getTileCoordinates(m.pId, tileData);
+    m.qTile = getTileCoordinates(m.qId, tileData);
+    var line_geometry = new THREE.Geometry();
+    //TODO this will eventually be customized once point matches are separated into different categories
+    var line_material = new THREE.LineBasicMaterial({
+      color: line_color,
+      linewidth: line_width,
+      visible: false
+    });
+    line_geometry.vertices.push(
+      new THREE.Vector3(m.pTile.xPos, m.pTile.yPos, m.pTile.zPos),
+      new THREE.Vector3(m.qTile.xPos, m.qTile.yPos, m.qTile.zPos)
+    );
+    merged_line_geometry.vertices.push(
+      new THREE.Vector3(m.pTile.xPos, m.pTile.yPos, m.pTile.zPos),
+      new THREE.Vector3(m.qTile.xPos, m.qTile.yPos, m.qTile.zPos)
+    );
+    var line = new THREE.Line(line_geometry, line_material);
+    m.mesh = line;
+    line.userData.connectionStrength = m.matches.w.length;
+    line.userData.strength_color = pm_connection_strength_chroma_scale(line.userData.connectionStrength);
+    point_match_line_group.add(line);
+    addPointMatchLineUUIDsToTiles(line.uuid, m.pTile);
+    addPointMatchLineUUIDsToTiles(line.uuid, m.qTile);
   });
 
   //merged_line is what is drawn on the canvas (improves performance)
@@ -418,8 +454,46 @@ var drawPMLines = function(tileData){
   scene.add(merged_line);
   //point_match_line_group contains the individual PM lines
   // scene.add(point_match_line_group);
-  console.log("number of tiles: ", tile_border_group.children.length);
-}
+};
+
+var getTileCoordinates = function(tileId, tileData){
+  var tileCoordinates;
+  //loop through all tiles in each layer to find tile
+  _.forEach(tileData, function(layer){
+    //since tileCoordinates is a dictionary, just check if tileId exists in the keys
+    if (tileId in layer.tileCoordinates){
+      tileCoordinates = layer.tileCoordinates[tileId];
+    }
+    if (tileCoordinates){
+      return false;
+    }
+  });
+  return tileCoordinates;
+};
+
+//adds the UUID of the point match line to the tile of the point match (so they can be highlighted later)
+var addPointMatchLineUUIDsToTiles = function(lineUUID, tile){
+  //create empty array if the list does not yet exist
+  if (!tile.mesh.userData.point_match_line_UUIDs){
+    tile.mesh.userData.point_match_line_UUIDs = [];
+  }
+  tile.mesh.userData.point_match_line_UUIDs.push(lineUUID);
+};
+
+//removes duplicate inter-layer point_matches
+var removeDuplicatePMs = function(tileData){
+  //gets the matchesOutsideGroup for all layers
+  var allMatchesOutsideGroup = _.map(tileData, function(l){
+    return l.pointMatches.matchesOutsideGroup;
+  });
+  //combines the matchesOutsideGroup into one array
+  var combinedMatchesOutsideGroup = _.concat.apply(_, allMatchesOutsideGroup);
+  //get unique matches by using the pId and qId as the iteree for uniqueness
+  var uniqueMatchesOutsideGroup = _.uniqBy(combinedMatchesOutsideGroup, function(m){
+    return [m.pId, m.qId].join();
+  });
+  return uniqueMatchesOutsideGroup;
+};
 
 var renderPME = function(){
   renderer.render(scene, camera);
@@ -429,79 +503,6 @@ var animate = function(){
   requestAnimationFrame(animate);
   renderPME();
   controls.update();
-};
-
-//highlights and unhighlights the point match lines of the moused over tile
-var highlightLines = function(intersected, linewidth, dehighlight){
-  if (intersected instanceof THREE.Group){
-    _.forEach(intersected.children, function(t){
-      _.forEach(t.userData.point_match_line_UUIDs, function(u){
-        var pm_line = _.find(point_match_line_group.children, function(c){
-          return c.uuid == u;
-        });
-        pm_line.material.linewidth = linewidth;
-        if (dehighlight){
-          pm_line.material.color.set(line_color);
-          pm_line.material.visible = false;
-        }else{
-          pm_line.material.color.set(pm_line.userData.strength_color.hex());
-          pm_line.material.visible = true;
-        }
-      });
-    });
-  }else{
-    _.forEach(intersected.object.userData.point_match_line_UUIDs, function(u){
-      var pm_line = _.find(point_match_line_group.children, function(c){
-        return c.uuid == u;
-      });
-      pm_line.material.linewidth = linewidth;
-      if (dehighlight){
-        pm_line.material.color.set(line_color);
-        pm_line.material.visible = false;
-      }else{
-        pm_line.material.color.set(pm_line.userData.strength_color.hex());
-        pm_line.material.visible = true;
-      }
-    });
-  }
-};
-
-var dehighlight = function(intersected){
-  //if an entire layer is selected, dehighlight all tiles and their connections of that layer
-  if (intersected instanceof THREE.Group){
-    _.forEach(intersected.children, function(t){
-      t.material.opacity = tile_opacity;
-      t.material.visible = false;
-      if (t.tileBorder) t.tileBorder.material.visible = false;
-    });
-  }else{
-    //revert opacity of tile
-    intersected.object.material.opacity = tile_opacity;
-    intersected.object.material.visible = false;
-    //hide tile border
-    if (intersected.object.tileBorder) intersected.object.tileBorder.material.visible = false;
-  }
-  //revert style of the tile's point match lines
-  highlightLines(intersected, line_width, true);
-};
-
-var highlight = function(intersected){
-  //if an entire layer is selected, highlight all tiles and their connections of that layer
-  if (intersected instanceof THREE.Group){
-    _.forEach(intersected.children, function(t){
-      t.material.opacity = tile_highlight_opacity;
-      t.material.visible = true;
-      if (t.tileBorder) t.tileBorder.material.visible = true;
-    });
-  }else{
-    //increase opacity of tile
-    intersected.object.material.opacity = tile_highlight_opacity;
-    intersected.object.material.visible = true;
-    //show tile border
-    if (intersected.object.tileBorder) intersected.object.tileBorder.material.visible = true;
-  }
-  //increase width and change color of all of the tile's point match lines
-  highlightLines(intersected, line_highlight_width);
 };
 
 var getRaycastIntersections = function(){
@@ -601,81 +602,77 @@ var onMouseUp = function(event, isShiftDown) {
   return metadataValues;
 };
 
-//adds the UUID of the point match line to the appropriate tile (so they can be highlighted later)
-var addPointMatchLineUUIDsToTiles = function(lineUUID, tileId){
-  //find the tile object3D
-  var p_tile;
-  _.forEach(all_tile_groups, function(g){
-    p_tile = _.find(g.children, function(c){
-      return c.userData.tileId == tileId;
+var highlight = function(intersected){
+  //if an entire layer is selected, highlight all tiles and their connections of that layer
+  if (intersected instanceof THREE.Group){
+    _.forEach(intersected.children, function(t){
+      t.material.opacity = tile_highlight_opacity;
+      t.material.visible = true;
+      if (t.tileBorder) t.tileBorder.material.visible = true;
     });
-    if (p_tile){ //the tile was found
-      return false;
-    }
-  });
-  //create empty array if the list does not yet exist
-  if (!p_tile.userData.point_match_line_UUIDs){
-    p_tile.userData.point_match_line_UUIDs = [];
+  }else{
+    //increase opacity of tile
+    intersected.object.material.opacity = tile_highlight_opacity;
+    intersected.object.material.visible = true;
+    //show tile border
+    if (intersected.object.tileBorder) intersected.object.tileBorder.material.visible = true;
   }
-  p_tile.userData.point_match_line_UUIDs.push(lineUUID);
+  //increase width and change color of all of the tile's point match lines
+  highlightLines(intersected, line_highlight_width);
 };
 
-//removes duplicate inter-layer point_matches. will eventually be used in a bigger function that processes point matches
-var removeDuplicatePMs = function(tileData){
-  //combine all interlayer matches so there are no duplicates
-  var all_interlayer_point_matches = [];
-  _.forEach(tileData, function(layer){
-    _.forEach(layer.pointMatches.matchesOutsideGroup, function(m){
-      var alreadyFound = _.find(all_interlayer_point_matches, function (m2){
-        return m2.pId == m.pId && m2.qId == m.qId;
+var dehighlight = function(intersected){
+  //if an entire layer is selected, dehighlight all tiles and their connections of that layer
+  if (intersected instanceof THREE.Group){
+    _.forEach(intersected.children, function(t){
+      t.material.opacity = tile_opacity;
+      t.material.visible = false;
+      if (t.tileBorder) t.tileBorder.material.visible = false;
+    });
+  }else{
+    //revert opacity of tile
+    intersected.object.material.opacity = tile_opacity;
+    intersected.object.material.visible = false;
+    //hide tile border
+    if (intersected.object.tileBorder) intersected.object.tileBorder.material.visible = false;
+  }
+  //revert style of the tile's point match lines
+  highlightLines(intersected, line_width, true);
+};
+
+//highlights and unhighlights the point match lines of the moused over tile
+var highlightLines = function(intersected, linewidth, dehighlight){
+  if (intersected instanceof THREE.Group){
+    _.forEach(intersected.children, function(t){
+      _.forEach(t.userData.point_match_line_UUIDs, function(u){
+        var pm_line = _.find(point_match_line_group.children, function(c){
+          return c.uuid == u;
+        });
+        pm_line.material.linewidth = linewidth;
+        if (dehighlight){
+          pm_line.material.color.set(line_color);
+          pm_line.material.visible = false;
+        }else{
+          pm_line.material.color.set(pm_line.userData.strength_color.hex());
+          pm_line.material.visible = true;
+        }
       });
-      if (!alreadyFound){
-        all_interlayer_point_matches.push(m);
+    });
+  }else{
+    _.forEach(intersected.object.userData.point_match_line_UUIDs, function(u){
+      var pm_line = _.find(point_match_line_group.children, function(c){
+        return c.uuid == u;
+      });
+      pm_line.material.linewidth = linewidth;
+      if (dehighlight){
+        pm_line.material.color.set(line_color);
+        pm_line.material.visible = false;
+      }else{
+        pm_line.material.color.set(pm_line.userData.strength_color.hex());
+        pm_line.material.visible = true;
       }
     });
-  });
-  return all_interlayer_point_matches;
-};
-
-var getTileCoordinates = function(tileId, tileData){
-  var tileCoordinates;
-  //loop through all tiles in each layer to find tile with tileId = tileId
-  _.forEach(tileData, function(layer){
-     tileCoordinates = _.find(layer.tileCoordinates, function (t){
-      return t.tileId == tileId;
-    });
-    //tile was found
-    if (tileCoordinates){
-      return false;
-    }
-  });
-  return tileCoordinates;
-};
-
-var calculateWeightRange = function(tileData){
-  //calculate max and min connection strength based on number of point matches
-  //for use in selecting the color indicating the strength
-  maxWeight = 0;
-  minWeight = Number.MAX_VALUE;
-  _.forEach(tileData, function(layer){
-    _.forEach(layer.pointMatches.matchesWithinGroup, function(m){
-      var pTileCoordinates = getTileCoordinates(m.pId, tileData);
-      var qTileCoordinates = getTileCoordinates(m.qId, tileData);
-      if (pTileCoordinates && qTileCoordinates){
-        maxWeight = Math.max(maxWeight, m.matches.w.length);
-        minWeight = Math.min(minWeight, m.matches.w.length);
-      }
-    });
-    _.forEach(layer.pointMatches.matchesOutsideGroup, function(m){
-      var pTileCoordinates = getTileCoordinates(m.pId, tileData);
-      var qTileCoordinates = getTileCoordinates(m.qId, tileData);
-      if (pTileCoordinates && qTileCoordinates){
-        maxWeight = Math.max(maxWeight, m.matches.w.length);
-        minWeight = Math.min(minWeight, m.matches.w.length);
-      }
-    });
-  });
-  return {minWeight: minWeight, maxWeight: maxWeight};
+  }
 };
 
 var getMouseoverMetadata = function(tile){
