@@ -15,7 +15,7 @@
 		<script src="{{ url_for('static', filename='vendor/TrackballControls.js') }}"></script>
 		<script src="{{ url_for('static', filename='vendor/lodash.min.js') }}"></script>
 		<script src="{{ url_for('static', filename='vendor/chroma.min.js') }}"></script>
-		<script type="text/babel" src="{{ url_for('static', filename='js/pme-react.js') }}"></script>
+		<script type="text/babel" src="{{ url_for('static', filename='js/pme-react-opt.js') }}"></script>
 		<!-- <script src="{{ url_for('static', filename='js/pme.js') }}"></script> -->
 
 		<div id="container"></div>
@@ -26,15 +26,22 @@
 			<br/>
 			<a href="javascript:void();" id="render">Render Layers</a>
 		</div>
-
+		<script>
+		javascript:(function(){var script=document.createElement('script');script.onload=function(){var stats=new Stats();document.body.appendChild(stats.dom);requestAnimationFrame(function loop(){stats.update();requestAnimationFrame(loop)});};script.src='//rawgit.com/mrdoob/stats.js/master/build/stats.min.js';document.head.appendChild(script);})()
+		</script>
 		<script type="text/babel">
 
 			$(function() {
 				$('a#render').bind('click', function() {
+					var start = new Date().getTime();
+				  console.log("started getting data")
 					$.getJSON('getdata', {
 						nfirst: $('input[name="nfirst"]').val(),
 						nlast: $('input[name="nlast"]').val()
 					}, function(data) {
+						var end = new Date().getTime();
+						var time = end - start;
+						console.log('API Load time: ' + time/1000);
 						ReactDOM.render(
 							<PMEReact tileData={data.tiledata}/>,
 							document.getElementById('container')
