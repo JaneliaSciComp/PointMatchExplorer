@@ -43,6 +43,14 @@ def getMatchesOutsideGroup(groupId):
     url = "/owner/{}/matchCollection/{}/group/{}/matchesOutsideGroup".format(app.config["OWNER"], app.config["MATCH_COLLECTION"], groupId)
     return getJSONfromURL(url)
 
+def getStackIds():
+    url = "/owner/flyTEM/stackIds"
+    return getJSONfromURL(url)
+
+def getMatchCollections():
+    url = "/owner/flyTEM/matchCollections"
+    return getJSONfromURL(url)
+
 def getSectionsForZ(z):
     sectionData = getSectionData()
     return [val['sectionId'] for val in sectionData if val['z'] == z]

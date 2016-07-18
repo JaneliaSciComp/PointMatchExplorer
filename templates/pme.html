@@ -27,14 +27,45 @@
 			<br/>
 			<a href="javascript:void();" id="render">Render Layers</a>
 		</div>
+		<div id="specsInput">
+
+		</div>
 
 		<script type="text/babel">
+
+			$.getJSON('getStackIdsAndMatchCollections', function(data) {
+				ReactDOM.render(
+					<SpecsInput stackIds={data.stackIds} matchCollections={data.matchCollections}/>,
+					document.getElementById('specsInput')
+				);
+				$("#projectselect").change(function(){
+					var selectedProject = $(this).val();
+
+					//get the stackIds for the selected project
+					var stackForSelectedProject = _.filter(data.stackIds, function(item) {
+							return item.project == selectedProject;
+					});
+					//from the stackIds, only retrieve the stack name
+					stackForSelectedProject = _.uniq(_.map(stackForSelectedProject, function(item){
+							return item.stack;
+					}));
+
+					var stackselect = $("#stackselect");
+					stackselect.empty();
+					$.each(stackForSelectedProject, function(index, value) {
+						stackselect.append("<option>" + value + "</option>");
+					});
+				});
+			});
 
 			$(function() {
 				$('a#render').bind('click', function() {
 					$.getJSON('getdata', {
 						nfirst: $('input[name="nfirst"]').val(),
-						nlast: $('input[name="nlast"]').val()
+						nlast: $('input[name="nlast"]').val(),
+						project: $("#projectselect").val(),
+						stack: $("#stackselect").val(),
+						matchCollection: $("#matchcollectionselect").val(),
 					}, function(data) {
 						ReactDOM.render(
 							<PMEReact tileData={data.tiledata}/>,
