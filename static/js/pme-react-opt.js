@@ -1,3 +1,61 @@
+window.SpecsInput = React.createClass({
+  render: function(){
+    var projects = _.uniq(_.map(this.props.stackIds, function(item){
+      return item.project;
+    }));
+    var stacks = _.uniq(_.map(this.props.stackIds, function(item){
+      return item.stack;
+    }));
+    var match_collections = _.map(this.props.matchCollections, function(collection){
+      return collection.collectionId.name;
+    });
+    return (
+      <div>
+        <Dropdown dropdownId = "projectselect" dropdownName="Select Project" values={projects}/>
+        <br/>
+        <Dropdown dropdownId = "stackselect" dropdownName="Select Stack" values={stacks}/>
+        <br/>
+        <Dropdown dropdownId = "matchcollectionselect" dropdownName="Select Match Collection" values={match_collections}/>
+      </div>
+    );
+  }
+});
+
+var Dropdown = React.createClass({
+  render: function(){
+    return (
+        <select id={this.props.dropdownId} ref="userInput" defaultValue="" required>
+          <option value="" disabled>{this.props.dropdownName}</option>
+          {
+            this.props.values.map(function(value) {
+              return <option key={value}
+                value={value}>{value}</option>;
+            })
+          }
+        </select>
+    );
+  }
+});
+
+// window.ProjectDropdown = React.createClass({
+//   getInitialState: function() {
+//     return {
+//      'project': null
+//     };
+//   },
+//   handleChange: function(event) {
+//    this.setState({project: "testproj"});
+//   },
+//   render: function(){
+//     return (
+//       <form>
+//         <Dropdown onChange={this.handleChange} dropdownName={this.props.dropdownName} values = {this.props.values}/>
+//       </form>
+//     );
+//   }
+// });
+
+
 var PMStrengthGradient = React.createClass({
   generateGradient : function(){
     var PMConnectionStrengthChromaScale = chroma.scale(this.props.colorList).domain([this.props.dmin, this.props.dmax])
@@ -77,7 +135,6 @@ var KVPair = React.createClass({
 });
 
 window.PMEReact = React.createClass({
-
   getInitialState: function() {
     return {
      'minWeight': null,
