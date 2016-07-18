@@ -3,12 +3,15 @@ window.SpecsInput = React.createClass({
     var projects = _.uniq(_.map(this.props.stackIds, function(item){
       return item.project;
     }));
+    projects.sort();
     var stacks = _.uniq(_.map(this.props.stackIds, function(item){
       return item.stack;
     }));
+    stacks.sort();
     var match_collections = _.map(this.props.matchCollections, function(collection){
       return collection.collectionId.name;
     });
+    match_collections.sort();
     return (
       <div>
         <Dropdown dropdownId = "projectselect" dropdownName="Select Project" values={projects}/>
@@ -562,7 +565,7 @@ var animate = function(){
   controls.update();
 };
 
-var getRaycastIntersections = function(){
+var getRaycastIntersections = function(event){
   mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
   mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
   raycaster.setFromCamera(mouse, camera);
@@ -572,7 +575,7 @@ var getRaycastIntersections = function(){
 var onMouseMove = function(event) {
   var metadataValues;
   event.preventDefault();
-  var intersections = getRaycastIntersections();
+  var intersections = getRaycastIntersections(event);
   if (intersections.length > 0) {
     var intersectedObject = intersected ? intersected.object : null;
     //only highlight if the mouse moved to a different tile
@@ -601,7 +604,7 @@ var onMouseMove = function(event) {
 
 var onMouseDown = function(event){
   event.preventDefault();
-  var intersections = getRaycastIntersections();
+  var intersections = getRaycastIntersections(event);
   if (intersections.length > 0) {
     downobj = intersections[0];
   }else{
@@ -614,7 +617,7 @@ var onMouseDown = function(event){
 var onMouseUp = function(event, isShiftDown) {
   var metadataValues;
   event.preventDefault();
-  var intersections = getRaycastIntersections();
+  var intersections = getRaycastIntersections(event);
   if (intersections.length > 0) {
     upobj = intersections[0];
   }else{

@@ -49,6 +49,7 @@
 					stackForSelectedProject = _.uniq(_.map(stackForSelectedProject, function(item){
 							return item.stack;
 					}));
+					stackForSelectedProject.sort();
 
 					var stackselect = $("#stackselect");
 					stackselect.empty();
