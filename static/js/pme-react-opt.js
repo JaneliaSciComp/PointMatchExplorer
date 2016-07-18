@@ -367,13 +367,13 @@ var drawTiles = function(tileData){
     z_offset = z_offset - z_spacing;
     all_tile_groups.push(tile_group);
     //tile_group is NOT drawn on the canvas!! it needs to be added to the scene in order to use raycasting
-    // scene.add(tile_group);
+    scene.add(tile_group);
   });
 
   //parent_tile_mesh is what is drawn on the canvas (improves performance)
   var parent_tile_mesh = new THREE.Mesh(merged_tile_geometry, merged_tile_material);
   scene.add(parent_tile_mesh);
-  // scene.add(tile_border_group);
+  scene.add(tile_border_group);
 };
 
 var drawPMLines = function(tileData){
@@ -453,7 +453,7 @@ var drawPMLines = function(tileData){
   var merged_line = new THREE.LineSegments(merged_line_geometry, merged_line_material);
   scene.add(merged_line);
   //point_match_line_group contains the individual PM lines
-  // scene.add(point_match_line_group);
+  scene.add(point_match_line_group);
 };
 
 var getTileCoordinates = function(tileId, tileData){
