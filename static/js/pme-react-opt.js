@@ -246,9 +246,7 @@ var generateVisualization = function(canvas, tileData){
   tile_gradient_chroma_scale = chroma.scale(tile_gradient_colors).colors(tileData.length);
 
   var start = new Date().getTime();
-  console.log("started filterPointMatches");
   filterPointMatches(tileData);
-  console.log("filterPointMatches time: " + (new Date().getTime() - start)/1000);
   var weightRange = calculateWeightRange(tileData);
   pm_connection_strength_chroma_scale = chroma.scale(pm_connection_strength_gradient_colors).domain([minWeight, maxWeight]);
 
@@ -268,18 +266,30 @@ var generateVisualization = function(canvas, tileData){
 
 //remove point matches of tiles that are not drawn
 var filterPointMatches = function(tileData){
-  var allTileIds = _.map(tileData, function(l){
-    return _.keys(l.tileCoordinates);
-  });
-  var combinedTileIds = _.concat.apply(_, allTileIds);
   _.forEach(tileData, function(layer){
     _.remove(layer.pointMatches.matchesWithinGroup, function(match){
-      return combinedTileIds.indexOf(match.pId) < 0 || combinedTileIds.indexOf(match.qId) < 0;
+      return getTileCoordinates(match.pId, tileData) == undefined || getTileCoordinates(match.qId, tileData) == undefined;
     });
     _.remove(layer.pointMatches.matchesOutsideGroup, function(match){
-      return combinedTileIds.indexOf(match.pId) < 0 || combinedTileIds.indexOf(match.qId) < 0;
+      return getTileCoordinates(match.pId, tileData) == undefined || getTileCoordinates(match.qId, tileData) == undefined;
     });
   });
+};
+
+//checks if tile exists, and if so, return the tile coordinate information
+var getTileCoordinates = function(tileId, tileData){
+  var tileCoordinates;
+  //loop through all tiles in each layer to find tile
+  _.forEach(tileData, function(layer){
+    //since tileCoordinates is a dictionary, just check if tileId exists in the keys
+    if (tileId in layer.tileCoordinates){
+      tileCoordinates = layer.tileCoordinates[tileId];
+    }
+    if (tileCoordinates){
+      return false;
+    }
+  });
+  return tileCoordinates;
 };
 
 //calculate max and min connection strength based on number of point matches
@@ -367,13 +377,13 @@ var drawTiles = function(tileData){
     z_offset = z_offset - z_spacing;
     all_tile_groups.push(tile_group);
     //tile_group is NOT drawn on the canvas!! it needs to be added to the scene in order to use raycasting
-    // scene.add(tile_group);
+    scene.add(tile_group);
   });
 
   //parent_tile_mesh is what is drawn on the canvas (improves performance)
   var parent_tile_mesh = new THREE.Mesh(merged_tile_geometry, merged_tile_material);
   scene.add(parent_tile_mesh);
-  // scene.add(tile_border_group);
+  scene.add(tile_border_group);
 };
 
 var drawPMLines = function(tileData){
@@ -453,22 +463,7 @@ var drawPMLines = function(tileData){
   var merged_line = new THREE.LineSegments(merged_line_geometry, merged_line_material);
   scene.add(merged_line);
   //point_match_line_group contains the individual PM lines
-  // scene.add(point_match_line_group);
-};
-
-var getTileCoordinates = function(tileId, tileData){
-  var tileCoordinates;
-  //loop through all tiles in each layer to find tile
-  _.forEach(tileData, function(layer){
-    //since tileCoordinates is a dictionary, just check if tileId exists in the keys
-    if (tileId in layer.tileCoordinates){
-      tileCoordinates = layer.tileCoordinates[tileId];
-    }
-    if (tileCoordinates){
-      return false;
-    }
-  });
-  return tileCoordinates;
+  scene.add(point_match_line_group);
 };
 
 //adds the UUID of the point match line to the tile of the point match (so they can be highlighted later)
