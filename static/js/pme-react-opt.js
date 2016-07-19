@@ -306,9 +306,7 @@ var generateVisualization = function(canvas, tileData){
   tile_gradient_chroma_scale = chroma.scale(tile_gradient_colors).colors(tileData.length);
 
   var start = new Date().getTime();
-  console.log("started filterPointMatches");
   filterPointMatches(tileData);
-  console.log("filterPointMatches time: " + (new Date().getTime() - start)/1000);
   var weightRange = calculateWeightRange(tileData);
   pm_connection_strength_chroma_scale = chroma.scale(pm_connection_strength_gradient_colors).domain([minWeight, maxWeight]);
 
@@ -328,18 +326,30 @@ var generateVisualization = function(canvas, tileData){
 
 //remove point matches of tiles that are not drawn
 var filterPointMatches = function(tileData){
-  var allTileIds = _.map(tileData, function(l){
-    return _.keys(l.tileCoordinates);
-  });
-  var combinedTileIds = _.concat.apply(_, allTileIds);
   _.forEach(tileData, function(layer){
     _.remove(layer.pointMatches.matchesWithinGroup, function(match){
-      return combinedTileIds.indexOf(match.pId) < 0 || combinedTileIds.indexOf(match.qId) < 0;
+      return getTileCoordinates(match.pId, tileData) == undefined || getTileCoordinates(match.qId, tileData) == undefined;
     });
     _.remove(layer.pointMatches.matchesOutsideGroup, function(match){
-      return combinedTileIds.indexOf(match.pId) < 0 || combinedTileIds.indexOf(match.qId) < 0;
+      return getTileCoordinates(match.pId, tileData) == undefined || getTileCoordinates(match.qId, tileData) == undefined;
     });
   });
+};
+
+//checks if tile exists, and if so, return the tile coordinate information
+var getTileCoordinates = function(tileId, tileData){
+  var tileCoordinates;
+  //loop through all tiles in each layer to find tile
+  _.forEach(tileData, function(layer){
+    //since tileCoordinates is a dictionary, just check if tileId exists in the keys
+    if (tileId in layer.tileCoordinates){
+      tileCoordinates = layer.tileCoordinates[tileId];
+    }
+    if (tileCoordinates){
+      return false;
+    }
+  });
+  return tileCoordinates;
 };
 
 //calculate max and min connection strength based on number of point matches
@@ -514,21 +524,6 @@ var drawPMLines = function(tileData){
   scene.add(merged_line);
   //point_match_line_group contains the individual PM lines
   scene.add(point_match_line_group);
-};
-
-var getTileCoordinates = function(tileId, tileData){
-  var tileCoordinates;
-  //loop through all tiles in each layer to find tile
-  _.forEach(tileData, function(layer){
-    //since tileCoordinates is a dictionary, just check if tileId exists in the keys
-    if (tileId in layer.tileCoordinates){
-      tileCoordinates = layer.tileCoordinates[tileId];
-    }
-    if (tileCoordinates){
-      return false;
-    }
-  });
-  return tileCoordinates;
 };
 
 //adds the UUID of the point match line to the tile of the point match (so they can be highlighted later)
