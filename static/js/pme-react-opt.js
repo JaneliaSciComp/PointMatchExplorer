@@ -206,16 +206,16 @@ window.PMEReact = React.createClass({
   },
 
   detectKeyDown: function(event){
-    switch(event.keyCode) {
-      case 16: this.setState({isShiftDown: true}); break;
-      case 91: this.setState({isCtrlDown: true}); break;
+    switch(event.key) {
+      case "Shift": this.setState({isShiftDown: true}); break;
+      case "Control": this.setState({isCtrlDown: true}); break;
     }
   },
 
   detectKeyUp: function(event){
-    switch(event.keyCode) {
-      case 16: this.setState({isShiftDown: false}); break;
-      case 91: this.setState({isCtrlDown: false}); break;
+    switch(event.key) {
+      case "Shift": this.setState({isShiftDown: false}); break;
+      case "Control": this.setState({isCtrlDown: false}); break;
     }
   }
 
