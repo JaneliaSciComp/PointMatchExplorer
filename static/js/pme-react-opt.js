@@ -612,6 +612,7 @@ var onMouseDown = function(event){
   }
 };
 
+var onMouseUp = function(event, isShiftDown, isCtrlDown) {
   var metadataValues;
   event.preventDefault();
   var intersections = getRaycastIntersections(event);
@@ -636,6 +637,9 @@ var onMouseDown = function(event){
         //only a tile is selected
         selected = upobj;
       }
+      if (isCtrlDown){
+        openTileImageWithNeighbors(selected.object.userData.tileId);
+      }
       //highlight new selected tile
       //can also be downobj since they are the same
       highlight(selected);
@@ -658,6 +662,15 @@ var onMouseDown = function(event){
   upobj = null;
   return metadataValues;
 };
+
+var openTileImageWithNeighbors = function(tileId){
+  var url = "http://tem-services.int.janelia.org:8080/render-ws/v1/owner/flyTEM"
+  url += "/project/" + $("#projectselect").val();
+  url += "/stack/" + $("#stackselect").val();
+  url += "/tile/" + tileId
+  url += "/withNeighbors/jpeg-image?scale=0.5&filter=true";
+  window.open(url);
+}
 
 var highlight = function(intersected){
   //if an entire layer is selected, highlight all tiles and their connections of that layer
