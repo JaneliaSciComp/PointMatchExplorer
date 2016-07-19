@@ -1,6 +1,6 @@
 from flask import Flask, request, session, g, redirect, url_for, \
      abort, render_template, flash, jsonify
-from getStackData import getTileData, getStackIds, getMatchCollections
+from getStackData import getTileData, getStackIds, getMatchCollections, getStackMetadata
 
 app = Flask(__name__)
 app.config.from_pyfile('config.cfg')
@@ -37,6 +37,10 @@ def getData():
 @app.route('/getStackIdsAndMatchCollections')
 def getStackIdsAndMatchCollections():
     return jsonify(stackIds = getStackIds(), matchCollections = getMatchCollections())
+
+@app.route('/getStackMetadata')
+def retrieveStackMetadata():
+    return jsonify(stackMetadata = getStackMetadata())
 
 if __name__ == '__main__':
     app.run()

@@ -14,6 +14,13 @@ def getSectionData():
     url = "/owner/{}/project/{}/stack/{}/sectionData".format(app.config["OWNER"], app.config["PROJECT"], app.config["STACK"])
     return getJSONfromURL(url)
 
+#gets metadata for the stack (needed for stack resolution)
+def getStackMetadata():
+    # url = "/owner/{}/project/{}/stack/{}".format(app.config["OWNER"], app.config["PROJECT"], app.config["STACK"])
+    # THIS IS TEMPORARY until Eric adds stack resolution to the "test" project
+    url = "/owner/{}/project/FAFB00/stack/v12_align".format(app.config["OWNER"])
+    return getJSONfromURL(url)
+
 # #gets specs for all tiles in a z layer
 # def getTileSpecs(z):
 #     url = "/owner/{}/project/{}/stack/{}/z/{}/tile-specs".format(app.config["OWNER"], app.config["PROJECT"], app.config["STACK"], z)
@@ -73,10 +80,11 @@ def calculateTranslation(nfirst, nlast):
 def getTileCoordinates(z, translation):
     tileBounds = getTileBounds(z)
     for tile in tileBounds:
-        tile['minX'] = tile['minX'] - translation[0]
-        tile['minY'] = tile['minY'] - translation[1]
-        tile['maxX'] = tile['maxX'] - translation[0]
-        tile['maxY'] = tile['maxY'] - translation[1]
+        tile['minXtranslated'] = tile['minX'] - translation[0]
+        tile['minYtranslated'] = tile['minY'] - translation[1]
+        tile['maxXtranslated'] = tile['maxX'] - translation[0]
+        tile['maxYtranslated'] = tile['maxY'] - translation[1]
+        tile['tileZ'] = z;
     return {tile['tileId'] : tile for tile in tileBounds}
 
 def getPointMatches(z):

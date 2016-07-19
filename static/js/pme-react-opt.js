@@ -146,6 +146,7 @@ window.PMEReact = React.createClass({
      'selectedMetadata': null,
      'isShiftDown': false,
      'isCtrlDown': false,
+     'isMetaDown': false
     };
   },
 
@@ -201,7 +202,7 @@ window.PMEReact = React.createClass({
   },
 
   processMouseUp: function(event){
-    var md = onMouseUp(event, this.state.isShiftDown, this.state.isCtrlDown);
+    var md = onMouseUp(event, this.state.isShiftDown, this.state.isCtrlDown, this.state.isMetaDown);
     this.setState({selectedMetadata: md});
   },
 
@@ -209,6 +210,7 @@ window.PMEReact = React.createClass({
     switch(event.key) {
       case "Shift": this.setState({isShiftDown: true}); break;
       case "Control": this.setState({isCtrlDown: true}); break;
+      case "Meta": this.setState({isMetaDown: true}); break;
     }
   },
 
@@ -216,6 +218,7 @@ window.PMEReact = React.createClass({
     switch(event.key) {
       case "Shift": this.setState({isShiftDown: false}); break;
       case "Control": this.setState({isCtrlDown: false}); break;
+      case "Meta": this.setState({isMetaDown: false}); break;
     }
   }
 
@@ -390,12 +393,12 @@ var drawTiles = function(tileData){
 
     _.forEach(layer.tileCoordinates, function(c){
       //adding data needed to draw the tile
-      c.width = size_scale * (c.maxX - c.minX);
-      c.height = size_scale * (c.maxY - c.minY);
+      c.width = size_scale * (c.maxXtranslated - c.minXtranslated);
+      c.height = size_scale * (c.maxYtranslated - c.minYtranslated);
       c.color = layer_color;
-      //minX and minY are scaled down to produce actual coordinates in three.js
-      c.xPos = position_scale * c.minX;
-      c.yPos = position_scale * c.minY;
+      //minXtranslated and minYtranslated are scaled down to produce actual coordinates in three.js
+      c.xPos = position_scale * c.minXtranslated;
+      c.yPos = position_scale * c.minYtranslated;
       c.zPos = z_offset;
 
       //creating geometries and drawing the tile
@@ -428,6 +431,7 @@ var drawTiles = function(tileData){
       tile_mesh_individual.updateMatrix();
       tile_mesh_individual.userData.tileId = c.tileId;
       tile_mesh_individual.userData.color = c.color;
+      tile_mesh_individual.userData.tileInfo = c;
       tile_group.add(tile_mesh_individual);
       c.mesh = tile_mesh_individual;
       //adds an invisible border to the tile. the opacity will be adjusted to show the border when the tile is highlighted
@@ -612,7 +616,7 @@ var onMouseDown = function(event){
   }
 };
 
-var onMouseUp = function(event, isShiftDown, isCtrlDown) {
+var onMouseUp = function(event, isShiftDown, isCtrlDown, isMetaDown) {
   var metadataValues;
   event.preventDefault();
   var intersections = getRaycastIntersections(event);
@@ -638,7 +642,10 @@ var onMouseUp = function(event, isShiftDown, isCtrlDown) {
         selected = upobj;
       }
       if (isCtrlDown){
-        openTileImageWithNeighbors(selected.object.userData.tileId);
+        openTileImageWithNeighbors(selected);
+      }
+      if (isMetaDown){
+        openStackInCatmaid(selected);
       }
       //highlight new selected tile
       //can also be downobj since they are the same
@@ -663,13 +670,34 @@ var onMouseUp = function(event, isShiftDown, isCtrlDown) {
   return metadataValues;
 };
 
-var openTileImageWithNeighbors = function(tileId){
+var openTileImageWithNeighbors = function(selected){
   var url = "http://tem-services.int.janelia.org:8080/render-ws/v1/owner/flyTEM"
   url += "/project/" + $("#projectselect").val();
   url += "/stack/" + $("#stackselect").val();
-  url += "/tile/" + tileId
+  url += "/tile/" + selected.object.userData.tileId
   url += "/withNeighbors/jpeg-image?scale=0.5&filter=true";
   window.open(url);
+}
+
+var openStackInCatmaid = function(selected){
+  var tileInfo = selected.object.userData.tileInfo;
+  $.getJSON('getStackMetadata', function(data) {
+    var stackMetadata = data.stackMetadata.currentVersion;
+    var url = "http://renderer-catmaid:8000/?"
+    url += "pid=" + $("#projectselect").val();
+    url += "&zp=" + tileInfo.tileZ*stackMetadata.stackResolutionZ;
+    url += "&yp=" + (tileInfo.minY+tileInfo.maxY)/2*stackMetadata.stackResolutionY;
+    url += "&xp=" + (tileInfo.minX+tileInfo.maxX)/2*stackMetadata.stackResolutionX;
+    url += "&tool=navigator";
+    url += "&sid0=" + $("#stackselect").val();
+    url += "&s0=1.5";
+    console.log(tileInfo)
+    console.log(stackMetadata)
+    console.log(tileInfo.tileZ*stackMetadata.stackResolutionZ)
+    console.log(tileInfo.minY*stackMetadata.stackResolutionY)
+    console.log(tileInfo.minX*stackMetadata.stackResolutionX)
+    window.open(url);
+  });
 }
 
 var highlight = function(intersected){
