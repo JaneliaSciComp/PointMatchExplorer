@@ -17,9 +17,9 @@ def renderOpt():
 def getData():
     nfirst = request.args.get('nfirst', 0, type=int)
     nlast = request.args.get('nlast', 0, type=int)
-    project = request.args.get('project')
-    stack = request.args.get('stack')
-    matchCollection = request.args.get('matchCollection')
+    project = request.args.get('project') or app.config["PROJECT"]
+    stack = request.args.get('stack') or app.config["STACK"]
+    matchCollection = request.args.get('matchCollection') or app.config["MATCH_COLLECTION"]
     app.config.update(
         PROJECT = project,
         STACK = stack,
