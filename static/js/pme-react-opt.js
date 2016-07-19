@@ -144,7 +144,8 @@ window.PMEReact = React.createClass({
      'maxWeight': null,
      'mouseoverMetadata': null,
      'selectedMetadata': null,
-     'isShiftDown': false
+     'isShiftDown': false,
+     'isCtrlDown': false,
     };
   },
 
@@ -184,8 +185,8 @@ window.PMEReact = React.createClass({
     canvas.addEventListener('mousemove', this.processMouseMove, false);
     canvas.addEventListener('mousedown', this.processMouseDown, false);
     canvas.addEventListener('mouseup', this.processMouseUp, false);
-    document.addEventListener('keydown', this.detectShiftDown, false);
-    document.addEventListener('keyup', this.detectShiftUp, false);
+    document.addEventListener('keydown', this.detectKeyDown, false);
+    document.addEventListener('keyup', this.detectKeyUp, false);
     var updatedStateValues = generateVisualization(this.refs.PMEcanvas, this.props.tileData);
     this.setState(updatedStateValues);
   },
@@ -200,19 +201,21 @@ window.PMEReact = React.createClass({
   },
 
   processMouseUp: function(event){
-    var md = onMouseUp(event, this.state.isShiftDown);
+    var md = onMouseUp(event, this.state.isShiftDown, this.state.isCtrlDown);
     this.setState({selectedMetadata: md});
   },
 
-  detectShiftDown: function(event){
+  detectKeyDown: function(event){
     switch(event.keyCode) {
       case 16: this.setState({isShiftDown: true}); break;
+      case 91: this.setState({isCtrlDown: true}); break;
     }
   },
 
-  detectShiftUp: function(event){
+  detectKeyUp: function(event){
     switch(event.keyCode) {
       case 16: this.setState({isShiftDown: false}); break;
+      case 91: this.setState({isCtrlDown: false}); break;
     }
   }
 
@@ -609,7 +612,6 @@ var onMouseDown = function(event){
   }
 };
 
-var onMouseUp = function(event, isShiftDown) {
   var metadataValues;
   event.preventDefault();
   var intersections = getRaycastIntersections(event);
