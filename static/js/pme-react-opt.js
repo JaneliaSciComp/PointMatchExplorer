@@ -398,7 +398,8 @@ var drawTiles = function(tileData){
       c.color = layer_color;
       //minXtranslated and minYtranslated are scaled down to produce actual coordinates in three.js
       c.xPos = position_scale * c.minXtranslated;
-      c.yPos = position_scale * c.minYtranslated;
+      //making this negative orients the layer properly
+      c.yPos = -position_scale * c.minYtranslated;
       c.zPos = z_offset;
 
       //creating geometries and drawing the tile
