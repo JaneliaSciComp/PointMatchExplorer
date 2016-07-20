@@ -57,25 +57,38 @@
 						stackselect.append("<option>" + value + "</option>");
 					});
 				});
+
+				$("#stackselect").change(function(){
+					ReactDOM.unmountComponentAtNode(document.getElementById('container'));
+					startPME();
+				})
+				$("#matchcollectionselect").change(function(){
+					ReactDOM.unmountComponentAtNode(document.getElementById('container'));
+					startPME();
+				})
 			});
 
 			$(function() {
 				$('a#render').bind('click', function() {
-					$.getJSON('getdata', {
-						nfirst: $('input[name="nfirst"]').val(),
-						nlast: $('input[name="nlast"]').val(),
-						project: $("#projectselect").val(),
-						stack: $("#stackselect").val(),
-						matchCollection: $("#matchcollectionselect").val(),
-					}, function(data) {
-						ReactDOM.render(
-							<PMEReact tileData={data.tiledata}/>,
-							document.getElementById('container')
-						);
-					});
+					startPME();
 					return false;
 				});
 			});
+
+			function startPME(){
+				$.getJSON('getdata', {
+					nfirst: $('input[name="nfirst"]').val(),
+					nlast: $('input[name="nlast"]').val(),
+					project: $("#projectselect").val(),
+					stack: $("#stackselect").val(),
+					matchCollection: $("#matchcollectionselect").val(),
+				}, function(data) {
+					ReactDOM.render(
+						<PMEReact tileData={data.tiledata}/>,
+						document.getElementById('container')
+					);
+				});
+			}
 
 		</script>
 	</body>

@@ -192,6 +192,16 @@ window.PMEReact = React.createClass({
     this.setState(updatedStateValues);
   },
 
+  componentWillUnmount: function(){
+    var canvas = this.refs.PMEcanvas;
+    canvas.removeEventListener('mousemove', this.processMouseMove, false);
+    canvas.removeEventListener('mousedown', this.processMouseDown, false);
+    canvas.removeEventListener('mouseup', this.processMouseUp, false);
+    document.removeEventListener('keydown', this.detectKeyDown, false);
+    document.removeEventListener('keyup', this.detectKeyUp, false);
+    disposeThreeScene();
+  },
+
   processMouseMove: function(event){
     var md = onMouseMove(event);
     this.setState({mouseoverMetadata: md});
@@ -232,6 +242,7 @@ var intersected, selected;
 var mouse, raycaster;
 var downobj, upobj;
 var downmouseX, upmouseX, downmouseY, upmouseY;
+var animateId;
 
 var size_scale = 0.05;
 var position_scale = 0.1;
@@ -249,6 +260,7 @@ var draw_distance = 1000000;
 var all_tile_groups = [];
 //all point match lines are grouped into point_match_line_group
 var point_match_line_group, tile_border_group;
+var parent_tile_mesh, merged_line;
 
 //max and min strength of pm connections
 var maxWeight, minWeight;
@@ -449,7 +461,7 @@ var drawTiles = function(tileData){
   });
 
   //parent_tile_mesh is what is drawn on the canvas (improves performance)
-  var parent_tile_mesh = new THREE.Mesh(merged_tile_geometry, merged_tile_material);
+  parent_tile_mesh = new THREE.Mesh(merged_tile_geometry, merged_tile_material);
   scene.add(parent_tile_mesh);
   scene.add(tile_border_group);
 };
@@ -528,7 +540,7 @@ var drawPMLines = function(tileData){
   });
 
   //merged_line is what is drawn on the canvas (improves performance)
-  var merged_line = new THREE.LineSegments(merged_line_geometry, merged_line_material);
+  merged_line = new THREE.LineSegments(merged_line_geometry, merged_line_material);
   scene.add(merged_line);
   //point_match_line_group contains the individual PM lines
   scene.add(point_match_line_group);
@@ -563,7 +575,7 @@ var renderPME = function(){
 };
 
 var animate = function(){
-  requestAnimationFrame(animate);
+  animateId = requestAnimationFrame(animate);
   renderPME();
   controls.update();
 };
@@ -692,11 +704,6 @@ var openStackInCatmaid = function(selected){
     url += "&tool=navigator";
     url += "&sid0=" + $("#stackselect").val();
     url += "&s0=1.5";
-    console.log(tileInfo)
-    console.log(stackMetadata)
-    console.log(tileInfo.tileZ*stackMetadata.stackResolutionZ)
-    console.log(tileInfo.minY*stackMetadata.stackResolutionY)
-    console.log(tileInfo.minX*stackMetadata.stackResolutionX)
     window.open(url);
   });
 }
@@ -831,4 +838,48 @@ var getSelectedMetadata = function(selected){
     ];
   }
   return md;
+};
+
+var disposeThreeScene = function(){
+  function disposeMesh(mesh){
+    mesh.geometry.dispose();
+    mesh.material.dispose();
+  }
+  function empty(elem){
+    while (elem.lastChild) elem.removeChild(elem.lastChild);
+  }
+  cancelAnimationFrame(animateId);
+
+  _.forEach(all_tile_groups, function(tile_group){
+    scene.remove(tile_group);
+    _.forEach(tile_group.children, function(mesh){
+      disposeMesh(mesh);
+    })
+  })
+  _.forEach(tile_border_group.children, function(mesh){
+    disposeMesh(mesh);
+  })
+  _.forEach(point_match_line_group.children, function(mesh){
+    disposeMesh(mesh);
+  });
+  disposeMesh(parent_tile_mesh);
+  disposeMesh(merged_line);
+
+  scene.remove(tile_border_group);
+  scene.remove(point_match_line_group);
+  scene.remove(parent_tile_mesh);
+  scene.remove(merged_line);
+  scene.remove(camera);
+
+  all_tile_groups = [];
+  tile_border_group = null;
+  point_match_line_group = null;
+  parent_tile_mesh = null;
+  merged_line = null;
+  camera = null;
+
+  scene = null;
+  controls = null;
+
+  empty(document.getElementById('container'))
 };
