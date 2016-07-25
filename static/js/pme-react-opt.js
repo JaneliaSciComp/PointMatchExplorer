@@ -551,18 +551,36 @@ var getRaycastIntersections = function(){
 function highlight(faceIndex, isSelected, isShiftDown){
   if (isShiftDown){
     var zLayer = faceIndexToTileInfo[faceIndex].tileZ;
-    var selectedGroup = new THREE.Group();
+    // var selectedLayer = new THREE.Group();
+    var line_geometry = new THREE.Geometry();
+    var line_material = new THREE.LineBasicMaterial({
+      color: 0xffffff,
+      linewidth: line_highlight_width,
+      vertexColors: THREE.VertexColors
+    });
+
+    var vertex_colors = [];
+    var vertex_counter = 0;
     _.forEach(faceIndexToTileInfo, function(tile, key){
       //highlight all tiles of that layer
       if (tile.tileZ == zLayer){
-        //draw the tile border
-        // selectedGroup.add(createTileBorder(tile, isSelected));
-        //draw the point match lines
-        selectedGroup.add(createLines(tile, isSelected));
+        //draw the point match lines for all the tiles in that layer
+        _.forEach(tile.PMList, function(pm){
+          line_geometry.vertices.push(
+            new THREE.Vector3(pm.startX, pm.startY, pm.startZ),
+            new THREE.Vector3(pm.endX, pm.endY, pm.endZ)
+          );
+          vertex_colors[vertex_counter] = new THREE.Color( pm.strength_color.hex() );
+          vertex_colors[vertex_counter+1] = new THREE.Color( pm.strength_color.hex() );
+          vertex_counter += 2;
+        })
       }
     })
-    selectedGroup.name = "selectedGroup";
-    scene.add(selectedGroup)
+    line_geometry.colors = vertex_colors;
+    var selected_layer_PM_lines = new THREE.LineSegments(line_geometry, line_material);
+    // selectedGroup.add(selected_layer_PM_lines);
+    selected_layer_PM_lines.name = "selectedLayer";
+    scene.add(line)
   }else{
     var tile = faceIndexToTileInfo[faceIndex]
     //draw the tile border
@@ -586,14 +604,14 @@ function dehighlight(faceIndex, isSelected){
   if (isSelected){
     scene.remove(scene.getObjectByName("selectedTileBorder"));
     scene.remove(scene.getObjectByName("selectedPMs"));
-    scene.remove(scene.getObjectByName("selectedGroup"));
+    scene.remove(scene.getObjectByName("selectedLayer"));
   }else{
     scene.remove(scene.getObjectByName("mouseoverTileBorder"));
     scene.remove(scene.getObjectByName("mouseoverPMs"));
   }
 }
 
-function createTileBorder(tile, isSelected){
+function createTileBorder(tile){
   //draws 4 lines to form the border around the tile
   var border_geometry = new THREE.Geometry();
   var border_material = new THREE.LineBasicMaterial({
@@ -615,7 +633,7 @@ function createTileBorder(tile, isSelected){
   return highlighted_tile_border;
 }
 
-function createLines(tile, isSelected){
+function createLines(tile){
   var PMGroup = new THREE.Group();
   _.forEach(tile.PMList, function(pm){
     var line_geometry = new THREE.Geometry();
