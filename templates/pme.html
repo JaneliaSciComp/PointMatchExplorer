@@ -70,6 +70,7 @@
 
 			$(function() {
 				$('a#render').bind('click', function() {
+					ReactDOM.unmountComponentAtNode(document.getElementById('container'));
 					startPME();
 					return false;
 				});
