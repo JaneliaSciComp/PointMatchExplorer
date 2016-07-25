@@ -69,6 +69,7 @@ def getTileCoordinates(z, translation):
         tile['minY'] = tile['minY'] - translation[1]
         tile['maxX'] = tile['maxX'] - translation[0]
         tile['maxY'] = tile['maxY'] - translation[1]
+        tile['tileZ'] = z;
     return {tile['tileId'] : tile for tile in tileBounds}
 
 def getPointMatches(z):
