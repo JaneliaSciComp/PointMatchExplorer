@@ -51,6 +51,8 @@
 					}));
 					stackForSelectedProject.sort();
 
+					//update the stacks based on the project selected
+					//TODO move this into react
 					var stackselect = $("#stackselect");
 					stackselect.empty();
 					$.each(stackForSelectedProject, function(index, value) {

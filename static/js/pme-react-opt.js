@@ -156,6 +156,9 @@ window.PMEReact = React.createClass({
     var metadata_display;
     var selected_metadata_display;
     var mouseover_metadata_display;
+    var pm_connection_strength_gradient_colors = ['#c33f2e', '#fc9d59', '#fee08b', '#e0f381', '#76c76f', '#3288bd'];
+    //how many steps to generate the gradient in
+    var pm_connection_strength_gradient_steps = 20;
 
     if (this.state.minWeight && this.state.maxWeight){
       pm_connection_strength_gradient = <PMStrengthGradient gradientTitle="Point Match Strength" colorList={pm_connection_strength_gradient_colors} numSteps={pm_connection_strength_gradient_steps} dmin={this.state.minWeight} dmax= {this.state.maxWeight} />;
@@ -234,8 +237,6 @@ window.PMEReact = React.createClass({
 
 });
 
-//TODO make div that shows loading information
-//TODO make template inheritance
 var camera, scene, renderer, controls;
 var intersected, selected;
 
@@ -255,29 +256,27 @@ var z_offset;
 var line_shorten_factor = 45;
 //used for the camera. anything beyond this distance will not be drawn.
 var draw_distance = 1000000;
-//tiles are grouped into THREE.Group objects by layer
-//TODO what is the benefit of grouping together each layer?
-var all_tile_groups = [];
-//all point match lines are grouped into point_match_line_group
-var point_match_line_group, tile_border_group;
-var parent_tile_mesh, merged_line;
+
+//maps the face index of the merged tiles to the tile information
+var faceIndexToTileInfo = {};
+//merged tiles and merged point match lines
+var merged_tiles, merged_line;
 
 //max and min strength of pm connections
 var maxWeight, minWeight;
 
 var pm_connection_strength_gradient_colors = ['#c33f2e', '#fc9d59', '#fee08b', '#e0f381', '#76c76f', '#3288bd'];
 //how many steps to generate the gradient in
-var pm_connection_strength_gradient_steps = 20;
 var pm_connection_strength_chroma_scale;
-var tile_gradient_colors = ['#fc00ff', '#00dbde'];
+var tile_gradient_colors = ['#fc66ff', '#66fcff'];
 var tile_gradient_chroma_scale;
 
 var line_color = 0xaaaaaa;
 var line_width = 0.5;
 var line_highlight_width = 4;
 
-var tile_opacity = 0.5;
-var tile_highlight_opacity = 0.9;
+var tile_opacity = 0.9;
+// var tile_highlight_opacity = 0.9;
 
 var tile_border_color = 0x4B4E4F;
 var tile_border_width = 2;
@@ -298,10 +297,7 @@ var generateVisualization = function(canvas, tileData){
   scene = new THREE.Scene();
   mouse = new THREE.Vector2();
   raycaster = new THREE.Raycaster();
-  point_match_line_group = new THREE.Group();
-  tile_border_group = new THREE.Group();
 
-  //TODO set maxZ dynamically using bounding box
   camera = new THREE.PerspectiveCamera(camera_view_angle, window.innerWidth / window.innerHeight, 1, draw_distance);
   camera.position.set(initial_camera_X, initial_camera_Y, initial_camera_Z);
   scene.add(camera);
@@ -333,7 +329,6 @@ var generateVisualization = function(canvas, tileData){
   drawTiles(tileData);
   drawPMLines(tileData);
   console.log("Render time: " + (new Date().getTime() - start)/1000);
-  console.log("number of tiles: ", tile_border_group.children.length);
   animate();
 
   return {
@@ -346,10 +341,10 @@ var generateVisualization = function(canvas, tileData){
 var filterPointMatches = function(tileData){
   _.forEach(tileData, function(layer){
     _.remove(layer.pointMatches.matchesWithinGroup, function(match){
-      return getTileCoordinates(match.pId, tileData) == undefined || getTileCoordinates(match.qId, tileData) == undefined;
+      return getTileCoordinates(match.pId, tileData) === undefined || getTileCoordinates(match.qId, tileData) === undefined;
     });
     _.remove(layer.pointMatches.matchesOutsideGroup, function(match){
-      return getTileCoordinates(match.pId, tileData) == undefined || getTileCoordinates(match.qId, tileData) == undefined;
+      return getTileCoordinates(match.pId, tileData) === undefined || getTileCoordinates(match.qId, tileData) === undefined;
     });
   });
 };
@@ -395,14 +390,11 @@ var drawTiles = function(tileData){
     opacity: tile_opacity,
     side: THREE.DoubleSide,
     vertexColors: THREE.FaceColors,
-    depthWrite: false
   });
 
+  var faceIndexCounter = 0;
   _.forEach(tileData, function(layer, index){
     var layer_color = tile_gradient_chroma_scale[index];
-    var tile_group = new THREE.Group();
-    tile_group.userData.zLayer = layer.z;
-
     _.forEach(layer.tileCoordinates, function(c){
       //adding data needed to draw the tile
       c.width = size_scale * (c.maxXtranslated - c.minXtranslated);
@@ -419,51 +411,20 @@ var drawTiles = function(tileData){
       var tile_geometry = new THREE.PlaneGeometry(c.width, c.height);
       for (var i = 0; i < tile_geometry.faces.length; i++) {
 					tile_geometry.faces[i].color = new THREE.Color(c.color);
+          faceIndexToTileInfo[faceIndexCounter + i] = c;
 			}
+      faceIndexCounter += tile_geometry.faces.length;
+
       var tile_mesh = new THREE.Mesh(tile_geometry);
       tile_mesh.position.set(c.xPos, c.yPos, c.zPos);
       tile_mesh.updateMatrix();
       merged_tile_geometry.merge(tile_mesh.geometry, tile_mesh.matrix);
-
-      //these tiles are created in order to use raycasting and tile borders
-      //they are NOT drawn on the canvas!!!
-      //creating individual geometries and meshes for each tile
-      var tile_geometry_individual = new THREE.PlaneGeometry(c.width, c.height);
-      //each tile has its own material, where its color is set
-      var tile_material_individual = new THREE.MeshBasicMaterial({
-        color: c.color,
-        transparent: true,
-        opacity: tile_opacity,
-        side: THREE.DoubleSide,
-        shading: THREE.SmoothShading,
-        vertexColors: THREE.FaceColors,
-        visible: false //these tiles are not drawn on the canvas!!
-      });
-      var tile_mesh_individual = new THREE.Mesh(tile_geometry_individual, tile_material_individual);
-      tile_mesh_individual.position.set(c.xPos, c.yPos, c.zPos);
-      tile_mesh_individual.updateMatrix();
-      tile_mesh_individual.userData.tileId = c.tileId;
-      tile_mesh_individual.userData.color = c.color;
-      tile_mesh_individual.userData.tileInfo = c;
-      tile_group.add(tile_mesh_individual);
-      c.mesh = tile_mesh_individual;
-      //adds an invisible border to the tile. the opacity will be adjusted to show the border when the tile is highlighted
-      var tile_border = new THREE.EdgesHelper(tile_mesh_individual, tile_border_color);
-      tile_border.material.linewidth = tile_border_width;
-      tile_border.material.visible = false;
-      tile_mesh_individual.tileBorder = tile_border;
-      tile_border_group.add(tile_border);
     });
     z_offset = z_offset - z_spacing;
-    all_tile_groups.push(tile_group);
-    //tile_group is NOT drawn on the canvas!! it needs to be added to the scene in order to use raycasting
-    scene.add(tile_group);
   });
-
-  //parent_tile_mesh is what is drawn on the canvas (improves performance)
-  parent_tile_mesh = new THREE.Mesh(merged_tile_geometry, merged_tile_material);
-  scene.add(parent_tile_mesh);
-  scene.add(tile_border_group);
+  //merged_tiles is what is drawn on the canvas (improves performance)
+  merged_tiles = new THREE.Mesh(merged_tile_geometry, merged_tile_material);
+  scene.add(merged_tiles);
 };
 
 var drawPMLines = function(tileData){
@@ -486,28 +447,24 @@ var drawPMLines = function(tileData){
       var smallerXLen = xlen * ratio;
       var smallerYLen = ylen * ratio;
 
-      var line_geometry = new THREE.Geometry();
-      //TODO this will eventually be customized once point matches are separated into different categories
-      var line_material = new THREE.LineBasicMaterial({
-        color: line_color,
-        linewidth: line_width,
-        visible: false
-      });
-      line_geometry.vertices.push(
-        new THREE.Vector3(m.pTile.xPos + smallerXLen, m.pTile.yPos + smallerYLen, m.pTile.zPos),
-        new THREE.Vector3(m.qTile.xPos - smallerXLen, m.qTile.yPos - smallerYLen, m.qTile.zPos)
-      );
       merged_line_geometry.vertices.push(
         new THREE.Vector3(m.pTile.xPos + smallerXLen, m.pTile.yPos + smallerYLen, m.pTile.zPos),
         new THREE.Vector3(m.qTile.xPos - smallerXLen, m.qTile.yPos - smallerYLen, m.qTile.zPos)
       );
-      var line = new THREE.Line(line_geometry, line_material);
-      m.mesh = line;
-      line.userData.connectionStrength = m.matches.w.length;
-      line.userData.strength_color = pm_connection_strength_chroma_scale(line.userData.connectionStrength);
-      point_match_line_group.add(line);
-      addPointMatchLineUUIDsToTiles(line.uuid, m.pTile);
-      addPointMatchLineUUIDsToTiles(line.uuid, m.qTile);
+
+      var PMInfo = {
+        startX: m.pTile.xPos + smallerXLen,
+        startY: m.pTile.yPos + smallerYLen,
+        startZ: m.pTile.zPos,
+        endX: m.qTile.xPos - smallerXLen,
+        endY: m.qTile.yPos - smallerYLen,
+        endZ: m.qTile.zPos,
+        connection_strength: m.matches.w.length,
+        strength_color: pm_connection_strength_chroma_scale(m.matches.w.length)
+      };
+
+      addPointMatchInfoToTile(m.pTile, PMInfo);
+      addPointMatchInfoToTile(m.qTile, PMInfo);
     });
   });
 
@@ -515,44 +472,36 @@ var drawPMLines = function(tileData){
   _.forEach(removeDuplicatePMs(tileData), function(m){
     m.pTile = getTileCoordinates(m.pId, tileData);
     m.qTile = getTileCoordinates(m.qId, tileData);
-    var line_geometry = new THREE.Geometry();
-    //TODO this will eventually be customized once point matches are separated into different categories
-    var line_material = new THREE.LineBasicMaterial({
-      color: line_color,
-      linewidth: line_width,
-      visible: false
-    });
-    line_geometry.vertices.push(
-      new THREE.Vector3(m.pTile.xPos, m.pTile.yPos, m.pTile.zPos),
-      new THREE.Vector3(m.qTile.xPos, m.qTile.yPos, m.qTile.zPos)
-    );
+
+    //since interlayer lines are drawn from the center of the tiles, no calculations need to be done
     merged_line_geometry.vertices.push(
       new THREE.Vector3(m.pTile.xPos, m.pTile.yPos, m.pTile.zPos),
       new THREE.Vector3(m.qTile.xPos, m.qTile.yPos, m.qTile.zPos)
     );
-    var line = new THREE.Line(line_geometry, line_material);
-    m.mesh = line;
-    line.userData.connectionStrength = m.matches.w.length;
-    line.userData.strength_color = pm_connection_strength_chroma_scale(line.userData.connectionStrength);
-    point_match_line_group.add(line);
-    addPointMatchLineUUIDsToTiles(line.uuid, m.pTile);
-    addPointMatchLineUUIDsToTiles(line.uuid, m.qTile);
+
+    var PMInfo = {
+      startX: m.pTile.xPos,
+      startY: m.pTile.yPos,
+      startZ: m.pTile.zPos,
+      endX: m.qTile.xPos,
+      endY: m.qTile.yPos,
+      endZ: m.qTile.zPos,
+      connection_strength: m.matches.w.length,
+      strength_color: pm_connection_strength_chroma_scale(m.matches.w.length)
+    };
+
+    addPointMatchInfoToTile(m.pTile, PMInfo);
+    addPointMatchInfoToTile(m.qTile, PMInfo);
   });
 
   //merged_line is what is drawn on the canvas (improves performance)
   merged_line = new THREE.LineSegments(merged_line_geometry, merged_line_material);
   scene.add(merged_line);
-  //point_match_line_group contains the individual PM lines
-  scene.add(point_match_line_group);
 };
 
-//adds the UUID of the point match line to the tile of the point match (so they can be highlighted later)
-var addPointMatchLineUUIDsToTiles = function(lineUUID, tile){
-  //create empty array if the list does not yet exist
-  if (!tile.mesh.userData.point_match_line_UUIDs){
-    tile.mesh.userData.point_match_line_UUIDs = [];
-  }
-  tile.mesh.userData.point_match_line_UUIDs.push(lineUUID);
+var addPointMatchInfoToTile = function(tile, PMInfo){
+  if (!tile.PMList){ tile.PMList = []; }
+  tile.PMList.push(PMInfo);
 };
 
 //removes duplicate inter-layer point_matches
@@ -584,7 +533,7 @@ var getRaycastIntersections = function(event){
   mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
   mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
   raycaster.setFromCamera(mouse, camera);
-  return raycaster.intersectObjects(all_tile_groups, true);
+  return raycaster.intersectObjects([merged_tiles], true);
 };
 
 var onMouseMove = function(event) {
@@ -592,28 +541,22 @@ var onMouseMove = function(event) {
   event.preventDefault();
   var intersections = getRaycastIntersections(event);
   if (intersections.length > 0) {
-    var intersectedObject = intersected ? intersected.object : null;
+    var intersectedFaceIndex = intersected ? intersected.faceIndex : null;
     //only highlight if the mouse moved to a different tile
     //(if the mouse is moved around in the same tile, don't do anything)
-    if (intersectedObject != intersections[0].object) {
+    if (intersectedFaceIndex != intersections[0].faceIndex) {
       if (intersected){ //dehighlight previous intersection
-        dehighlight(intersected);
+        dehighlight(intersected.faceIndex);
       }
       intersected = intersections[0];
-      highlight(intersected);
+      highlight(intersected.faceIndex);
     }
     //get updated metadata text
-    metadataValues = getMouseoverMetadata(intersected);
+    metadataValues = getMouseoverMetadata(intersected.faceIndex);
   }else if (intersected){ //there are no current intersections, but there was a previous intersection
-    dehighlight(intersected);
+    dehighlight(intersected.faceIndex);
     intersected = null;
   }
-
-  //TODO such a hack. hopefully this doesn't slow things down
-  if (selected){
-    highlight(selected);
-  }
-
   return metadataValues;
 };
 
@@ -642,40 +585,34 @@ var onMouseUp = function(event, isShiftDown, isCtrlDown, isMetaDown) {
   }
   if (downobj && upobj){
     //if the mouse was clicked on the same tile
-    if (downobj.object == upobj.object){
-      //dehighlight already selected tile
+    if (downobj.faceIndex == upobj.faceIndex){
+      //dehighlight already selected tile/layer
       if (selected){
-        dehighlight(selected);
+        dehighlight(selected.faceIndex, true);
       }
-      if (isShiftDown){
-        //the entire layer will be selected.
-        selected = upobj.object.parent;
-      }else{
-        //only a tile is selected
-        selected = upobj;
-      }
+      selected = upobj;
       if (isCtrlDown){
-        openTileImageWithNeighbors(selected);
+        openTileImageWithNeighbors(selected.faceIndex);
       }
       if (isMetaDown){
-        openStackInCatmaid(selected);
+        openStackInCatmaid(selected.faceIndex);
       }
       //highlight new selected tile
       //can also be downobj since they are the same
-      highlight(selected);
-      metadataValues = getSelectedMetadata(selected);
+      highlight(selected.faceIndex, true, isShiftDown);
+      metadataValues = getSelectedMetadata(selected.faceIndex, isShiftDown);
     }
   }
   if (!downobj && !upobj){ //if the mouse is clicked outside
     //only dehighlight selected tile if mouse was clicked, not when it is dragged for panning
     if(downmouseX == upmouseX && downmouseY == upmouseY){
       if (selected){
-        dehighlight(selected);
+        dehighlight(selected.faceIndex, true);
         selected = null;
       }
     }else if (selected){
       //do not remove metadata display if the mouse was not clicked
-      metadataValues = getSelectedMetadata(selected);
+      metadataValues = getSelectedMetadata(selected.faceIndex, isShiftDown);
     }
   }
   downobj = null;
@@ -683,20 +620,20 @@ var onMouseUp = function(event, isShiftDown, isCtrlDown, isMetaDown) {
   return metadataValues;
 };
 
-var openTileImageWithNeighbors = function(selected){
-  var url = "http://tem-services.int.janelia.org:8080/render-ws/v1/owner/flyTEM"
+var openTileImageWithNeighbors = function(faceIndex){
+  var url = "http://tem-services.int.janelia.org:8080/render-ws/v1/owner/flyTEM";
   url += "/project/" + $("#projectselect").val();
   url += "/stack/" + $("#stackselect").val();
-  url += "/tile/" + selected.object.userData.tileId
+  url += "/tile/" + faceIndexToTileInfo[faceIndex].tileId;
   url += "/withNeighbors/jpeg-image?scale=0.5&filter=true";
   window.open(url);
-}
+};
 
-var openStackInCatmaid = function(selected){
-  var tileInfo = selected.object.userData.tileInfo;
+var openStackInCatmaid = function(faceIndex){
+  var tileInfo = faceIndexToTileInfo[faceIndex];
   $.getJSON('getStackMetadata', function(data) {
     var stackMetadata = data.stackMetadata.currentVersion;
-    var url = "http://renderer-catmaid:8000/?"
+    var url = "http://renderer-catmaid:8000/?";
     url += "pid=" + $("#projectselect").val();
     url += "&zp=" + tileInfo.tileZ*stackMetadata.stackResolutionZ;
     url += "&yp=" + (tileInfo.minY+tileInfo.maxY)/2*stackMetadata.stackResolutionY;
@@ -706,115 +643,152 @@ var openStackInCatmaid = function(selected){
     url += "&s0=1.5";
     window.open(url);
   });
-}
-
-var highlight = function(intersected){
-  //if an entire layer is selected, highlight all tiles and their connections of that layer
-  if (intersected instanceof THREE.Group){
-    _.forEach(intersected.children, function(t){
-      t.material.opacity = tile_highlight_opacity;
-      t.material.visible = true;
-      if (t.tileBorder) t.tileBorder.material.visible = true;
-    });
-  }else{
-    //increase opacity of tile
-    intersected.object.material.opacity = tile_highlight_opacity;
-    intersected.object.material.visible = true;
-    //show tile border
-    if (intersected.object.tileBorder) intersected.object.tileBorder.material.visible = true;
-  }
-  //increase width and change color of all of the tile's point match lines
-  highlightLines(intersected, line_highlight_width);
 };
 
-var dehighlight = function(intersected){
-  //if an entire layer is selected, dehighlight all tiles and their connections of that layer
-  if (intersected instanceof THREE.Group){
-    _.forEach(intersected.children, function(t){
-      t.material.opacity = tile_opacity;
-      t.material.visible = false;
-      if (t.tileBorder) t.tileBorder.material.visible = false;
+var highlight = function(faceIndex, isSelected, isShiftDown){
+  if (isShiftDown){
+    var zLayer = faceIndexToTileInfo[faceIndex].tileZ;
+    var line_geometry = new THREE.Geometry();
+    var line_material = new THREE.LineBasicMaterial({
+      color: 0xffffff,
+      linewidth: line_highlight_width,
+      vertexColors: THREE.VertexColors
     });
-  }else{
-    //revert opacity of tile
-    intersected.object.material.opacity = tile_opacity;
-    intersected.object.material.visible = false;
-    //hide tile border
-    if (intersected.object.tileBorder) intersected.object.tileBorder.material.visible = false;
-  }
-  //revert style of the tile's point match lines
-  highlightLines(intersected, line_width, true);
-};
 
-//highlights and unhighlights the point match lines of the moused over tile
-var highlightLines = function(intersected, linewidth, dehighlight){
-  if (intersected instanceof THREE.Group){
-    _.forEach(intersected.children, function(t){
-      _.forEach(t.userData.point_match_line_UUIDs, function(u){
-        var pm_line = _.find(point_match_line_group.children, function(c){
-          return c.uuid == u;
+    var vertex_colors = [];
+    var vertex_counter = 0;
+    _.forEach(faceIndexToTileInfo, function(tile){
+      //draw the point match lines for all the tiles in that layer
+      if (tile.tileZ == zLayer){
+        _.forEach(tile.PMList, function(pm){
+          line_geometry.vertices.push(
+            new THREE.Vector3(pm.startX, pm.startY, pm.startZ),
+            new THREE.Vector3(pm.endX, pm.endY, pm.endZ)
+          );
+          vertex_colors[vertex_counter] = new THREE.Color( pm.strength_color.hex() );
+          vertex_colors[vertex_counter+1] = new THREE.Color( pm.strength_color.hex() );
+          vertex_counter += 2;
         });
-        pm_line.material.linewidth = linewidth;
-        if (dehighlight){
-          pm_line.material.color.set(line_color);
-          pm_line.material.visible = false;
-        }else{
-          pm_line.material.color.set(pm_line.userData.strength_color.hex());
-          pm_line.material.visible = true;
-        }
-      });
-    });
-  }else{
-    _.forEach(intersected.object.userData.point_match_line_UUIDs, function(u){
-      var pm_line = _.find(point_match_line_group.children, function(c){
-        return c.uuid == u;
-      });
-      pm_line.material.linewidth = linewidth;
-      if (dehighlight){
-        pm_line.material.color.set(line_color);
-        pm_line.material.visible = false;
-      }else{
-        pm_line.material.color.set(pm_line.userData.strength_color.hex());
-        pm_line.material.visible = true;
       }
     });
+    line_geometry.colors = vertex_colors;
+    var selected_layer_PM_lines = new THREE.LineSegments(line_geometry, line_material);
+    selected_layer_PM_lines.name = "selectedLayer";
+    scene.add(selected_layer_PM_lines);
+  }else{
+    var tile = faceIndexToTileInfo[faceIndex];
+    //draw the tile border
+    var tileBorder = createTileBorder(tile, isSelected);
+    //draw the point match lines
+    var PMLines = createLines(tile, isSelected);
+    //the names are necessary for dehighlighting the objects
+    if (isSelected){
+      tileBorder.name = "selectedTileBorder";
+      PMLines.name = "selectedPMs";
+    }
+    else{
+      tileBorder.name = "mouseoverTileBorder";
+      PMLines.name = "mouseoverPMs";
+    }
+    scene.add(tileBorder);
+    scene.add(PMLines);
   }
 };
 
-var getMouseoverMetadata = function(tile){
+var createTileBorder = function(tile, isSelected){
+  //draws 4 lines to form the border around the tile
+  var border_geometry = new THREE.Geometry();
+  var border_material = new THREE.LineBasicMaterial({
+    color: tile_border_color,
+    linewidth: tile_border_width,
+    visible: true
+  });
+  //xPos and yPos are the centers of the tiles, a corner needs to be calcuated in order to draw the border_geometry
+  var cornerX = tile.xPos - 0.5 * tile.width;
+  var cornerY = tile.yPos - 0.5 * tile.height;
+  border_geometry.vertices.push(
+    new THREE.Vector3(cornerX, cornerY, tile.zPos),
+    new THREE.Vector3(cornerX + tile.width, cornerY, tile.zPos),
+    new THREE.Vector3(cornerX + tile.width, cornerY + tile.height, tile.zPos),
+    new THREE.Vector3(cornerX, cornerY + tile.height, tile.zPos),
+    new THREE.Vector3(cornerX, cornerY, tile.zPos)
+  );
+  var highlighted_tile_border = new THREE.Line(border_geometry, border_material);
+  return highlighted_tile_border;
+};
+
+var createLines = function(tile, isSelected){
+  var PMGroup = new THREE.Group();
+  _.forEach(tile.PMList, function(pm){
+    var line_geometry = new THREE.Geometry();
+    var line_material = new THREE.LineBasicMaterial({
+      color: pm.strength_color.hex(),
+      linewidth: line_highlight_width
+    });
+    line_geometry.vertices.push(
+      new THREE.Vector3(pm.startX, pm.startY, pm.startZ),
+      new THREE.Vector3(pm.endX, pm.endY, pm.endZ)
+    );
+    var line = new THREE.Line(line_geometry, line_material);
+    PMGroup.add(line);
+  });
+  return PMGroup;
+};
+
+var dehighlight = function(faceIndex, isSelected){
+  if (isSelected){
+    scene.remove(scene.getObjectByName("selectedTileBorder"));
+    scene.remove(scene.getObjectByName("selectedPMs"));
+    scene.remove(scene.getObjectByName("selectedLayer"));
+  }else{
+    scene.remove(scene.getObjectByName("mouseoverTileBorder"));
+    scene.remove(scene.getObjectByName("mouseoverPMs"));
+  }
+};
+
+var getMouseoverMetadata = function(faceIndex){
+  var tile = faceIndexToTileInfo[faceIndex];
   var md = [
     {
       keyname: "Tile Z",
-      valuename: tile.object.parent.userData.zLayer
+      valuename: tile.tileZ
     },
     {
       keyname: "Tile ID",
-      valuename: tile.object.userData.tileId
+      valuename: tile.tileId
     },
     {
       keyname: "Number of tiles with point matches",
-      valuename: tile.object.userData.point_match_line_UUIDs.length
+      valuename: tile.PMList.length
     }
   ];
   return md;
 };
 
-var getSelectedMetadata = function(selected){
+var getSelectedMetadata = function(faceIndex, isShiftDown){
+  var selected = faceIndexToTileInfo[faceIndex];
   var md;
   //check if a tile or a layer was selected
-  if (selected instanceof THREE.Group){
+  if (isShiftDown){
       var pointMatchSetsCount = 0;
-      _.forEach(selected.children, function(c){
-        pointMatchSetsCount += c.userData.point_match_line_UUIDs.length;
+      var tileCount = 0;
+      var zLayer = faceIndexToTileInfo[faceIndex].tileZ;
+      _.forEach(faceIndexToTileInfo, function(tile){
+        if (tile.tileZ == zLayer){
+          tileCount++;
+          pointMatchSetsCount += tile.PMList.length;
+        }
       });
+      //needs to be halved since they each tile has 2 faces and they are counted twice
+      pointMatchSetsCount = pointMatchSetsCount/2;
       md = [
         {
           keyname: "Selected Z",
-          valuename: selected.userData.zLayer
+          valuename: zLayer
         },
         {
           keyname: "Tile Count",
-          valuename: selected.children.length
+          valuename: tileCount
         },
         {
           keyname: "Number of point match sets",
@@ -825,15 +799,15 @@ var getSelectedMetadata = function(selected){
     md = [
       {
         keyname: "Selected Tile Z",
-        valuename: selected.object.parent.userData.zLayer
+        valuename: selected.tileZ
       },
       {
         keyname: "Selected Tile ID",
-        valuename: selected.object.userData.tileId
+        valuename: selected.tileId
       },
       {
         keyname: "Number of tiles with point matches",
-        valuename: selected.object.userData.point_match_line_UUIDs.length
+        valuename: selected.PMList.length
       }
     ];
   }
@@ -850,36 +824,18 @@ var disposeThreeScene = function(){
   }
   cancelAnimationFrame(animateId);
 
-  _.forEach(all_tile_groups, function(tile_group){
-    scene.remove(tile_group);
-    _.forEach(tile_group.children, function(mesh){
-      disposeMesh(mesh);
-    })
-  })
-  _.forEach(tile_border_group.children, function(mesh){
-    disposeMesh(mesh);
-  })
-  _.forEach(point_match_line_group.children, function(mesh){
-    disposeMesh(mesh);
-  });
-  disposeMesh(parent_tile_mesh);
+  disposeMesh(merged_tiles);
   disposeMesh(merged_line);
 
-  scene.remove(tile_border_group);
-  scene.remove(point_match_line_group);
-  scene.remove(parent_tile_mesh);
+  scene.remove(merged_tiles);
   scene.remove(merged_line);
   scene.remove(camera);
 
-  all_tile_groups = [];
-  tile_border_group = null;
-  point_match_line_group = null;
-  parent_tile_mesh = null;
+  merged_tiles = null;
   merged_line = null;
   camera = null;
-
   scene = null;
   controls = null;
 
-  empty(document.getElementById('container'))
+  empty(document.getElementById('container'));
 };
