@@ -215,7 +215,7 @@ window.PMEReact = React.createClass({
   },
 
   processMouseUp: function(event){
-    var md = onMouseUp(event, this.state.isShiftDown, this.state.isCtrlDown, this.state.isMetaDown);
+    var md = onMouseUp(event, this.state.isShiftDown, this.state.isCtrlDown, this.state.isMetaDown, this.afterMouseUp);
     this.setState({selectedMetadata: md});
   },
 
@@ -233,6 +233,12 @@ window.PMEReact = React.createClass({
       case "Control": this.setState({isCtrlDown: false}); break;
       case "Meta": this.setState({isMetaDown: false}); break;
     }
+  },
+
+  afterMouseUp: function(event){
+    this.setState({isShiftDown: false});
+    this.setState({isCtrlDown: false});
+    this.setState({isMetaDown: false});
   }
 
 });
@@ -572,7 +578,7 @@ var onMouseDown = function(event){
   }
 };
 
-var onMouseUp = function(event, isShiftDown, isCtrlDown, isMetaDown) {
+var onMouseUp = function(event, isShiftDown, isCtrlDown, isMetaDown, afterMouseUp) {
   var metadataValues;
   event.preventDefault();
   var intersections = getRaycastIntersections(event);
@@ -617,6 +623,7 @@ var onMouseUp = function(event, isShiftDown, isCtrlDown, isMetaDown) {
   }
   downobj = null;
   upobj = null;
+  afterMouseUp();
   return metadataValues;
 };
 
