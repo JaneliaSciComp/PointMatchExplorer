@@ -5,20 +5,20 @@ body {
   font-size:20px;
   font-weight: bold;
 }
-#metaDataContainer {
+.metaDataContainer {
   position: absolute;
   top: 0px; width: 100%;
   padding: 5px;
   text-align:left;
   z-index:99;
 }
-#layerInput {
+.layerInput {
   position: absolute;
   top: 80px; width: 100%;
   padding-right: 50px;
   text-align:right;
 }
-#specsInput {
+.specsInput {
   position: absolute;
   top: 0; width: 100%;
   padding-right: 50px;
