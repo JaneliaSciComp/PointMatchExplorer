@@ -4,4 +4,4 @@ npm-debug.log
 dist
 lib
 coverage
-bundle.js
+#bundle.js
