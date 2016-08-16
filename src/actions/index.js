@@ -46,14 +46,14 @@ export function updateMatchCollection(matchCollection){
     }
 }
 
-export function requestData(dataType){
+function requestData(dataType){
   return {
     type: REQUEST_DATA,
     dataType
   }
 }
 
-export function receiveData(dataType, data){
+function receiveData(dataType, data){
   return {
     type: RECEIVE_DATA,
     dataType,
@@ -61,7 +61,7 @@ export function receiveData(dataType, data){
   }
 }
 
-export function invalidateData(dataType) {
+export function invalidateData(dataType){
   return {
     type: INVALIDATE_DATA,
     dataType
