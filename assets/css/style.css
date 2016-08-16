@@ -8,6 +8,7 @@ body {
 .metaDataContainer {
   position: absolute;
   top: 0px; width: 100%;
+  height: 5em;
   padding: 5px;
   text-align:left;
   z-index:99;
@@ -24,7 +25,6 @@ body {
   padding-right: 50px;
   text-align:right;
 }
-
 .gradient {
     width: 175px;
     white-space: nowrap;
