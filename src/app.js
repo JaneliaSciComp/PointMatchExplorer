@@ -1,12 +1,13 @@
 import React, { Component } from 'react'
+import ReactDOM from 'react-dom';
 import {connect} from 'react-redux'
 import {SpecsInput, LayerInput} from './components/userInput'
 import {PMStrengthGradient} from './components/PMStrengthGradient'
 import {MetadataInfo} from './components/MetadataInfo'
 import {fetchDataIfNeeded, updateStartZ, updateEndZ, updateProjectAndPopulateStack, updateStack, updateMatchCollection} from './actions'
+import {getTileData, getProjectStackMatchCollectionList} from './helpers/utils.js'
+import {camera, generateVisualization, onMouseMove, onMouseUp, onMouseDown, disposeThreeScene} from './helpers/utils-three.js'
 import 'whatwg-fetch'
-import 'lodash'
-import 'three'
 import isEmpty from 'lodash/isEmpty'
 
 class App extends Component {
