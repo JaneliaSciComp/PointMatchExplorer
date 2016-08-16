@@ -130,8 +130,11 @@ class App extends Component {
 			}
 		}
 	}
+
+	render() {
 		const {APIData, UserInput, tileData} = this.props
 		const dropdownValues = getProjectStackMatchCollectionList(APIData, UserInput)
+		const PMEComponents = this.generatePMEComponents()
 		return (
 			<div>
 				{dropdownValues &&
@@ -149,9 +152,42 @@ class App extends Component {
 								onChangeEndZ={this.handleChangeEndZ} />
 					</div>
 				}
+				{!isEmpty(this.props.tileData) ? PMEComponents : <div></div>}
 			</div>
 		)
 	}
+
+	generatePMEComponents() {
+		var canvas_node = <canvas ref="PMEcanvas"/>;
+		var pm_connection_strength_gradient;
+		var metadata_display;
+		var selected_metadata_display;
+		var mouseover_metadata_display;
+		var pm_connection_strength_gradient_colors = ['#c33f2e', '#fc9d59', '#fee08b', '#e0f381', '#76c76f', '#3288bd'];
+		//how many steps to generate the gradient in
+		var pm_connection_strength_gradient_steps = 20;
+
+		const {minWeight, maxWeight, mouseoverMetadata, selectedMetadata} = this.props.PMEVariables;
+
+		if (minWeight && maxWeight){
+			pm_connection_strength_gradient = <PMStrengthGradient gradientTitle="Point Match Strength" colorList={pm_connection_strength_gradient_colors} numSteps={pm_connection_strength_gradient_steps} dmin={minWeight} dmax= {maxWeight} />;
+		}
+		if (selectedMetadata){
+			selected_metadata_display = (<div><MetadataInfo kvpairs={selectedMetadata}/><br/></div>);
+		}
+		if (mouseoverMetadata){
+			mouseover_metadata_display = <MetadataInfo kvpairs={mouseoverMetadata}/>;
+		}
+		metadata_display =
+		(
+			<div className="metaDataContainer">
+				{selected_metadata_display}
+				{mouseover_metadata_display}
+			</div>
+		);
+		return <div id="container">{pm_connection_strength_gradient}{metadata_display}{canvas_node}</div>;
+	}
+
 }
 
 const mapStateToProps = function(state) {
