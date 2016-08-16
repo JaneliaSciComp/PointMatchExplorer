@@ -15,7 +15,7 @@ import {
 const dataInitialState = {
 	isFetching: false,
 	didInvalidate: false,
-	json: {}
+	data: {}
 }
 
 const userInputInitialState = {
@@ -24,6 +24,17 @@ const userInputInitialState = {
 	selectedMatchCollection: null,
 	startZ: null,
 	endZ: null
+}
+
+const PMEVariablesInitialState = {
+   minWeight: null,
+   maxWeight: null,
+   mouseoverMetadata: null,
+   selectedMetadata: null,
+   isShiftDown: false,
+   isCtrlDown: false,
+   isMetaDown: false,
+	 rendered: false
 }
 
 function UserInput(state = userInputInitialState, action){
@@ -75,12 +86,12 @@ function getData(state = dataInitialState, action){
 	}
 }
 
-function APIData(state = {}, action) {
+function APIData(state = {}, action){
   switch (action.type) {
     case INVALIDATE_DATA:
 		case RECEIVE_DATA:
     case REQUEST_DATA:
-       return Object.assign({}, state, {
+      return Object.assign({}, state, {
 				 [action.dataType] : getData(state[action.dataType], action)
       })
     default:
@@ -108,7 +119,9 @@ function PMEVariables(state = PMEVariablesInitialState, action){
 
 const pmeApp = combineReducers({
 	UserInput,
-	APIData
+	APIData,
+	tileData,
+	PMEVariables
 })
 
 export default pmeApp
