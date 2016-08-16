@@ -188,6 +188,27 @@ class App extends Component {
 		return <div id="container">{pm_connection_strength_gradient}{metadata_display}{canvas_node}</div>;
 	}
 
+	componentDidUpdate(){
+		const {APIData, UserInput, tileData, PMEVariables} = this.props
+		const {rendered} = PMEVariables;
+		if (!isEmpty(tileData) && !rendered){
+			var canvas = this.refs.PMEcanvas;
+			canvas.addEventListener('resize', function(){
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+				renderer.setSize(window.innerWidth, window.innerHeight);
+			}, false);
+			canvas.addEventListener('mousemove', this.processMouseMove, false);
+			canvas.addEventListener('mousedown', this.processMouseDown, false);
+			canvas.addEventListener('mouseup', this.processMouseUp, false);
+			document.addEventListener('keydown', this.detectKeyDown, false);
+			document.addEventListener('keyup', this.detectKeyUp, false);
+			var updatedPMEVariables = generateVisualization(this.refs.PMEcanvas, tileData);
+			updatedPMEVariables.rendered = true;
+			this.props.updatePMEVariables(updatedPMEVariables);
+		}
+	}
+
 }
 
 const mapStateToProps = function(state) {
