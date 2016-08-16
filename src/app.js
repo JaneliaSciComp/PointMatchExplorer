@@ -124,17 +124,12 @@ class App extends Component {
 }
 
 const mapStateToProps = function(state) {
-  console.log(state)
-	const {APIData} = state
-	const {isFetching, didInvalidate, tileData} = (!isEmpty(APIData)) ? APIData : {
-					isFetching: false,
-					didInvalidate: false,
-					lastUpdated: 0,
-					tileData: {}
-	}
+	const {APIData, UserInput, tileData, PMEVariables} = state
 	return {
-		url: "http://127.0.0.1:5000/getStackResolution",
-		tileData
+		APIData,
+		UserInput,
+		tileData,
+		PMEVariables
 	}
 }
 
@@ -142,6 +137,9 @@ const mapDispatchToProps = function(dispatch) {
 	return {
 		getData: function(dataType) {
 			dispatch(fetchDataIfNeeded(dataType))
+		},
+		invalidateData: function(dataType){
+			dispatch(invalidateData(dataType))
 		},
 		updateStartZ: function(zValue){
 			dispatch(updateStartZ(zValue))
