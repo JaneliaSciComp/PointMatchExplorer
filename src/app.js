@@ -115,6 +115,21 @@ class App extends Component {
 		this.props.getData('MatchCollections')
 		this.props.getData('StackResolution')
 	}
+
+	componentWillReceiveProps(nextProps){
+		const {StackIds, MatchCollections, SectionBounds, TileBounds, SectionData, MatchesWithinGroup, MatchesOutsideGroup} = nextProps.APIData
+		if (SectionData){
+			if(!(SectionData.isFetching)){
+				nextProps.getData("MatchesWithinGroup")
+				nextProps.getData("MatchesOutsideGroup")
+			}
+		}
+		if (SectionBounds && TileBounds && SectionData && MatchesWithinGroup && MatchesOutsideGroup && isEmpty(nextProps.tileData)){
+			if(!(SectionBounds.isFetching) && !(TileBounds.isFetching) && !(SectionData.isFetching) && !(MatchesWithinGroup.isFetching) && !(MatchesOutsideGroup.isFetching)){
+				nextProps.updateTileData(getTileData(nextProps.APIData, nextProps.UserInput))
+			}
+		}
+	}
 		const {APIData, UserInput, tileData} = this.props
 		const dropdownValues = getProjectStackMatchCollectionList(APIData, UserInput)
 		return (
