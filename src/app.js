@@ -18,15 +18,13 @@ class App extends Component {
 		this.handleProjectSelect = this.handleProjectSelect.bind(this)
 		this.handleStackSelect = this.handleStackSelect.bind(this)
 		this.handleMatchCollectionSelect = this.handleMatchCollectionSelect.bind(this)
-	}
-
-	componentWillMount(){
-		//do calls to get project, stack and match collection info
-		this.props.getData('StackResolution')
-		this.props.getData('StackMetadata')
-	}
-
-	componentDidMount() {
+		this.handleRenderClick = this.handleRenderClick.bind(this)
+		this.processMouseMove = this.processMouseMove.bind(this)
+		this.processMouseDown = this.processMouseDown.bind(this)
+		this.processMouseUp = this.processMouseUp.bind(this)
+		this.detectKeyDown = this.detectKeyDown.bind(this)
+		this.detectKeyUp = this.detectKeyUp.bind(this)
+		this.afterMouseUp = this.afterMouseUp.bind(this)
 	}
 
 	handleChangeStartZ(zValue){
@@ -49,20 +47,68 @@ class App extends Component {
 		this.props.updateMatchCollection(matchCollection)
 	}
 
-	render() {
-		const { tileData, isFetching } = this.props
-		console.log(tileData)
-		const placeholderData = {
-			stackIds: [{
-				project: "project1",
-				stack: "stack1"
-			}],
-			matchCollections: [{
-				collectionId: {
-					name: "collection1"
-				}
-			}]
+	handleRenderClick(){
+		const {selectedProject, selectedStack, selectedMatchCollection, startZ, endZ} = this.props.UserInput
+		let readyToRender = (selectedProject!=null && selectedStack!=null && selectedMatchCollection!=null && startZ!=null && endZ!=null )
+		var canvas = this.refs.PMEcanvas;
+		if (canvas){
+			this.props.updatePMEVariables({rendered: false});
+			this.props.updateTileData([]);
+			this.props.invalidateData("SectionBounds")
+			this.props.invalidateData("TileBounds")
+			this.props.invalidateData("SectionData")
+			this.props.invalidateData("MatchesWithinGroup")
+			this.props.invalidateData("MatchesOutsideGroup")
+			canvas.removeEventListener('mousemove', this.processMouseMove, false);
+			canvas.removeEventListener('mousedown', this.processMouseDown, false);
+			canvas.removeEventListener('mouseup', this.processMouseUp, false);
+			document.removeEventListener('keydown', this.detectKeyDown, false);
+			document.removeEventListener('keyup', this.detectKeyUp, false);
+			disposeThreeScene();
 		}
+		if (readyToRender){
+			this.props.getData("SectionBounds")
+			this.props.getData("TileBounds")
+			this.props.getData("SectionData")
+		}
+	}
+
+	processMouseMove(event){
+    var md = onMouseMove(event);
+    this.props.updatePMEVariables({mouseoverMetadata: md});
+  }
+
+  processMouseDown(event){
+    onMouseDown(event);
+  }
+
+  processMouseUp(event){
+    const {isShiftDown, isCtrlDown, isMetaDown} = this.props.PMEVariables;
+    var md = onMouseUp(event, isShiftDown, isCtrlDown, isMetaDown, this.afterMouseUp, this.props.UserInput, this.props.APIData.StackResolution.data.currentVersion);
+    this.props.updatePMEVariables({selectedMetadata: md});
+  }
+
+  detectKeyDown(event){
+    switch(event.key) {
+      case "Shift": this.props.updatePMEVariables({isShiftDown: true}); break;
+      case "Control": this.props.updatePMEVariables({isCtrlDown: true}); break;
+      case "Meta": this.props.updatePMEVariables({isMetaDown: true}); break;
+    }
+  }
+
+  detectKeyUp(event){
+    switch(event.key) {
+      case "Shift": this.props.updatePMEVariables({isShiftDown: false}); break;
+      case "Control": this.props.updatePMEVariables({isCtrlDown: false}); break;
+      case "Meta": this.props.updatePMEVariables({isMetaDown: false}); break;
+    }
+  }
+
+  afterMouseUp(event){
+    this.props.updatePMEVariables({isShiftDown: false});
+    this.props.updatePMEVariables({isCtrlDown: false});
+    this.props.updatePMEVariables({isMetaDown: false});
+  }
 		return (
 			<div>
 				<SpecsInput
