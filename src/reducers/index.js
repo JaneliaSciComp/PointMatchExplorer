@@ -88,6 +88,24 @@ function APIData(state = {}, action) {
   }
 }
 
+function tileData(state = {}, action){
+	switch (action.type) {
+		case UPDATE_TILE_DATA:
+			return action.tileData
+		default:
+			return state
+	}
+}
+
+function PMEVariables(state = PMEVariablesInitialState, action){
+	switch (action.type) {
+		case UPDATE_PME_VARIABLES:
+			return Object.assign({}, state, action.PMEVariables)
+		default:
+			return state
+	}
+}
+
 const pmeApp = combineReducers({
 	UserInput,
 	APIData

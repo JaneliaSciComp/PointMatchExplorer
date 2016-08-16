@@ -4,7 +4,7 @@ import {connect} from 'react-redux'
 import {SpecsInput, LayerInput} from './components/userInput'
 import {PMStrengthGradient} from './components/PMStrengthGradient'
 import {MetadataInfo} from './components/MetadataInfo'
-import {fetchDataIfNeeded, updateStartZ, updateEndZ, updateProjectAndPopulateStack, updateStack, updateMatchCollection} from './actions'
+import {fetchDataIfNeeded, invalidateData, updateStartZ, updateEndZ, updateProject, updateStack, updateMatchCollection, updateTileData, updatePMEVariables} from './actions'
 import {getTileData, getProjectStackMatchCollectionList} from './helpers/utils.js'
 import {camera, generateVisualization, onMouseMove, onMouseUp, onMouseDown, disposeThreeScene} from './helpers/utils-three.js'
 import 'whatwg-fetch'
@@ -112,6 +112,12 @@ const mapDispatchToProps = function(dispatch) {
 		updateMatchCollection: function(matchCollection){
 			dispatch(updateMatchCollection(matchCollection))
 		},
+		updateTileData: function(tileData){
+			dispatch(updateTileData(tileData))
+		},
+		updatePMEVariables: function(PMEVariables){
+			dispatch(updatePMEVariables(PMEVariables))
+		}
 	}
 }
 

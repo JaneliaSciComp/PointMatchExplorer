@@ -8,6 +8,8 @@ export const UPDATE_END_Z = 'UPDATE_END_Z'
 export const UPDATE_PROJECT = 'UPDATE_PROJECT'
 export const UPDATE_STACK = 'UPDATE_STACK'
 export const UPDATE_MATCH_COLLECTION = 'UPDATE_MATCH_COLLECTION'
+export const UPDATE_TILE_DATA = 'UPDATE_TILE_DATA'
+export const UPDATE_PME_VARIABLES = 'UPDATE_PME_VARIABLES'
 
 export function updateStartZ(zValue){
   return {
@@ -63,6 +65,20 @@ export function invalidateData(dataType) {
   return {
     type: INVALIDATE_DATA,
     dataType
+  }
+}
+
+export function updateTileData(tileData){
+  return {
+    type: UPDATE_TILE_DATA,
+    tileData
+  }
+}
+
+export function updatePMEVariables(PMEVariables){
+  return {
+    type: UPDATE_PME_VARIABLES,
+    PMEVariables
   }
 }
 
