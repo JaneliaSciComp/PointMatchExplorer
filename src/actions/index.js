@@ -83,11 +83,62 @@ export function updatePMEVariables(PMEVariables){
 }
 
 function fetchData(dataType){
-  return dispatch => {
-    dispatch(requestData(dataType))
-    return fetch(mapDataTypeToURL(dataType))
-      .then(response => response.json())
-      .then(json => dispatch(receiveData(dataType, json)))
+  return (dispatch, getState) => {
+    dispatch(requestData(dataType));
+    const state = getState();
+    const {startZ, endZ} = state.UserInput;
+    if (dataType == "SectionBounds" || dataType == "TileBounds"){
+      let urls = [];
+      //get a list of string URLs
+      for (var z = parseInt(startZ); z <= parseInt(endZ); z++){
+        urls.push(mapDataTypeToURL(getState(), dataType, {z:z}));
+      }
+      const promises = urls.map(url => fetch(url).then(response => response.json()));
+      return Promise.all(promises)
+      .then(responses  => {
+        //maps Z layer to the bounds
+        let allBounds = {};
+        for (var i = 0; i < responses.length; i++){
+          //hacky way of getting the Z for the bound
+          allBounds[parseInt(startZ)+i] = responses[i];
+        }
+        return allBounds;
+      })
+      .then(allBounds => dispatch(receiveData(dataType, allBounds)))
+    }else if(dataType == "MatchesWithinGroup" || dataType == "MatchesOutsideGroup"){
+      let urls = [];
+      let urlIndexToZ = {};
+      let indexCount = 0;
+      //get a list of string URLs
+      for (var z = parseInt(startZ); z <= parseInt(endZ); z++){
+        const sections = getSectionsForZ(z, state.APIData.SectionData.data);
+        _.forEach(sections, function(section){
+          urls.push(mapDataTypeToURL(getState(), dataType, {groupId: section}));
+          urlIndexToZ[indexCount] = z;
+          indexCount++;
+        })
+      }
+      var promises = urls.map(url => fetch(url).then(response => response.json()));
+      return Promise.all(promises)
+      .then(responses  => {
+        let matches = {};
+        //the return value maintains the order of the original iterable
+        //urlIndexToZ is used to determine what Z corresponds to each response
+        for (var i = 0; i < responses.length; i++){
+          const z = urlIndexToZ[i];
+          if (!matches[z]){
+            matches[z] = [];
+          }
+          matches[z] = matches[z].concat(responses[i]);
+        }
+        return matches;
+      })
+      .then(matches => dispatch(receiveData(dataType, matches)))
+    }else{
+      return fetch(mapDataTypeToURL(getState(), dataType))
+        .then(response => response.json())
+        .then(json => dispatch(receiveData(dataType, json)))
+    }
   }
 }
 
