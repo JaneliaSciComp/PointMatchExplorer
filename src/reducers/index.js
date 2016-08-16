@@ -1,5 +1,16 @@
 import { combineReducers } from 'redux'
-import {INVALIDATE_DATA, REQUEST_DATA, RECEIVE_DATA, UPDATE_START_Z, UPDATE_END_Z, UPDATE_PROJECT_AND_POPULATE_STACK, UPDATE_STACK, UPDATE_MATCH_COLLECTION} from '../actions'
+import {
+	INVALIDATE_DATA,
+	REQUEST_DATA,
+	RECEIVE_DATA,
+	UPDATE_START_Z,
+	UPDATE_END_Z,
+	UPDATE_PROJECT,
+	UPDATE_STACK,
+	UPDATE_MATCH_COLLECTION,
+	UPDATE_TILE_DATA,
+	UPDATE_PME_VARIABLES
+} from '../actions'
 
 const dataInitialState = {
 	isFetching: false,
@@ -25,7 +36,7 @@ function UserInput(state = userInputInitialState, action){
 			return Object.assign({}, state, {
 	        endZ: action.zValue
 	    })
-		case UPDATE_PROJECT_AND_POPULATE_STACK:
+		case UPDATE_PROJECT:
 			return Object.assign({}, state, {
 					selectedProject: action.project
 			})

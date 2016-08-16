@@ -37,7 +37,7 @@ class App extends Component {
 	}
 
 	handleProjectSelect(project){
-		this.props.updateProjectAndPopulateStack(project)
+		this.props.updateProject(project)
 	}
 
 	handleStackSelect(stack){
@@ -102,8 +102,8 @@ const mapDispatchToProps = function(dispatch) {
 		updateEndZ: function(zValue){
 			dispatch(updateEndZ(zValue))
 		},
-		updateProjectAndPopulateStack: function(project){
-			dispatch(updateProjectAndPopulateStack(project))
+		updateProject: function(project){
+			dispatch(updateProject(project))
 		},
 		updateStack: function(stack){
 			dispatch(updateStack(stack))

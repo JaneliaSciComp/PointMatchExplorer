@@ -5,7 +5,7 @@ export const REQUEST_DATA = 'REQUEST_DATA'
 export const RECEIVE_DATA = 'RECEIVE_DATA'
 export const UPDATE_START_Z = 'UPDATE_START_Z'
 export const UPDATE_END_Z = 'UPDATE_END_Z'
-export const UPDATE_PROJECT_AND_POPULATE_STACK = 'UPDATE_PROJECT_AND_POPULATE_STACK'
+export const UPDATE_PROJECT = 'UPDATE_PROJECT'
 export const UPDATE_STACK = 'UPDATE_STACK'
 export const UPDATE_MATCH_COLLECTION = 'UPDATE_MATCH_COLLECTION'
 
@@ -23,9 +23,9 @@ export function updateEndZ(zValue){
     }
 }
 
-export function updateProjectAndPopulateStack(project){
+export function updateProject(project){
   return {
-      type: UPDATE_PROJECT_AND_POPULATE_STACK,
+      type: UPDATE_PROJECT,
       project
     }
 }
