@@ -1,5 +1,5 @@
 {
-  "name": "re-pme",
+  "name": "pme",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -26,6 +26,7 @@
     "redux": "^3.5.2",
     "redux-logger": "^2.6.1",
     "redux-thunk": "^2.1.0",
+    "three-trackballcontrols": "0.0.5",
     "webpack": "^1.13.1"
   }
 }
