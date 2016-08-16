@@ -91,20 +91,28 @@ function fetchData(dataType){
   }
 }
 
-function mapDataTypeToURL(dataType){
-  const BASE_URL = 'http://tem-services.int.janelia.org:8080/render-ws/v1'
+function mapDataTypeToURL(state, dataType, params){
+  const BASE_URL = 'http://renderer.int.janelia.org:8080/render-ws/v1/owner/flyTEM'
+  const {selectedProject, selectedStack, selectedMatchCollection} = state.UserInput
   switch(dataType) {
     case "StackIds":
+      return `${BASE_URL}/stackIds`
     case "MatchCollections":
+      return `${BASE_URL}/matchCollections`
     case "StackResolution":
-      return "http://127.0.0.1:5000/getStackResolution"
+      return `${BASE_URL}/project/FAFB00/stack/v12_align`
     case "StackMetadata":
-      return "http://127.0.0.1:5000/getStackMetadata"
+      return `${BASE_URL}/project/${selectedProject}/stack/${selectedStack}`
     case "SectionData":
+      return `${BASE_URL}/project/${selectedProject}/stack/${selectedStack}/sectionData`
     case "TileBounds":
+      return `${BASE_URL}/project/${selectedProject}/stack/${selectedStack}/z/${params.z}/tileBounds`
     case "SectionBounds":
+      return `${BASE_URL}/project/${selectedProject}/stack/${selectedStack}/z/${params.z}/bounds`
     case "MatchesWithinGroup":
+      return `${BASE_URL}/matchCollection/${selectedMatchCollection}/group/${params.groupId}/matchesWithinGroup`
     case "MatchesOutsideGroup":
+      return `${BASE_URL}/matchCollection/${selectedMatchCollection}/group/${params.groupId}/matchesOutsideGroup`
     default:
       return null
   }
