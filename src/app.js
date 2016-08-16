@@ -109,15 +109,31 @@ class App extends Component {
     this.props.updatePMEVariables({isCtrlDown: false});
     this.props.updatePMEVariables({isMetaDown: false});
   }
+
+	componentWillMount(){
+		this.props.getData('StackIds')
+		this.props.getData('MatchCollections')
+		this.props.getData('StackResolution')
+	}
+		const {APIData, UserInput, tileData} = this.props
+		const dropdownValues = getProjectStackMatchCollectionList(APIData, UserInput)
 		return (
 			<div>
-				<SpecsInput
-					stackIds={placeholderData.stackIds}
-					matchCollections={placeholderData.matchCollections}
-					onProjectSelect={this.handleProjectSelect}
-					onStackSelect={this.handleStackSelect}
-					onMatchCollectionSelect={this.handleMatchCollectionSelect}/>
-				<LayerInput onChangeStartZ={this.handleChangeStartZ} onChangeEndZ={this.handleChangeEndZ} />
+				{dropdownValues &&
+					<div>
+							<SpecsInput
+								projects={dropdownValues.projects}
+								stacks={dropdownValues.stacks}
+								match_collections={dropdownValues.match_collections}
+								onProjectSelect={this.handleProjectSelect}
+								onStackSelect={this.handleStackSelect}
+								onMatchCollectionSelect={this.handleMatchCollectionSelect}/>
+							<LayerInput
+								onRenderClick={this.handleRenderClick}
+								onChangeStartZ={this.handleChangeStartZ}
+								onChangeEndZ={this.handleChangeEndZ} />
+					</div>
+				}
 			</div>
 		)
 	}
