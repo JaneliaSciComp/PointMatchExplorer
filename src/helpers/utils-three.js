@@ -1,249 +1,10 @@
-window.SpecsInput = React.createClass({
-  render: function(){
-    var projects = _.uniq(_.map(this.props.stackIds, function(item){
-      return item.project;
-    }));
-    projects.sort();
-    var stacks = _.uniq(_.map(this.props.stackIds, function(item){
-      return item.stack;
-    }));
-    stacks.sort();
-    var match_collections = _.map(this.props.matchCollections, function(collection){
-      return collection.collectionId.name;
-    });
-    match_collections.sort();
-    return (
-      <div>
-        <Dropdown dropdownId = "projectselect" dropdownName="Select Project" values={projects}/>
-        <br/>
-        <Dropdown dropdownId = "stackselect" dropdownName="Select Stack" values={stacks}/>
-        <br/>
-        <Dropdown dropdownId = "matchcollectionselect" dropdownName="Select Match Collection" values={match_collections}/>
-      </div>
-    );
-  }
-});
+import THREE from 'three'
+import TrackballControls from 'three-trackballcontrols'
+import 'lodash'
+import chroma from 'chroma-js'
 
-var Dropdown = React.createClass({
-  render: function(){
-    return (
-        <select id={this.props.dropdownId} ref="userInput" defaultValue="" required>
-          <option value="" disabled>{this.props.dropdownName}</option>
-          {
-            this.props.values.map(function(value) {
-              return <option key={value}
-                value={value}>{value}</option>;
-            })
-          }
-        </select>
-    );
-  }
-});
-
-// window.ProjectDropdown = React.createClass({
-//   getInitialState: function() {
-//     return {
-//      'project': null
-//     };
-//   },
-//   handleChange: function(event) {
-//    this.setState({project: "testproj"});
-//   },
-//   render: function(){
-//     return (
-//       <form>
-//         <Dropdown onChange={this.handleChange} dropdownName={this.props.dropdownName} values = {this.props.values}/>
-//       </form>
-//     );
-//   }
-// });
-
-
-var PMStrengthGradient = React.createClass({
-  generateGradient : function(){
-    var PMConnectionStrengthChromaScale = chroma.scale(this.props.colorList).domain([this.props.dmin, this.props.dmax])
-    return PMConnectionStrengthChromaScale;
-  },
-  render: function(){
-    return (
-      <div className = "gradient">
-        <PMStrengthGradientTitle gradientTitle={this.props.gradientTitle}/>
-        <PMStrengthGradientBar gradient={this.generateGradient()} numSteps={this.props.numSteps} dmin={this.props.dmin} dmax={this.props.dmax}/>
-        <PMStrengthGradientDomainLabels dmin={this.props.dmin} dmax={this.props.dmax}/>
-      </div>
-    );
-  }
-});
-
-var PMStrengthGradientTitle = React.createClass({
-  render: function(){
-    return <span className="label"> {this.props.gradientTitle} </span>;
-  }
-});
-
-var PMStrengthGradientBar = React.createClass({
-  render: function(){
-    var steps = [];
-    var gradient = this.props.gradient;
-    for (var i = 0; i < this.props.numSteps; i++){
-      var bgColor = gradient(this.props.dmin + ((i/this.props.numSteps) * (this.props.dmax - this.props.dmin)))
-      steps.push(<PMStrengthGradientStep key={i} stepColor={bgColor}/>)
-    }
-    return <div>{steps}</div>;
-  }
-});
-
-var PMStrengthGradientStep = React.createClass({
-  render: function(){
-    var stepStyle = {
-      backgroundColor: this.props.stepColor
-    };
-    return <span className="grad-step" style={stepStyle}></span>;
-  }
-});
-
-var PMStrengthGradientDomainLabels = React.createClass({
-  render: function(){
-    var dmid = 0.5 * (this.props.dmin + this.props.dmax);
-    return (
-      <div>
-        <span className="domain-min"> {this.props.dmin} </span>
-        <span className="domain-med"> {dmid} </span>
-        <span className="domain-max"> {this.props.dmax} </span>
-      </div>
-    );
-  }
-});
-
-var MetadataInfo = React.createClass({
-  render: function(){
-    return <MetadataKVPairs kvpairs={this.props.kvpairs}/>
-  }
-});
-
-var MetadataKVPairs = React.createClass({
-  render: function(){
-    var kvpairs = [];
-    for (var i = 0; i < this.props.kvpairs.length; i++){
-      kvpairs.push(<KVPair key={i} keyname={this.props.kvpairs[i].keyname} valuename={this.props.kvpairs[i].valuename}/>)
-    }
-    return <div>{kvpairs}</div>;
-  }
-});
-
-var KVPair = React.createClass({
-  render: function(){
-    return <div> {this.props.keyname + ": " + this.props.valuename} </div>
-  }
-});
-
-window.PMEReact = React.createClass({
-  getInitialState: function() {
-    return {
-     'minWeight': null,
-     'maxWeight': null,
-     'mouseoverMetadata': null,
-     'selectedMetadata': null,
-     'isShiftDown': false,
-     'isCtrlDown': false,
-     'isMetaDown': false
-    };
-  },
-
-  render: function() {
-    var canvas_node = <canvas ref="PMEcanvas"/>;
-    var pm_connection_strength_gradient;
-    var metadata_display;
-    var selected_metadata_display;
-    var mouseover_metadata_display;
-    var pm_connection_strength_gradient_colors = ['#c33f2e', '#fc9d59', '#fee08b', '#e0f381', '#76c76f', '#3288bd'];
-    //how many steps to generate the gradient in
-    var pm_connection_strength_gradient_steps = 20;
-
-    if (this.state.minWeight && this.state.maxWeight){
-      pm_connection_strength_gradient = <PMStrengthGradient gradientTitle="Point Match Strength" colorList={pm_connection_strength_gradient_colors} numSteps={pm_connection_strength_gradient_steps} dmin={this.state.minWeight} dmax= {this.state.maxWeight} />;
-    }
-    if (this.state.selectedMetadata){
-      selected_metadata_display = (<div><MetadataInfo id="selectedMetadata" kvpairs={this.state.selectedMetadata}/><br/></div>);
-    }
-    if (this.state.mouseoverMetadata){
-      mouseover_metadata_display = <MetadataInfo id="mouseoverMetadata" kvpairs={this.state.mouseoverMetadata}/>;
-    }
-    metadata_display =
-    (
-      <div id="metaDataContainer">
-        {selected_metadata_display}
-        {mouseover_metadata_display}
-      </div>
-    );
-    return <div>{pm_connection_strength_gradient}{metadata_display}{canvas_node}</div>;
-  },
-
-  componentDidMount: function() {
-    var canvas = this.refs.PMEcanvas;
-    canvas.addEventListener('resize', function(){
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    }, false);
-    canvas.addEventListener('mousemove', this.processMouseMove, false);
-    canvas.addEventListener('mousedown', this.processMouseDown, false);
-    canvas.addEventListener('mouseup', this.processMouseUp, false);
-    document.addEventListener('keydown', this.detectKeyDown, false);
-    document.addEventListener('keyup', this.detectKeyUp, false);
-    var updatedStateValues = generateVisualization(this.refs.PMEcanvas, this.props.tileData);
-    this.setState(updatedStateValues);
-  },
-
-  componentWillUnmount: function(){
-    var canvas = this.refs.PMEcanvas;
-    canvas.removeEventListener('mousemove', this.processMouseMove, false);
-    canvas.removeEventListener('mousedown', this.processMouseDown, false);
-    canvas.removeEventListener('mouseup', this.processMouseUp, false);
-    document.removeEventListener('keydown', this.detectKeyDown, false);
-    document.removeEventListener('keyup', this.detectKeyUp, false);
-    disposeThreeScene();
-  },
-
-  processMouseMove: function(event){
-    var md = onMouseMove(event);
-    this.setState({mouseoverMetadata: md});
-  },
-
-  processMouseDown: function(event){
-    onMouseDown(event);
-  },
-
-  processMouseUp: function(event){
-    var md = onMouseUp(event, this.state.isShiftDown, this.state.isCtrlDown, this.state.isMetaDown, this.afterMouseUp);
-    this.setState({selectedMetadata: md});
-  },
-
-  detectKeyDown: function(event){
-    switch(event.key) {
-      case "Shift": this.setState({isShiftDown: true}); break;
-      case "Control": this.setState({isCtrlDown: true}); break;
-      case "Meta": this.setState({isMetaDown: true}); break;
-    }
-  },
-
-  detectKeyUp: function(event){
-    switch(event.key) {
-      case "Shift": this.setState({isShiftDown: false}); break;
-      case "Control": this.setState({isCtrlDown: false}); break;
-      case "Meta": this.setState({isMetaDown: false}); break;
-    }
-  },
-
-  afterMouseUp: function(event){
-    this.setState({isShiftDown: false});
-    this.setState({isCtrlDown: false});
-    this.setState({isMetaDown: false});
-  }
-
-});
-
-var camera, scene, renderer, controls;
+export var camera;
+var scene, renderer, controls;
 var intersected, selected;
 
 var mouse, raycaster;
@@ -299,7 +60,7 @@ var control_zoom_speed = 0.5;
 var control_min_distance = 0;
 var control_max_distance = 5000000;
 
-var generateVisualization = function(canvas, tileData){
+export const generateVisualization = function(canvas, tileData){
   scene = new THREE.Scene();
   mouse = new THREE.Vector2();
   raycaster = new THREE.Raycaster();
@@ -313,7 +74,7 @@ var generateVisualization = function(canvas, tileData){
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(window.innerWidth, window.innerHeight);
 
-  controls = new THREE.TrackballControls(camera, renderer.domElement);
+  controls = new TrackballControls(camera, renderer.domElement);
   controls.rotateSpeed = control_rotate_speed;
   controls.zoomSpeed = control_zoom_speed;
   controls.minDistance = control_min_distance;
@@ -325,34 +86,17 @@ var generateVisualization = function(canvas, tileData){
   //get a list of colors representing the interpolated gradient for tiles and connection strength
   tile_gradient_chroma_scale = chroma.scale(tile_gradient_colors).colors(tileData.length);
 
-  var start = new Date().getTime();
-  filterPointMatches(tileData);
   var weightRange = calculateWeightRange(tileData);
   pm_connection_strength_chroma_scale = chroma.scale(pm_connection_strength_gradient_colors).domain([minWeight, maxWeight]);
 
-  start = new Date().getTime();
-  console.log("started rendering");
   drawTiles(tileData);
   drawPMLines(tileData);
-  console.log("Render time: " + (new Date().getTime() - start)/1000);
   animate();
 
   return {
     minWeight: weightRange.minWeight,
     maxWeight: weightRange.maxWeight
   };
-};
-
-//remove point matches of tiles that are not drawn
-var filterPointMatches = function(tileData){
-  _.forEach(tileData, function(layer){
-    _.remove(layer.pointMatches.matchesWithinGroup, function(match){
-      return getTileCoordinates(match.pId, tileData) === undefined || getTileCoordinates(match.qId, tileData) === undefined;
-    });
-    _.remove(layer.pointMatches.matchesOutsideGroup, function(match){
-      return getTileCoordinates(match.pId, tileData) === undefined || getTileCoordinates(match.qId, tileData) === undefined;
-    });
-  });
 };
 
 //checks if tile exists, and if so, return the tile coordinate information
@@ -542,7 +286,7 @@ var getRaycastIntersections = function(event){
   return raycaster.intersectObjects([merged_tiles], true);
 };
 
-var onMouseMove = function(event) {
+export const onMouseMove = function(event) {
   var metadataValues;
   event.preventDefault();
   var intersections = getRaycastIntersections(event);
@@ -566,7 +310,7 @@ var onMouseMove = function(event) {
   return metadataValues;
 };
 
-var onMouseDown = function(event){
+export const onMouseDown = function(event){
   event.preventDefault();
   var intersections = getRaycastIntersections(event);
   if (intersections.length > 0) {
@@ -578,7 +322,7 @@ var onMouseDown = function(event){
   }
 };
 
-var onMouseUp = function(event, isShiftDown, isCtrlDown, isMetaDown, afterMouseUp) {
+export const onMouseUp = function(event, isShiftDown, isCtrlDown, isMetaDown, afterMouseUp, userInput, stackResolution) {
   var metadataValues;
   event.preventDefault();
   var intersections = getRaycastIntersections(event);
@@ -598,10 +342,10 @@ var onMouseUp = function(event, isShiftDown, isCtrlDown, isMetaDown, afterMouseU
       }
       selected = upobj;
       if (isCtrlDown){
-        openTileImageWithNeighbors(selected.faceIndex);
+        openTileImageWithNeighbors(selected.faceIndex, userInput);
       }
       if (isMetaDown){
-        openStackInCatmaid(selected.faceIndex);
+        openStackInCatmaid(selected.faceIndex, userInput, stackResolution);
       }
       //highlight new selected tile
       //can also be downobj since they are the same
@@ -627,29 +371,26 @@ var onMouseUp = function(event, isShiftDown, isCtrlDown, isMetaDown, afterMouseU
   return metadataValues;
 };
 
-var openTileImageWithNeighbors = function(faceIndex){
+var openTileImageWithNeighbors = function(faceIndex, userInput){
   var url = "http://tem-services.int.janelia.org:8080/render-ws/v1/owner/flyTEM";
-  url += "/project/" + $("#projectselect").val();
-  url += "/stack/" + $("#stackselect").val();
+  url += "/project/" + userInput.selectedProject;
+  url += "/stack/" + userInput.selectedStack;
   url += "/tile/" + faceIndexToTileInfo[faceIndex].tileId;
   url += "/withNeighbors/jpeg-image?scale=0.5&filter=true";
   window.open(url);
 };
 
-var openStackInCatmaid = function(faceIndex){
+var openStackInCatmaid = function(faceIndex, userInput, stackResolution){
   var tileInfo = faceIndexToTileInfo[faceIndex];
-  $.getJSON('getStackMetadata', function(data) {
-    var stackMetadata = data.stackMetadata.currentVersion;
-    var url = "http://renderer-catmaid:8000/?";
-    url += "pid=" + $("#projectselect").val();
-    url += "&zp=" + tileInfo.tileZ*stackMetadata.stackResolutionZ;
-    url += "&yp=" + (tileInfo.minY+tileInfo.maxY)/2*stackMetadata.stackResolutionY;
-    url += "&xp=" + (tileInfo.minX+tileInfo.maxX)/2*stackMetadata.stackResolutionX;
-    url += "&tool=navigator";
-    url += "&sid0=" + $("#stackselect").val();
-    url += "&s0=1.5";
-    window.open(url);
-  });
+  var url = "http://renderer-catmaid:8000/?";
+  url += "pid=" + userInput.selectedProject;
+  url += "&zp=" + tileInfo.tileZ*stackResolution.stackResolutionZ;
+  url += "&yp=" + (tileInfo.minY+tileInfo.maxY)/2*stackResolution.stackResolutionY;
+  url += "&xp=" + (tileInfo.minX+tileInfo.maxX)/2*stackResolution.stackResolutionX;
+  url += "&tool=navigator";
+  url += "&sid0=" + userInput.selectedStack;
+  url += "&s0=1.5";
+  window.open(url);
 };
 
 var highlight = function(faceIndex, isSelected, isShiftDown){
@@ -821,14 +562,14 @@ var getSelectedMetadata = function(faceIndex, isShiftDown){
   return md;
 };
 
-var disposeThreeScene = function(){
+export const disposeThreeScene = function(){
   function disposeMesh(mesh){
     mesh.geometry.dispose();
     mesh.material.dispose();
   }
-  function empty(elem){
-    while (elem.lastChild) elem.removeChild(elem.lastChild);
-  }
+  // function empty(elem){
+  //   while (elem.lastChild) elem.removeChild(elem.lastChild);
+  // }
   cancelAnimationFrame(animateId);
 
   disposeMesh(merged_tiles);
@@ -844,5 +585,5 @@ var disposeThreeScene = function(){
   scene = null;
   controls = null;
 
-  empty(document.getElementById('container'));
+  // empty(document.getElementById('container'));
 };
