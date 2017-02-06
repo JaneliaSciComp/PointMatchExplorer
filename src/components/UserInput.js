@@ -3,11 +3,11 @@ import React from 'react';
 export const SpecsInput = (props) => {
   return (
     <div className = "specsInput">
-      <Dropdown className = "specsInput" dropdownName="Select Project" onChange={props.onProjectSelect} values={props.projects}/>
+      <Dropdown className = "specsInput" dropdownName="Select Project" onChange={props.onProjectSelect} values={props.projects} value={props.selectedProject}/>
       <br/>
-      <Dropdown className = "specsInput" dropdownName="Select Stack" onChange={props.onStackSelect} values={props.stacks}/>
+      <Dropdown className = "specsInput" dropdownName="Select Stack" onChange={props.onStackSelect} values={props.stacks} value={props.selectedStack}/>
       <br/>
-      <Dropdown className = "specsInput" dropdownName="Select Match Collection" onChange={props.onMatchCollectionSelect} values={props.match_collections}/>
+      <Dropdown className = "specsInput" dropdownName="Select Match Collection" onChange={props.onMatchCollectionSelect} values={props.match_collections} value={props.selectedMatchCollection}/>
     </div>
   );
 }
@@ -26,7 +26,7 @@ export const LayerInput = (props) => {
 
 const Dropdown = (props) => {
   return (
-      <select id={props.dropdownId} defaultValue="" required onChange={e => props.onChange(e.target.value)}>
+      <select id={props.dropdownId} required onChange={e => props.onChange(e.target.value)} value={props.value}>
         <option value="" disabled>{props.dropdownName}</option>
         {
           props.values.map(value =>

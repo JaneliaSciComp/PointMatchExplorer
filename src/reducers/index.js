@@ -19,9 +19,9 @@ const dataInitialState = {
 }
 
 const userInputInitialState = {
-	selectedProject: null,
-	selectedStack: null,
-	selectedMatchCollection: null,
+	selectedProject: 'FAFB00',
+	selectedStack: 'v12_acquire_merged',
+	selectedMatchCollection: 'FAFB_pm_2',
 	startZ: null,
 	endZ: null
 }

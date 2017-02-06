@@ -145,7 +145,10 @@ class App extends Component {
 								match_collections={dropdownValues.match_collections}
 								onProjectSelect={this.handleProjectSelect}
 								onStackSelect={this.handleStackSelect}
-								onMatchCollectionSelect={this.handleMatchCollectionSelect}/>
+								onMatchCollectionSelect={this.handleMatchCollectionSelect}
+								selectedProject={UserInput.selectedProject}
+								selectedStack={UserInput.selectedStack}
+								selectedMatchCollection={UserInput.selectedMatchCollection}/>
 							<LayerInput
 								onRenderClick={this.handleRenderClick}
 								onChangeStartZ={this.handleChangeStartZ}
