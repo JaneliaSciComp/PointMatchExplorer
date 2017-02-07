@@ -155,6 +155,7 @@ var drawTiles = function(tileData){
       //making this negative orients the layer properly
       c.yPos = -position_scale * c.minYtranslated;
       c.zPos = z_offset;
+      c.PMList = [];
 
       //creating geometries and drawing the tile
       //the merged tiles are what are drawn on the canvas
@@ -496,6 +497,7 @@ var dehighlight = function(faceIndex, isSelected){
 
 var getMouseoverMetadata = function(faceIndex){
   var tile = faceIndexToTileInfo[faceIndex];
+
   var md = [
     {
       keyname: "Tile Z",

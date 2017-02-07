@@ -15,9 +15,11 @@ import {
 const dataInitialState = {
 	isFetching: false,
 	didInvalidate: false,
+	Fetched: false,
 	data: {}
 }
 
+//TODO: hook up to query params
 const userInputInitialState = {
 	selectedProject: 'FAFB00',
 	selectedStack: 'v12_acquire_merged',
@@ -68,17 +70,20 @@ function getData(state = dataInitialState, action){
 	switch (action.type) {
 		case INVALIDATE_DATA:
 			return Object.assign({}, state, {
-					didInvalidate: true
+					didInvalidate: true,
+					Fetched: false,
 				})
 		case REQUEST_DATA:
 			 return Object.assign({}, state, {
 				isFetching: true,
-				didInvalidate: false
+				didInvalidate: false,
+				Fetched: false
 			})
 		case RECEIVE_DATA:
 			return Object.assign({}, state, {
 				isFetching: false,
 				didInvalidate: false,
+				Fetched: true,
 				data: action.data
 			})
 		default:

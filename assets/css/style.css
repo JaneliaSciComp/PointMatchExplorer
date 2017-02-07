@@ -7,7 +7,7 @@ body {
 }
 .metaDataContainer {
   position: absolute;
-  top: 0px; width: 100%;
+  top: 0px; width: 50%;
   height: 5em;
   padding: 5px;
   text-align:left;

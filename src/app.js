@@ -119,13 +119,14 @@ class App extends Component {
 	componentWillReceiveProps(nextProps){
 		const {StackIds, MatchCollections, SectionBounds, TileBounds, SectionData, MatchesWithinGroup, MatchesOutsideGroup} = nextProps.APIData
 		if (SectionData){
-			if(!(SectionData.isFetching)){
+			if(SectionData.Fetched){
 				nextProps.getData("MatchesWithinGroup")
 				nextProps.getData("MatchesOutsideGroup")
 			}
 		}
 		if (SectionBounds && TileBounds && SectionData && MatchesWithinGroup && MatchesOutsideGroup && isEmpty(nextProps.tileData)){
-			if(!(SectionBounds.isFetching) && !(TileBounds.isFetching) && !(SectionData.isFetching) && !(MatchesWithinGroup.isFetching) && !(MatchesOutsideGroup.isFetching)){
+			if(SectionBounds.Fetched && TileBounds.Fetched && SectionData.Fetched && 
+			MatchesWithinGroup.Fetched && MatchesOutsideGroup.Fetched){
 				nextProps.updateTileData(getTileData(nextProps.APIData, nextProps.UserInput))
 			}
 		}

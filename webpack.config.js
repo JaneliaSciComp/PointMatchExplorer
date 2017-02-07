@@ -24,4 +24,13 @@ module.exports = {
       }
     ]
   },
+  plugins: [
+          function() {
+              //show timestamp before compiling
+              this.plugin('watch-run', function(watching, callback) {
+                  console.log('Begin compile at ' + new Date());
+                  callback();
+              })
+          }
+  ],
 };
