@@ -5,13 +5,27 @@ PME utilizes React/Redux for the front-end and  Three.js to render the visualiza
 
 To build
 ---------
-install npm
-install webpack globally
-clone the repository
-cd into the root of the respository
 
-    >npm install
-    >webpack
+1. install npm (only first time )
+2. clone the repository (only first time)
+3. cd into the root of the respository
+4. run the following:
+
+```
+    npm install # only needed initially or if dependencies change.
+    npm run dist
+```
+
+To Develop
+----------
+Repeat build process, but run the following instead of ```npm run dist```:
+
+```
+    npm run devserver
+```
+
+The app is now available at the specified address. Webpack will watch for changes
+and recompile the bundle, so simply refresh your browser after updating the code.
 
 Functionality
 --------------
