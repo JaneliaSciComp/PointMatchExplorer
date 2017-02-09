@@ -4,8 +4,10 @@ import {connect} from 'react-redux'
 import {SpecsInput, LayerInput} from './components/userInput'
 import {PMStrengthGradient} from './components/PMStrengthGradient'
 import {MetadataInfo} from './components/MetadataInfo'
-import {fetchDataIfNeeded, invalidateData, updateStartZ, updateEndZ, updateProject, updateStack, updateMatchCollection, updateTileData, updatePMEVariables} from './actions'
-import {getTileData, getProjectStackMatchCollectionList} from './helpers/utils.js'
+import {fetchDataIfNeeded, invalidateData, updateStartZ, updateEndZ, updateProject, updateStack,
+  updateMatchCollection, updateStackOwner, updateMatchOwner, updateTileData, updatePMEVariables,
+  resetStackData, resetMatchData} from './actions'
+import {getTileData, getUserInputSelectLists} from './helpers/utils.js'
 import {camera, generateVisualization, onMouseMove, onMouseUp, onMouseDown, disposeThreeScene} from './helpers/utils-three.js'
 import 'whatwg-fetch'
 import isEmpty from 'lodash/isEmpty'
@@ -18,6 +20,8 @@ class App extends Component {
 		this.handleProjectSelect = this.handleProjectSelect.bind(this)
 		this.handleStackSelect = this.handleStackSelect.bind(this)
 		this.handleMatchCollectionSelect = this.handleMatchCollectionSelect.bind(this)
+		this.handleStackOwnerSelect = this.handleStackOwnerSelect.bind(this)
+		this.handleMatchOwnerSelect = this.handleMatchOwnerSelect.bind(this)
 		this.handleRenderClick = this.handleRenderClick.bind(this)
 		this.processMouseMove = this.processMouseMove.bind(this)
 		this.processMouseDown = this.processMouseDown.bind(this)
@@ -45,6 +49,16 @@ class App extends Component {
 
 	handleMatchCollectionSelect(matchCollection){
 		this.props.updateMatchCollection(matchCollection)
+	}
+
+	handleStackOwnerSelect(stackOwner){
+		this.props.resetStackData()
+		this.props.updateStackOwner(stackOwner)
+	}
+
+	handleMatchOwnerSelect(matchOwner){
+		this.props.resetMatchData()
+		this.props.updateMatchOwner(matchOwner)
 	}
 
 	handleRenderClick(){
@@ -111,30 +125,41 @@ class App extends Component {
   }
 
 	componentWillMount(){
-		this.props.getData('StackIds')
-		this.props.getData('MatchCollections')
+		this.props.getData('StackOwners')
 		this.props.getData('StackResolution')
+		this.props.getData('MatchOwners')
 	}
 
 	componentWillReceiveProps(nextProps){
-		const {StackIds, MatchCollections, SectionBounds, TileBounds, SectionData, MatchesWithinGroup, MatchesOutsideGroup} = nextProps.APIData
-		if (SectionData){
-			if(SectionData.Fetched){
-				nextProps.getData("MatchesWithinGroup")
-				nextProps.getData("MatchesOutsideGroup")
-			}
+		const {StackOwners, MatchOwners, StackIds, MatchCollections, SectionBounds, TileBounds, SectionData, MatchesWithinGroup, 
+			MatchesOutsideGroup} = nextProps.APIData
+		const {selectedStackOwner, selectedMatchOwner} = nextProps.UserInput
+
+		if(StackOwners.Fetched && selectedStackOwner){
+			nextProps.getData("StackIds")
 		}
-		if (SectionBounds && TileBounds && SectionData && MatchesWithinGroup && MatchesOutsideGroup && isEmpty(nextProps.tileData)){
-			if(SectionBounds.Fetched && TileBounds.Fetched && SectionData.Fetched && 
-			MatchesWithinGroup.Fetched && MatchesOutsideGroup.Fetched){
-				nextProps.updateTileData(getTileData(nextProps.APIData, nextProps.UserInput))
-			}
+		if (MatchOwners.Fetched && selectedMatchOwner){
+			nextProps.getData("MatchCollections")
 		}
+
+		if (SectionData.Fetched){
+			nextProps.getData("MatchesWithinGroup")
+			nextProps.getData("MatchesOutsideGroup")
+		}
+		if (this.readyToFetchTiles(nextProps)){
+			nextProps.updateTileData(getTileData(nextProps.APIData, nextProps.UserInput))
+		}
+	}
+
+	readyToFetchTiles(nextProps){
+		const {SectionBounds,TileBounds, SectionData, MatchesWithinGroup, MatchesOutsideGroup} = nextProps.APIData
+		return SectionBounds.Fetched && TileBounds.Fetched && SectionData.Fetched && 
+			MatchesWithinGroup.Fetched && MatchesOutsideGroup.Fetched && isEmpty(nextProps.tileData)
 	}
 
 	render() {
 		const {APIData, UserInput, tileData} = this.props
-		const dropdownValues = getProjectStackMatchCollectionList(APIData, UserInput)
+		const dropdownValues = getUserInputSelectLists(APIData, UserInput)
 		const PMEComponents = this.generatePMEComponents()
 		return (
 			<div>
@@ -144,12 +169,21 @@ class App extends Component {
 								projects={dropdownValues.projects}
 								stacks={dropdownValues.stacks}
 								match_collections={dropdownValues.match_collections}
+								stack_owners={dropdownValues.stack_owners}
+								match_owners={dropdownValues.match_owners}
 								onProjectSelect={this.handleProjectSelect}
 								onStackSelect={this.handleStackSelect}
 								onMatchCollectionSelect={this.handleMatchCollectionSelect}
+								onStackOwnerSelect={this.handleStackOwnerSelect}
+								onMatchOwnerSelect={this.handleMatchOwnerSelect}
 								selectedProject={UserInput.selectedProject}
 								selectedStack={UserInput.selectedStack}
-								selectedMatchCollection={UserInput.selectedMatchCollection}/>
+								selectedMatchCollection={UserInput.selectedMatchCollection}
+								selectedProject={UserInput.selectedProject}
+								selectedStack={UserInput.selectedStack}
+								selectedMatchCollection={UserInput.selectedMatchCollection}
+								selectedStackOwner={UserInput.selectedStackOwner}
+								selectedMatchOwner={UserInput.selectedMatchOwner}/>
 							<LayerInput
 								onRenderClick={this.handleRenderClick}
 								onChangeStartZ={this.handleChangeStartZ}
@@ -248,11 +282,23 @@ const mapDispatchToProps = function(dispatch) {
 		updateMatchCollection: function(matchCollection){
 			dispatch(updateMatchCollection(matchCollection))
 		},
+		updateStackOwner: function(stackOwner){
+			dispatch(updateStackOwner(stackOwner))
+		},
+		updateMatchOwner: function(matchOwner){
+			dispatch(updateMatchOwner(matchOwner))
+		},
 		updateTileData: function(tileData){
 			dispatch(updateTileData(tileData))
 		},
 		updatePMEVariables: function(PMEVariables){
 			dispatch(updatePMEVariables(PMEVariables))
+		},
+		resetStackData: function(){
+			dispatch(resetStackData())
+		},
+		resetMatchData: function(){
+			dispatch(resetMatchData())
 		}
 	}
 }

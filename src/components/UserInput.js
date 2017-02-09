@@ -1,13 +1,35 @@
 import React from 'react';
 
 export const SpecsInput = (props) => {
+  let stackDisabled = true;
+  let matchDisabled = true;
+  let projectDisabled = true;
+  if (props.selectedProject && props.stacks){
+    stackDisabled = false;
+  }
+  if (props.selectedStackOwner && props.projects){
+    projectDisabled = false;
+  }
+  if (props.selectedMatchOwner && props.match_collections){
+    matchDisabled =false;
+  }
+
   return (
+
     <div className = "specsInput">
-      <Dropdown className = "specsInput" dropdownName="Select Project" onChange={props.onProjectSelect} values={props.projects} value={props.selectedProject}/>
+    
+      <Dropdown className = "specsInput" dropdownName="Select Stack Owner" onChange={props.onStackOwnerSelect}
+        values={props.stack_owners} value={props.selectedStackOwner}/>
+      <Dropdown className = "specsInput" dropdownName="Select Project" onChange={props.onProjectSelect}
+        values={ projectDisabled ? [] : props.projects} value={props.selectedProject} disabled={projectDisabled}/>
+      <Dropdown className = "specsInput" dropdownName="Select Stack" onChange={props.onStackSelect}
+        values={ stackDisabled ? [] : props.stacks} value={props.selectedStack} disabled={stackDisabled}/>
       <br/>
-      <Dropdown className = "specsInput" dropdownName="Select Stack" onChange={props.onStackSelect} values={props.stacks} value={props.selectedStack}/>
-      <br/>
-      <Dropdown className = "specsInput" dropdownName="Select Match Collection" onChange={props.onMatchCollectionSelect} values={props.match_collections} value={props.selectedMatchCollection}/>
+      
+      <Dropdown className = "specsInput" dropdownName="Select Match Owner" onChange={props.onMatchOwnerSelect} 
+        values={props.match_owners} value={props.selectedMatchOwner}/>
+      <Dropdown className = "specsInput" dropdownName="Select Match Collection" onChange={props.onMatchCollectionSelect}
+        values={ matchDisabled ? [] : props.match_collections} value={props.selectedMatchCollection} disabled={matchDisabled}/>
     </div>
   );
 }
@@ -26,7 +48,7 @@ export const LayerInput = (props) => {
 
 const Dropdown = (props) => {
   return (
-      <select id={props.dropdownId} required onChange={e => props.onChange(e.target.value)} value={props.value}>
+      <select disabled={props.disabled} id={props.dropdownId} required onChange={e => props.onChange(e.target.value)} value={props.value}>
         <option value="" disabled>{props.dropdownName}</option>
         {
           props.values.map(value =>

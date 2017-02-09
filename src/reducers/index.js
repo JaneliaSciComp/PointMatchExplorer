@@ -8,8 +8,12 @@ import {
 	UPDATE_PROJECT,
 	UPDATE_STACK,
 	UPDATE_MATCH_COLLECTION,
+	UPDATE_STACK_OWNER,
+	UPDATE_MATCH_OWNER,
 	UPDATE_TILE_DATA,
-	UPDATE_PME_VARIABLES
+	UPDATE_PME_VARIABLES,
+	RESET_STACK_DATA,
+	RESET_MATCH_DATA
 } from '../actions'
 
 const dataInitialState = {
@@ -21,9 +25,11 @@ const dataInitialState = {
 
 //TODO: hook up to query params
 const userInputInitialState = {
-	selectedProject: 'FAFB00',
-	selectedStack: 'v12_acquire_merged',
-	selectedMatchCollection: 'FAFB_pm_2',
+	selectedProject: '',
+	selectedStack: '',
+	selectedMatchCollection: '',
+	selectedStackOwner: '',
+	selectedMatchOwner: '',
 	startZ: null,
 	endZ: null
 }
@@ -39,6 +45,20 @@ const PMEVariablesInitialState = {
 	 rendered: false
 }
 
+const APIDataInitialState = {
+  "StackOwners": dataInitialState,
+  "MatchOwners": dataInitialState,
+  "MatchCollections": dataInitialState,
+  "StackResolution": dataInitialState,
+  "StackMetadata": dataInitialState,
+  "SectionData": dataInitialState,
+  "StackIds": dataInitialState,
+  "TileBounds": dataInitialState,
+  "SectionBounds": dataInitialState,
+  "MatchesWithinGroup": dataInitialState,
+  "MatchesOutsideGroup": dataInitialState,
+}
+
 function UserInput(state = userInputInitialState, action){
 	switch (action.type) {
     case UPDATE_START_Z:
@@ -51,16 +71,28 @@ function UserInput(state = userInputInitialState, action){
 	    })
 		case UPDATE_PROJECT:
 			return Object.assign({}, state, {
-					selectedProject: action.project
+					selectedProject: action.project,
+					selectedStack: ''
 			})
+		case UPDATE_STACK_OWNER:
+			return Object.assign({}, state, {
+					selectedStackOwner: action.stackOwner,
+					selectedProject:'',
+					selectedStack: ''
+		})
 		case UPDATE_STACK:
 			return Object.assign({}, state, {
 					selectedStack: action.stack
-			})
+		})
+		case UPDATE_MATCH_OWNER:
+			return Object.assign({}, state, {
+					selectedMatchOwner: action.matchOwner,
+					selectedMatchCollection: ''
+		})
 		case UPDATE_MATCH_COLLECTION:
 			return Object.assign({}, state, {
 					selectedMatchCollection: action.matchCollection
-			})
+		})
     default:
       return state
   }
@@ -91,13 +123,26 @@ function getData(state = dataInitialState, action){
 	}
 }
 
-function APIData(state = {}, action){
+function APIData(state = APIDataInitialState, action){
   switch (action.type) {
     case INVALIDATE_DATA:
 		case RECEIVE_DATA:
     case REQUEST_DATA:
       return Object.assign({}, state, {
-				 [action.dataType] : getData(state[action.dataType], action)
+				[action.dataType] : getData(state[action.dataType], action)
+      })
+      break
+    case RESET_STACK_DATA:
+      return Object.assign({}, state, {
+        "StackIds": dataInitialState,
+        "StackMetadata": dataInitialState,
+        "SectionData": dataInitialState,
+        "StackIds": dataInitialState,
+      })
+      break
+    case RESET_MATCH_DATA:
+      return Object.assign({}, state, {
+        "MatchCollections": dataInitialState,
       })
     default:
       return state

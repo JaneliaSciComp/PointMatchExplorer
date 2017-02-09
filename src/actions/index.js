@@ -8,8 +8,13 @@ export const UPDATE_END_Z = 'UPDATE_END_Z'
 export const UPDATE_PROJECT = 'UPDATE_PROJECT'
 export const UPDATE_STACK = 'UPDATE_STACK'
 export const UPDATE_MATCH_COLLECTION = 'UPDATE_MATCH_COLLECTION'
+export const UPDATE_STACK_OWNER = 'UPDATE_STACK_OWNER'
+export const UPDATE_MATCH_OWNER = 'UPDATE_MATCH_OWNER'
 export const UPDATE_TILE_DATA = 'UPDATE_TILE_DATA'
 export const UPDATE_PME_VARIABLES = 'UPDATE_PME_VARIABLES'
+export const RESET_STACK_DATA = 'RESET_STACK_DATA'
+export const RESET_MATCH_DATA = 'RESET_MATCH_DATA'
+
 
 export function updateStartZ(zValue){
   return {
@@ -44,6 +49,32 @@ export function updateMatchCollection(matchCollection){
       type: UPDATE_MATCH_COLLECTION,
       matchCollection
     }
+}
+
+export function updateStackOwner(stackOwner){
+  return {
+      type: UPDATE_STACK_OWNER,
+      stackOwner
+    }
+}
+
+export function updateMatchOwner(matchOwner){
+  return {
+      type: UPDATE_MATCH_OWNER,
+      matchOwner
+    }
+}
+
+export function resetStackData(){
+  return {
+    type: RESET_STACK_DATA
+  }
+}
+
+export function resetMatchData(){
+  return {
+    type: RESET_MATCH_DATA
+  }
 }
 
 function requestData(dataType){
@@ -143,27 +174,35 @@ function fetchData(dataType){
 }
 
 function mapDataTypeToURL(state, dataType, params){
-  const BASE_URL = 'http://renderer.int.janelia.org:8080/render-ws/v1/owner/flyTEM'
-  const {selectedProject, selectedStack, selectedMatchCollection} = state.UserInput
+  const BASE_URL = 'http://renderer.int.janelia.org:8080/render-ws/v1';
+  const {selectedProject, selectedStack, selectedMatchCollection, selectedStackOwner,
+    selectedMatchOwner} = state.UserInput
+  const MATCH_BASE_URL = `${BASE_URL}/owner/${selectedMatchOwner}`
+  const STACK_BASE_URL = `${BASE_URL}/owner/${selectedStackOwner}`
+
   switch(dataType) {
+    case "StackOwners": 
+      return `${BASE_URL}/owners`
+    case "MatchOwners":
+      return `${BASE_URL}/matchCollectionOwners`
     case "StackIds":
-      return `${BASE_URL}/stackIds`
+      return `${STACK_BASE_URL}/stackIds`
     case "MatchCollections":
-      return `${BASE_URL}/matchCollections`
+      return `${MATCH_BASE_URL}/matchCollections`
     case "StackResolution":
-      return `${BASE_URL}/project/FAFB00/stack/v12_align`
+      return `${BASE_URL}/owner/flyTEM/project/FAFB00/stack/v12_align`
     case "StackMetadata":
-      return `${BASE_URL}/project/${selectedProject}/stack/${selectedStack}`
+      return `${STACK_BASE_URL}/project/${selectedProject}/stack/${selectedStack}`
     case "SectionData":
-      return `${BASE_URL}/project/${selectedProject}/stack/${selectedStack}/sectionData`
+      return `${STACK_BASE_URL}/project/${selectedProject}/stack/${selectedStack}/sectionData`
     case "TileBounds":
-      return `${BASE_URL}/project/${selectedProject}/stack/${selectedStack}/z/${params.z}/tileBounds`
+      return `${STACK_BASE_URL}/project/${selectedProject}/stack/${selectedStack}/z/${params.z}/tileBounds`
     case "SectionBounds":
-      return `${BASE_URL}/project/${selectedProject}/stack/${selectedStack}/z/${params.z}/bounds`
+      return `${STACK_BASE_URL}/project/${selectedProject}/stack/${selectedStack}/z/${params.z}/bounds`
     case "MatchesWithinGroup":
-      return `${BASE_URL}/matchCollection/${selectedMatchCollection}/group/${params.groupId}/matchesWithinGroup`
+      return `${STACK_BASE_URL}/matchCollection/${selectedMatchCollection}/group/${params.groupId}/matchesWithinGroup`
     case "MatchesOutsideGroup":
-      return `${BASE_URL}/matchCollection/${selectedMatchCollection}/group/${params.groupId}/matchesOutsideGroup`
+      return `${STACK_BASE_URL}/matchCollection/${selectedMatchCollection}/group/${params.groupId}/matchesOutsideGroup`
     default:
       return null
   }
@@ -171,7 +210,7 @@ function mapDataTypeToURL(state, dataType, params){
 
 function shouldFetchData(state, dataType) {
   const data = state.APIData[dataType]
-  if (!data) {
+  if (!data.Fetched && !data.isFetching) {
     return true
   }
   if (data.isFetching) {

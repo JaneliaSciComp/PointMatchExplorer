@@ -85,16 +85,21 @@ export const getTileData = function(APIData, UserInput){
   return tileData
 }
 
-export const getProjectStackMatchCollectionList = function (APIData, UserInput){
-  const {StackIds, MatchCollections} = APIData
-  const {selectedProject} = UserInput
-  //get unique projects from stackIds
-  if (StackIds && MatchCollections){
-    let projects = _.uniq(_.map(StackIds.data, function(item){
+export const getUserInputSelectLists = function (APIData, UserInput){
+  const {StackIds, MatchCollections, StackOwners, MatchOwners} = APIData
+  const {selectedProject, selectedStackOwner, selectedMatchOwner} = UserInput
+  let projects = []
+  let stacks = []
+  let match_collections = []
+  let stack_owners = StackOwners.Fetched ? StackOwners.data : []
+  let match_owners = MatchOwners.Fetched ? MatchOwners.data : []
+
+  if(StackIds.Fetched){
+    projects = _.uniq(_.map(StackIds.data, function(item){
       return item.project;
     }));
     projects.sort();
-    let stacks = []
+
     //only return stacks if the project has been selected
     if (selectedProject){
       //get the stackIds for the selected project
@@ -107,15 +112,22 @@ export const getProjectStackMatchCollectionList = function (APIData, UserInput){
       }));
       stacks.sort();
     }
+  }
+  //get match collection names
+  if (MatchCollections.Fetched){
+
     //get unique match collections
-    let match_collections = _.map(MatchCollections.data, function(collection){
+    match_collections = _.map(MatchCollections.data, function(collection){
       return collection.collectionId.name;
     });
     match_collections.sort();
-    return {
-      projects,
-      stacks,
-      match_collections
-    }
   }
+  return {
+    projects,
+    stacks,
+    match_collections,
+    stack_owners,
+    match_owners
+  }
+
 }

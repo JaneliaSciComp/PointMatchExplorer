@@ -372,13 +372,15 @@ export const onMouseUp = function(event, isShiftDown, isCtrlDown, isMetaDown, af
   return metadataValues;
 };
 
-var openTileImageWithNeighbors = function(faceIndex, userInput){
-  var url = "http://tem-services.int.janelia.org:8080/render-ws/v1/owner/flyTEM";
-  url += "/project/" + userInput.selectedProject;
-  url += "/stack/" + userInput.selectedStack;
-  url += "/tile/" + faceIndexToTileInfo[faceIndex].tileId;
-  url += "/withNeighbors/jpeg-image?scale=0.5&filter=true";
-  window.open(url);
+var openTileImageWithNeighbors = function openTileImageWithNeighbors(faceIndex, userInput) {
+    var url = "http://renderer-dev:8080/render-ws/view/tile-with-neighbors.html?tileId=" +
+                    faceIndexToTileInfo[faceIndex].tileId + 
+                    "&renderStackOwner=" + userInput.selectedStackOwner +
+                    "&renderStackProject=" + userInput.selectedProject + 
+                    "&renderStack=" + userInput.selectedStack +
+                    "&matchOwner=" + userInput.selectedMatchOwner +
+                    "&matchCollection=" + userInput.selectedMatchCollection;
+    window.open(url);
 };
 
 var openStackInCatmaid = function(faceIndex, userInput, stackResolution){
