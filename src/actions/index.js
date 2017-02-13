@@ -1,68 +1,68 @@
-import {getSectionsForZ} from '../helpers/utils.js'
+import {getSectionsForZ} from "../helpers/utils.js"
 
-export const INVALIDATE_DATA = 'INVALIDATE_DATA'
-export const REQUEST_DATA = 'REQUEST_DATA'
-export const RECEIVE_DATA = 'RECEIVE_DATA'
-export const UPDATE_START_Z = 'UPDATE_START_Z'
-export const UPDATE_END_Z = 'UPDATE_END_Z'
-export const UPDATE_PROJECT = 'UPDATE_PROJECT'
-export const UPDATE_STACK = 'UPDATE_STACK'
-export const UPDATE_MATCH_COLLECTION = 'UPDATE_MATCH_COLLECTION'
-export const UPDATE_STACK_OWNER = 'UPDATE_STACK_OWNER'
-export const UPDATE_MATCH_OWNER = 'UPDATE_MATCH_OWNER'
-export const UPDATE_TILE_DATA = 'UPDATE_TILE_DATA'
-export const UPDATE_PME_VARIABLES = 'UPDATE_PME_VARIABLES'
-export const RESET_STACK_DATA = 'RESET_STACK_DATA'
-export const RESET_MATCH_DATA = 'RESET_MATCH_DATA'
+export const INVALIDATE_DATA = "INVALIDATE_DATA"
+export const REQUEST_DATA = "REQUEST_DATA"
+export const RECEIVE_DATA = "RECEIVE_DATA"
+export const UPDATE_START_Z = "UPDATE_START_Z"
+export const UPDATE_END_Z = "UPDATE_END_Z"
+export const UPDATE_PROJECT = "UPDATE_PROJECT"
+export const UPDATE_STACK = "UPDATE_STACK"
+export const UPDATE_MATCH_COLLECTION = "UPDATE_MATCH_COLLECTION"
+export const UPDATE_STACK_OWNER = "UPDATE_STACK_OWNER"
+export const UPDATE_MATCH_OWNER = "UPDATE_MATCH_OWNER"
+export const UPDATE_TILE_DATA = "UPDATE_TILE_DATA"
+export const UPDATE_PME_VARIABLES = "UPDATE_PME_VARIABLES"
+export const RESET_STACK_DATA = "RESET_STACK_DATA"
+export const RESET_MATCH_DATA = "RESET_MATCH_DATA"
 
 
 export function updateStartZ(zValue){
   return {
-      type: UPDATE_START_Z,
-      zValue
-    }
+    type: UPDATE_START_Z,
+    zValue
+  }
 }
 
 export function updateEndZ(zValue){
   return {
-      type: UPDATE_END_Z,
-      zValue
-    }
+    type: UPDATE_END_Z,
+    zValue
+  }
 }
 
 export function updateProject(project){
   return {
-      type: UPDATE_PROJECT,
-      project
-    }
+    type: UPDATE_PROJECT,
+    project
+  }
 }
 
 export function updateStack(stack){
   return {
-      type: UPDATE_STACK,
-      stack
-    }
+    type: UPDATE_STACK,
+    stack
+  }
 }
 
 export function updateMatchCollection(matchCollection){
   return {
-      type: UPDATE_MATCH_COLLECTION,
-      matchCollection
-    }
+    type: UPDATE_MATCH_COLLECTION,
+    matchCollection
+  }
 }
 
 export function updateStackOwner(stackOwner){
   return {
-      type: UPDATE_STACK_OWNER,
-      stackOwner
-    }
+    type: UPDATE_STACK_OWNER,
+    stackOwner
+  }
 }
 
 export function updateMatchOwner(matchOwner){
   return {
-      type: UPDATE_MATCH_OWNER,
-      matchOwner
-    }
+    type: UPDATE_MATCH_OWNER,
+    matchOwner
+  }
 }
 
 export function resetStackData(){
@@ -115,54 +115,54 @@ export function updatePMEVariables(PMEVariables){
 
 function fetchData(dataType){
   return (dispatch, getState) => {
-    dispatch(requestData(dataType));
-    const state = getState();
-    const {startZ, endZ} = state.UserInput;
+    dispatch(requestData(dataType))
+    const state = getState()
+    const {startZ, endZ} = state.UserInput
     if (dataType == "SectionBounds" || dataType == "TileBounds"){
-      let urls = [];
+      let urls = []
       //get a list of string URLs
-      for (var z = parseInt(startZ); z <= parseInt(endZ); z++){
-        urls.push(mapDataTypeToURL(getState(), dataType, {z:z}));
+      for (let z = parseInt(startZ); z <= parseInt(endZ); z++){
+        urls.push(mapDataTypeToURL(getState(), dataType, {z:z}))
       }
-      const promises = urls.map(url => fetch(url).then(response => response.json()));
+      const promises = urls.map(url => fetch(url).then(response => response.json()))
       return Promise.all(promises)
       .then(responses  => {
         //maps Z layer to the bounds
-        let allBounds = {};
+        let allBounds = {}
         for (var i = 0; i < responses.length; i++){
           //hacky way of getting the Z for the bound
-          allBounds[parseInt(startZ)+i] = responses[i];
+          allBounds[parseInt(startZ)+i] = responses[i]
         }
-        return allBounds;
+        return allBounds
       })
       .then(allBounds => dispatch(receiveData(dataType, allBounds)))
     }else if(dataType == "MatchesWithinGroup" || dataType == "MatchesOutsideGroup"){
-      let urls = [];
-      let urlIndexToZ = {};
-      let indexCount = 0;
+      let urls = []
+      let urlIndexToZ = {}
+      let indexCount = 0
       //get a list of string URLs
-      for (var z = parseInt(startZ); z <= parseInt(endZ); z++){
-        const sections = getSectionsForZ(z, state.APIData.SectionData.data);
+      for (let z = parseInt(startZ); z <= parseInt(endZ); z++){
+        const sections = getSectionsForZ(z, state.APIData.SectionData.data)
         _.forEach(sections, function(section){
-          urls.push(mapDataTypeToURL(getState(), dataType, {groupId: section}));
-          urlIndexToZ[indexCount] = z;
-          indexCount++;
+          urls.push(mapDataTypeToURL(getState(), dataType, {groupId: section}))
+          urlIndexToZ[indexCount] = z
+          indexCount++
         })
       }
-      var promises = urls.map(url => fetch(url).then(response => response.json()));
+      var promises = urls.map(url => fetch(url).then(response => response.json()))
       return Promise.all(promises)
       .then(responses  => {
-        let matches = {};
+        let matches = {}
         //the return value maintains the order of the original iterable
         //urlIndexToZ is used to determine what Z corresponds to each response
         for (var i = 0; i < responses.length; i++){
-          const z = urlIndexToZ[i];
+          const z = urlIndexToZ[i]
           if (!matches[z]){
-            matches[z] = [];
+            matches[z] = []
           }
-          matches[z] = matches[z].concat(responses[i]);
+          matches[z] = matches[z].concat(responses[i])
         }
-        return matches;
+        return matches
       })
       .then(matches => dispatch(receiveData(dataType, matches)))
     }else{
@@ -174,7 +174,7 @@ function fetchData(dataType){
 }
 
 function mapDataTypeToURL(state, dataType, params){
-  const BASE_URL = 'http://renderer.int.janelia.org:8080/render-ws/v1';
+  const BASE_URL = "http://renderer.int.janelia.org:8080/render-ws/v1"
   const {selectedProject, selectedStack, selectedMatchCollection, selectedStackOwner,
     selectedMatchOwner} = state.UserInput
   const MATCH_BASE_URL = `${BASE_URL}/owner/${selectedMatchOwner}`

@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 export const SpecsInput = (props) => {
   let stackDisabled = true;
@@ -41,7 +41,7 @@ export const LayerInput = (props) => {
       <br/>
       End Z: <input type="number" onChange={e => props.onChangeEndZ(e.target.value)}></input>
       <br/>
-      <button onClick={e => props.onRenderClick()}>Render Layers</button>
+      <button onClick={e => props.onRenderClick(e.target.value)}>Render Layers</button>
     </div>
   );
 }

@@ -13,16 +13,24 @@ module.exports = {
     port: defaultPort,
   },
   module: {
-    loaders: [
+    rules: [
       {
-        test: /.js?$/,
-        loader: 'babel-loader',
+        test: /\.js$/,
         exclude: /node_modules/,
-        query: {
-          presets: ['es2015', 'react']
-        }
-      }
-    ]
+        use: [
+          {
+            loader: 'babel-loader',
+            query: {
+              presets: ['es2015', 'react']
+            }
+          },
+          {
+            loader: 'eslint-loader',
+            options: {rules: {semi: 0}}
+          }
+        ],
+      },
+    ],
   },
   plugins: [
           function() {
@@ -34,3 +42,14 @@ module.exports = {
           }
   ],
 };
+/*
+    loaders: [
+      {
+        test: /.js?$/,
+        loader: 'babel-loader',
+        exclude: /node_modules/,
+        query: {
+          presets: ['es2015', 'react']
+        }
+      }
+*/
