@@ -571,9 +571,7 @@ export const disposeThreeScene = function(){
     mesh.geometry.dispose()
     mesh.material.dispose()
   }
-  // function empty(elem){
-  //   while (elem.lastChild) elem.removeChild(elem.lastChild);
-  // }
+
   cancelAnimationFrame(animateId)
 
   disposeMesh(merged_tiles)
@@ -588,6 +586,7 @@ export const disposeThreeScene = function(){
   camera = null
   scene = null
   controls = null
+  faceIndexToTileInfo = {}
 
   // empty(document.getElementById('container'));
 }
