@@ -1,12 +1,10 @@
-import React, { Component } from "react"
+import React, {Component} from "react"
 import {connect} from "react-redux"
-import {SpecsInput, LayerInput} from "./components/userInput"
+import UserInputs from "./components/userInput"
 import {PMStrengthGradient} from "./components/PMStrengthGradient"
 import {MetadataInfo} from "./components/MetadataInfo"
-import {fetchDataIfNeeded, invalidateData, updateStartZ, updateEndZ, updateProject, updateStack,
-  updateMatchCollection, updateStackOwner, updateMatchOwner, updateTileData, updatePMEVariables,
-  resetStackData, resetMatchData} from "./actions"
-import {getTileData, getUserInputSelectLists} from "./helpers/utils.js"
+import {fetchDataIfNeeded, invalidateData, updateTileData, updatePMEVariables} from "./actions"
+import {getTileData} from "./helpers/utils.js"
 import {camera, generateVisualization, onMouseMove, onMouseUp, onMouseDown, disposeThreeScene} from "./helpers/utils-three.js"
 import "whatwg-fetch"
 import isEmpty from "lodash/isEmpty"
@@ -14,50 +12,12 @@ import isEmpty from "lodash/isEmpty"
 class App extends Component {
   constructor(props) {
     super(props)
-    this.handleChangeStartZ = this.handleChangeStartZ.bind(this)
-    this.handleChangeEndZ = this.handleChangeEndZ.bind(this)
-    this.handleProjectSelect = this.handleProjectSelect.bind(this)
-    this.handleStackSelect = this.handleStackSelect.bind(this)
-    this.handleMatchCollectionSelect = this.handleMatchCollectionSelect.bind(this)
-    this.handleStackOwnerSelect = this.handleStackOwnerSelect.bind(this)
-    this.handleMatchOwnerSelect = this.handleMatchOwnerSelect.bind(this)
-    this.handleRenderClick = this.handleRenderClick.bind(this)
     this.processMouseMove = this.processMouseMove.bind(this)
     this.processMouseDown = this.processMouseDown.bind(this)
     this.processMouseUp = this.processMouseUp.bind(this)
     this.detectKeyDown = this.detectKeyDown.bind(this)
     this.detectKeyUp = this.detectKeyUp.bind(this)
     this.afterMouseUp = this.afterMouseUp.bind(this)
-  }
-
-  handleChangeStartZ(zValue){
-    this.props.updateStartZ(zValue)
-  }
-
-  handleChangeEndZ(zValue){
-    this.props.updateEndZ(zValue)
-  }
-
-  handleProjectSelect(project){
-    this.props.updateProject(project)
-  }
-
-  handleStackSelect(stack){
-    this.props.updateStack(stack)
-  }
-
-  handleMatchCollectionSelect(matchCollection){
-    this.props.updateMatchCollection(matchCollection)
-  }
-
-  handleStackOwnerSelect(stackOwner){
-    this.props.resetStackData()
-    this.props.updateStackOwner(stackOwner)
-  }
-
-  handleMatchOwnerSelect(matchOwner){
-    this.props.resetMatchData()
-    this.props.updateMatchOwner(matchOwner)
   }
 
   handleRenderClick(){
@@ -123,27 +83,9 @@ class App extends Component {
     this.props.updatePMEVariables({isMetaDown: false})
   }
 
-  componentWillMount(){
-    this.props.getData("StackOwners")
-    this.props.getData("StackResolution")
-    this.props.getData("MatchOwners")
-  }
 
   componentWillReceiveProps(nextProps){
-    const {StackOwners, MatchOwners, SectionData} = nextProps.APIData
-    const {selectedStackOwner, selectedMatchOwner} = nextProps.UserInput
 
-    if(StackOwners.Fetched && selectedStackOwner){
-      nextProps.getData("StackIds")
-    }
-    if (MatchOwners.Fetched && selectedMatchOwner){
-      nextProps.getData("MatchCollections")
-    }
-
-    if (SectionData.Fetched){
-      nextProps.getData("MatchesWithinGroup")
-      nextProps.getData("MatchesOutsideGroup")
-    }
     if (this.readyToFetchTiles(nextProps)){
       nextProps.updateTileData(getTileData(nextProps.APIData, nextProps.UserInput))
     }
@@ -156,38 +98,10 @@ class App extends Component {
   }
 
   render() {
-    const {APIData, UserInput} = this.props
-    const dropdownValues = getUserInputSelectLists(APIData, UserInput)
     const PMEComponents = this.generatePMEComponents()
     return (
       <div>
-        {dropdownValues &&
-          <div>
-              <SpecsInput
-                projects={dropdownValues.projects}
-                stacks={dropdownValues.stacks}
-                match_collections={dropdownValues.match_collections}
-                stack_owners={dropdownValues.stack_owners}
-                match_owners={dropdownValues.match_owners}
-                onProjectSelect={this.handleProjectSelect}
-                onStackSelect={this.handleStackSelect}
-                onMatchCollectionSelect={this.handleMatchCollectionSelect}
-                onStackOwnerSelect={this.handleStackOwnerSelect}
-                onMatchOwnerSelect={this.handleMatchOwnerSelect}
-                selectedProject={UserInput.selectedProject}
-                selectedStack={UserInput.selectedStack}
-                selectedMatchCollection={UserInput.selectedMatchCollection}
-                selectedProject={UserInput.selectedProject}
-                selectedStack={UserInput.selectedStack}
-                selectedMatchCollection={UserInput.selectedMatchCollection}
-                selectedStackOwner={UserInput.selectedStackOwner}
-                selectedMatchOwner={UserInput.selectedMatchOwner}/>
-              <LayerInput
-                onRenderClick={this.handleRenderClick}
-                onChangeStartZ={this.handleChangeStartZ}
-                onChangeEndZ={this.handleChangeEndZ} />
-          </div>
-        }
+        <UserInputs onRenderClick={this.handleRenderClick.bind(this)}/>
         {!isEmpty(this.props.tileData) ? PMEComponents : <div></div>}
       </div>
     )
@@ -265,38 +179,11 @@ const mapDispatchToProps = function(dispatch) {
     invalidateData: function(dataType){
       dispatch(invalidateData(dataType))
     },
-    updateStartZ: function(zValue){
-      dispatch(updateStartZ(zValue))
-    },
-    updateEndZ: function(zValue){
-      dispatch(updateEndZ(zValue))
-    },
-    updateProject: function(project){
-      dispatch(updateProject(project))
-    },
-    updateStack: function(stack){
-      dispatch(updateStack(stack))
-    },
-    updateMatchCollection: function(matchCollection){
-      dispatch(updateMatchCollection(matchCollection))
-    },
-    updateStackOwner: function(stackOwner){
-      dispatch(updateStackOwner(stackOwner))
-    },
-    updateMatchOwner: function(matchOwner){
-      dispatch(updateMatchOwner(matchOwner))
-    },
     updateTileData: function(tileData){
       dispatch(updateTileData(tileData))
     },
     updatePMEVariables: function(PMEVariables){
       dispatch(updatePMEVariables(PMEVariables))
-    },
-    resetStackData: function(){
-      dispatch(resetStackData())
-    },
-    resetMatchData: function(){
-      dispatch(resetMatchData())
     }
   }
 }
