@@ -2,6 +2,7 @@ import React, {Component} from "react"
 import {connect} from "react-redux"
 import {updateUserInput} from "../actions"
 import {userInputInitialState} from "../reducers"
+import URLSearchParams from "url-search-params"
 /*
   Keeps url query params in sync with Redux store
 */
