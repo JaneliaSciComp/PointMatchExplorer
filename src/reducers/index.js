@@ -13,7 +13,8 @@ import {
   UPDATE_TILE_DATA,
   UPDATE_PME_VARIABLES,
   RESET_STACK_DATA,
-  RESET_MATCH_DATA
+  RESET_MATCH_DATA,
+  UPDATE_USER_INPUT
 } from "../actions"
 
 const dataInitialState = {
@@ -24,14 +25,14 @@ const dataInitialState = {
 }
 
 //TODO: hook up to query params
-const userInputInitialState = {
+export const userInputInitialState = {
   selectedProject: "",
   selectedStack: "",
   selectedMatchCollection: "",
   selectedStackOwner: "",
   selectedMatchOwner: "",
-  startZ: null,
-  endZ: null
+  startZ: "",
+  endZ: ""
 }
 
 const PMEVariablesInitialState = {
@@ -93,6 +94,8 @@ function UserInput(state = userInputInitialState, action){
       return Object.assign({}, state, {
         selectedMatchCollection: action.matchCollection
       })
+    case UPDATE_USER_INPUT:
+      return Object.assign({}, state, action.userInputData)
     default:
       return state
   }

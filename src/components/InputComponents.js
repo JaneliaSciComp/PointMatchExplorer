@@ -37,9 +37,9 @@ export const SpecsInput = (props) => {
 export const LayerInput = (props) => {
   return (
     <div className = "layerInput">
-      Start Z: <input type="number" onChange={e => props.onChangeStartZ(e.target.value)}></input>
+      Start Z: <input type="number" onChange={e => props.onChangeStartZ(e.target.value)} value={props.selectedStartZ}></input>
       <br/>
-      End Z: <input type="number" onChange={e => props.onChangeEndZ(e.target.value)}></input>
+      End Z: <input type="number" onChange={e => props.onChangeEndZ(e.target.value)} value={props.selectedEndZ}></input>
       <br/>
       <button onClick={e => props.onRenderClick(e.target.value)}>Render Layers</button>
     </div>

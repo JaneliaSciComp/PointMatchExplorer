@@ -8,6 +8,8 @@ import {getTileData} from "./helpers/utils.js"
 import {camera, generateVisualization, onMouseMove, onMouseUp, onMouseDown, disposeThreeScene} from "./helpers/utils-three.js"
 import "whatwg-fetch"
 import isEmpty from "lodash/isEmpty"
+import UrlParamHandler from "./components/UrlParamHandler"
+
 
 class App extends Component {
   constructor(props) {
@@ -22,7 +24,7 @@ class App extends Component {
 
   handleRenderClick(){
     const {selectedProject, selectedStack, selectedMatchCollection, startZ, endZ} = this.props.UserInput
-    let readyToRender = (selectedProject!=null && selectedStack!=null && selectedMatchCollection!=null && startZ!=null && endZ!=null )
+    let readyToRender = (selectedProject && selectedStack && selectedMatchCollection && startZ!=="" && endZ!=="" )
     var canvas = this.refs.PMEcanvas
     if (canvas){
       this.props.updatePMEVariables({rendered: false})
@@ -103,6 +105,7 @@ class App extends Component {
       <div>
         <UserInputs onRenderClick={this.handleRenderClick.bind(this)}/>
         {!isEmpty(this.props.tileData) ? PMEComponents : <div></div>}
+        <UrlParamHandler />
       </div>
     )
   }

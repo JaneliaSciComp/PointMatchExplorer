@@ -99,7 +99,9 @@ class UserInputs extends Component {
             <LayerInput
               onRenderClick={this.props.onRenderClick}
               onChangeStartZ={this.handleChangeStartZ}
-              onChangeEndZ={this.handleChangeEndZ} />
+              selectedStartZ={UserInput.startZ}
+              onChangeEndZ={this.handleChangeEndZ} 
+              selectedEndZ={UserInput.endZ}/>
         </div>
       }
       </div>

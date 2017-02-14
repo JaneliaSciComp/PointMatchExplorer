@@ -14,7 +14,14 @@ export const UPDATE_TILE_DATA = "UPDATE_TILE_DATA"
 export const UPDATE_PME_VARIABLES = "UPDATE_PME_VARIABLES"
 export const RESET_STACK_DATA = "RESET_STACK_DATA"
 export const RESET_MATCH_DATA = "RESET_MATCH_DATA"
+export const UPDATE_USER_INPUT = "UPDATE_USER_INPUT"
 
+export function updateUserInput(userInputData){
+  return {
+    type: UPDATE_USER_INPUT,
+    userInputData
+  }
+}
 
 export function updateStartZ(zValue){
   return {
