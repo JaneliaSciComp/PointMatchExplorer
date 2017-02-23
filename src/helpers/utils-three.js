@@ -1,4 +1,5 @@
 import THREE from "three"
+import { MeshLine, MeshLineMaterial } from "three.meshline" 
 import TrackballControls from "three-trackballcontrols"
 import "lodash"
 import chroma from "chroma-js"
@@ -39,8 +40,8 @@ var tile_gradient_colors = ["#fc66ff", "#66fcff"]
 var tile_gradient_chroma_scale
 
 var line_color = 0xaaaaaa
-var line_width = 0.5
-var line_highlight_width = 4
+var line_width = 1
+var line_highlight_width = 10
 
 var tile_opacity = 0.9
 // var tile_highlight_opacity = 0.9;
@@ -65,7 +66,7 @@ export const generateVisualization = function(canvas, tileData){
   mouse = new THREE.Vector2()
   raycaster = new THREE.Raycaster()
 
-  camera = new THREE.PerspectiveCamera(camera_view_angle, window.innerWidth / window.innerHeight, 1, draw_distance)
+  camera = new THREE.PerspectiveCamera(camera_view_angle, window.innerWidth / window.innerHeight, 100, draw_distance)
   camera.position.set(initial_camera_X, initial_camera_Y, initial_camera_Z)
   scene.add(camera)
 
@@ -397,33 +398,17 @@ var openStackInCatmaid = function(faceIndex, userInput, stackResolution){
 }
 
 var highlight = function(faceIndex, isSelected, isShiftDown){
+  console.log(isShiftDown)
   if (isShiftDown){
     var zLayer = faceIndexToTileInfo[faceIndex].tileZ
-    var line_geometry = new THREE.Geometry()
-    var line_material = new THREE.LineBasicMaterial({
-      color: 0xffffff,
-      linewidth: line_highlight_width,
-      vertexColors: THREE.VertexColors
-    })
-
-    var vertex_colors = []
-    var vertex_counter = 0
+    var selected_layer_PM_lines = new THREE.Group()
     _.forEach(faceIndexToTileInfo, function(tile){
       //draw the point match lines for all the tiles in that layer
       if (tile.tileZ == zLayer){
-        _.forEach(tile.PMList, function(pm){
-          line_geometry.vertices.push(
-            new THREE.Vector3(pm.startX, pm.startY, pm.startZ),
-            new THREE.Vector3(pm.endX, pm.endY, pm.endZ)
-          )
-          vertex_colors[vertex_counter] = new THREE.Color( pm.strength_color.hex() )
-          vertex_colors[vertex_counter+1] = new THREE.Color( pm.strength_color.hex() )
-          vertex_counter += 2
-        })
+        addHighlightedPMLine(selected_layer_PM_lines, tile)
       }
     })
-    line_geometry.colors = vertex_colors
-    var selected_layer_PM_lines = new THREE.LineSegments(line_geometry, line_material)
+
     selected_layer_PM_lines.name = "selectedLayer"
     scene.add(selected_layer_PM_lines)
   }else{
@@ -444,6 +429,27 @@ var highlight = function(faceIndex, isSelected, isShiftDown){
     scene.add(tileBorder)
     scene.add(PMLines)
   }
+}
+
+var addHighlightedPMLine = function(group, tile){
+  _.forEach(tile.PMList, function(pm){
+    var line_geometry = new THREE.Geometry()
+    line_geometry.vertices.push(
+      new THREE.Vector3(pm.startX, pm.startY, pm.startZ),
+      new THREE.Vector3(pm.endX, pm.endY, pm.endZ)
+    )
+    var line = new MeshLine()
+    line.setGeometry(line_geometry)
+    var line_material = new MeshLineMaterial({
+      color: new THREE.Color(pm.strength_color.hex()),
+      lineWidth: line_highlight_width,
+      sizeAttenuation: true,
+      resolution: new THREE.Vector2(window.innerWidth, window.innerHeight)
+
+    })
+    var meshLine = new THREE.Mesh(line.geometry, line_material)
+    group.add(meshLine)
+  })
 }
 
 var createTileBorder = function(tile){
@@ -470,19 +476,7 @@ var createTileBorder = function(tile){
 
 var createLines = function(tile){
   var PMGroup = new THREE.Group()
-  _.forEach(tile.PMList, function(pm){
-    var line_geometry = new THREE.Geometry()
-    var line_material = new THREE.LineBasicMaterial({
-      color: pm.strength_color.hex(),
-      linewidth: line_highlight_width
-    })
-    line_geometry.vertices.push(
-      new THREE.Vector3(pm.startX, pm.startY, pm.startZ),
-      new THREE.Vector3(pm.endX, pm.endY, pm.endZ)
-    )
-    var line = new THREE.Line(line_geometry, line_material)
-    PMGroup.add(line)
-  })
+  addHighlightedPMLine(PMGroup, tile)
   return PMGroup
 }
 
