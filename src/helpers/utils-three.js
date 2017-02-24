@@ -398,7 +398,7 @@ var openStackInCatmaid = function(faceIndex, userInput, stackResolution){
 }
 
 var highlight = function(faceIndex, isSelected, isShiftDown){
-  console.log(isShiftDown)
+
   if (isShiftDown){
     var zLayer = faceIndexToTileInfo[faceIndex].tileZ
     var selected_layer_PM_lines = new THREE.Group()
@@ -582,5 +582,14 @@ export const disposeThreeScene = function(){
   controls = null
   faceIndexToTileInfo = {}
 
-  // empty(document.getElementById('container'));
+}
+
+window.addEventListener( "resize", onWindowResize, false );
+
+function onWindowResize(){
+  if(camera && renderer){
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize( window.innerWidth, window.innerHeight );
+  }
 }
