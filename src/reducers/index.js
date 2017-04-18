@@ -31,6 +31,10 @@ export const userInputInitialState = {
   selectedMatchCollection: "",
   selectedStackOwner: "",
   selectedMatchOwner: "",
+  renderDataHost: "tem-services.int.janelia.org:8080",
+  dynamicRenderHost: "renderer.int.janelia.org:8080",
+  catmaidHost: "renderer-catmaid:8000",
+  mergeCollection: "",
   startZ: "",
   endZ: ""
 }

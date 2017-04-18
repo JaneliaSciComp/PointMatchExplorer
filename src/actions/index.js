@@ -181,11 +181,16 @@ function fetchData(dataType){
 }
 
 function mapDataTypeToURL(state, dataType, params){
-  const BASE_URL = "http://renderer.int.janelia.org:8080/render-ws/v1"
   const {selectedProject, selectedStack, selectedMatchCollection, selectedStackOwner,
-    selectedMatchOwner} = state.UserInput
+    selectedMatchOwner, renderDataHost, mergeCollection } = state.UserInput
+  const BASE_URL = `http://${renderDataHost}/render-ws/v1`
   const MATCH_BASE_URL = `${BASE_URL}/owner/${selectedMatchOwner}`
   const STACK_BASE_URL = `${BASE_URL}/owner/${selectedStackOwner}`
+
+  var matchQueryParameters = "";
+  if (mergeCollection.length > 0) {
+    matchQueryParameters = "?mergeCollection=" + mergeCollection;
+  }
 
   switch(dataType) {
     case "StackOwners": 
@@ -207,9 +212,9 @@ function mapDataTypeToURL(state, dataType, params){
     case "SectionBounds":
       return `${STACK_BASE_URL}/project/${selectedProject}/stack/${selectedStack}/z/${params.z}/bounds`
     case "MatchesWithinGroup":
-      return `${STACK_BASE_URL}/matchCollection/${selectedMatchCollection}/group/${params.groupId}/matchesWithinGroup`
+      return `${STACK_BASE_URL}/matchCollection/${selectedMatchCollection}/group/${params.groupId}/matchesWithinGroup${matchQueryParameters}`
     case "MatchesOutsideGroup":
-      return `${STACK_BASE_URL}/matchCollection/${selectedMatchCollection}/group/${params.groupId}/matchesOutsideGroup`
+      return `${STACK_BASE_URL}/matchCollection/${selectedMatchCollection}/group/${params.groupId}/matchesOutsideGroup${matchQueryParameters}`
     default:
       return null
   }
