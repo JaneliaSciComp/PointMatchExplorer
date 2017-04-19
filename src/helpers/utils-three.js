@@ -377,15 +377,23 @@ export const onMouseUp = function(event, isShiftDown, isCtrlDown, isMetaDown, is
 }
 
 var openTileImageWithNeighbors = function openTileImageWithNeighbors(faceIndex, userInput) {
+
+  var tile = faceIndexToTileInfo[faceIndex];
+
+  var width = tile.maxX - tile.minX + 1;
+  var renderScale = 400.0 / width;
+
   var url = "http://" + userInput.dynamicRenderHost + "/render-ws/view/tile-with-neighbors.html?tileId=" +
-                    faceIndexToTileInfo[faceIndex].tileId + 
-                    "&renderStackOwner=" + userInput.selectedStackOwner +
-                    "&renderStackProject=" + userInput.selectedProject + 
-                    "&renderStack=" + userInput.selectedStack +
-                    "&matchOwner=" + userInput.selectedMatchOwner +
-                    "&matchCollection=" + userInput.selectedMatchCollection
-  window.open(url)
-}
+            tile.tileId +
+            "&renderScale=" + renderScale +
+            "&renderStackOwner=" + userInput.selectedStackOwner +
+            "&renderStackProject=" + userInput.selectedProject +
+            "&renderStack=" + userInput.selectedStack +
+            "&matchOwner=" + userInput.selectedMatchOwner +
+            "&matchCollection=" + userInput.selectedMatchCollection;
+
+  window.open(url);
+};
 
 var openTilePair = function openTilePair(faceIndexA, faceIndexB, userInput) {
 
