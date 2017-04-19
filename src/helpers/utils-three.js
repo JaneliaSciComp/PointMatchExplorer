@@ -324,7 +324,7 @@ export const onMouseDown = function(event){
   }
 }
 
-export const onMouseUp = function(event, isShiftDown, isCtrlDown, isMetaDown, afterMouseUp, userInput, stackResolution) {
+export const onMouseUp = function(event, isShiftDown, isCtrlDown, isMetaDown, isPDown, afterMouseUp, userInput, stackResolution) {
   var metadataValues
   event.preventDefault()
   var intersections = getRaycastIntersections(event)
@@ -341,6 +341,9 @@ export const onMouseUp = function(event, isShiftDown, isCtrlDown, isMetaDown, af
       //dehighlight already selected tile/layer
       if (selected){
         dehighlight(selected.faceIndex, true)
+        if (isPDown) {
+          openTilePair(selected.faceIndex, upobj.faceIndex, userInput);
+        }
       }
       selected = upobj
       if (isCtrlDown){
@@ -374,7 +377,7 @@ export const onMouseUp = function(event, isShiftDown, isCtrlDown, isMetaDown, af
 }
 
 var openTileImageWithNeighbors = function openTileImageWithNeighbors(faceIndex, userInput) {
-  var url = "http://renderer-dev:8080/render-ws/view/tile-with-neighbors.html?tileId=" +
+  var url = "http://" + userInput.dynamicRenderHost + "/render-ws/view/tile-with-neighbors.html?tileId=" +
                     faceIndexToTileInfo[faceIndex].tileId + 
                     "&renderStackOwner=" + userInput.selectedStackOwner +
                     "&renderStackProject=" + userInput.selectedProject + 
@@ -384,9 +387,29 @@ var openTileImageWithNeighbors = function openTileImageWithNeighbors(faceIndex, 
   window.open(url)
 }
 
+var openTilePair = function openTilePair(faceIndexA, faceIndexB, userInput) {
+
+  var pTile = faceIndexToTileInfo[faceIndexA];
+  var qTile = faceIndexToTileInfo[faceIndexB];
+
+  var maxWidth = Math.max((pTile.maxX - pTile.minX + 1), (qTile.maxX - qTile.minX + 1));
+  var renderScale = 700.0 / maxWidth;
+
+  var url = "http://" + userInput.dynamicRenderHost + "/render-ws/view/tile-pair.html?pId=" + pTile.tileId +
+            "&qId=" + qTile.tileId +
+            "&renderScale=" + renderScale +
+            "&renderStackOwner=" + userInput.selectedStackOwner +
+            "&renderStackProject=" + userInput.selectedProject +
+            "&renderStack=" + userInput.selectedStack +
+            "&matchOwner=" + userInput.selectedMatchOwner +
+            "&matchCollection=" + userInput.selectedMatchCollection;
+
+  window.open(url);
+};
+
 var openStackInCatmaid = function(faceIndex, userInput, stackResolution){
   var tileInfo = faceIndexToTileInfo[faceIndex]
-  var url = "http://renderer-catmaid:8000/?"
+  var url = "http://" + userInput.catmaidHost + "/?";
   url += "pid=" + userInput.selectedProject
   url += "&zp=" + tileInfo.tileZ*stackResolution.stackResolutionZ
   url += "&yp=" + (tileInfo.minY+tileInfo.maxY)/2*stackResolution.stackResolutionY

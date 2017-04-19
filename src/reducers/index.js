@@ -47,6 +47,7 @@ const PMEVariablesInitialState = {
   isShiftDown: false,
   isCtrlDown: false,
   isMetaDown: false,
+  isPDown: false,
   rendered: false
 }
 

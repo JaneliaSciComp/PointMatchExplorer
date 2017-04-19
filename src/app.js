@@ -58,8 +58,8 @@ class App extends Component {
   }
 
   processMouseUp(event){
-    const {isShiftDown, isCtrlDown, isMetaDown} = this.props.PMEVariables
-    var md = onMouseUp(event, isShiftDown, isCtrlDown, isMetaDown, this.afterMouseUp, this.props.UserInput, this.props.APIData.StackResolution.data.currentVersion)
+    const {isShiftDown, isCtrlDown, isMetaDown, isPDown} = this.props.PMEVariables;
+    var md = onMouseUp(event, isShiftDown, isCtrlDown, isMetaDown, isPDown, this.afterMouseUp, this.props.UserInput, this.props.APIData.StackResolution.data.currentVersion);
     this.props.updatePMEVariables({selectedMetadata: md})
   }
 
@@ -68,6 +68,7 @@ class App extends Component {
       case "Shift": this.props.updatePMEVariables({isShiftDown: true}); break
       case "Control": this.props.updatePMEVariables({isCtrlDown: true}); break
       case "Meta": this.props.updatePMEVariables({isMetaDown: true}); break
+      case "p": this.props.updatePMEVariables({isPDown: true}); break;
     }
   }
 
@@ -76,6 +77,7 @@ class App extends Component {
       case "Shift": this.props.updatePMEVariables({isShiftDown: false}); break
       case "Control": this.props.updatePMEVariables({isCtrlDown: false}); break
       case "Meta": this.props.updatePMEVariables({isMetaDown: false}); break
+      case "p": this.props.updatePMEVariables({isPDown: false}); break;
     }
   }
 
@@ -83,6 +85,7 @@ class App extends Component {
     this.props.updatePMEVariables({isShiftDown: false})
     this.props.updatePMEVariables({isCtrlDown: false})
     this.props.updatePMEVariables({isMetaDown: false})
+    this.props.updatePMEVariables({isPDown: false});
   }
 
 
