@@ -38,4 +38,5 @@ Key/mouse mapping:
 - click on tile to highlight it and its point matches
 - shift click on a tile to highlight all tiles and point matches of that tile's section
 - command + click on a tile to view its section in Catmaid, zoomed in on that tile
-- ctrl+click on a tile to view a grayscale png image of the tile and its neighbors
+- ctrl+click on a tile to view match data for the tile and its neighboring tiles
+- after selecting (clicking) one tile, hold p key and click second tile to view match data for the tile pair  
