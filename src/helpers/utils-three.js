@@ -418,7 +418,7 @@ var openTilePair = function openTilePair(faceIndexA, faceIndexB, userInput) {
 var openStackInCatmaid = function(faceIndex, userInput, stackResolution){
   var tileInfo = faceIndexToTileInfo[faceIndex]
   var url = "http://" + userInput.catmaidHost + "/?";
-  url += "pid=" + userInput.selectedProject
+  url += "pid=" + userInput.selectedStackOwner + "__" + userInput.selectedProject
   url += "&zp=" + tileInfo.tileZ*stackResolution.stackResolutionZ
   url += "&yp=" + (tileInfo.minY+tileInfo.maxY)/2*stackResolution.stackResolutionY
   url += "&xp=" + (tileInfo.minX+tileInfo.maxX)/2*stackResolution.stackResolutionX
