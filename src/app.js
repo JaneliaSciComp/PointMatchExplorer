@@ -32,6 +32,7 @@ class App extends Component {
       this.props.invalidateData("SectionBounds")
       this.props.invalidateData("TileBounds")
       this.props.invalidateData("SectionData")
+      this.props.invalidateData("StackMetadata")
       this.props.invalidateData("MatchesWithinGroup")
       this.props.invalidateData("MatchesOutsideGroup")
       canvas.removeEventListener("mousemove", this.processMouseMove, false)
@@ -45,6 +46,7 @@ class App extends Component {
       this.props.getData("SectionBounds")
       this.props.getData("TileBounds")
       this.props.getData("SectionData")
+      this.props.getData("StackMetadata")
     }
   }
 
@@ -59,7 +61,7 @@ class App extends Component {
 
   processMouseUp(event){
     const {isShiftDown, isCtrlDown, isMetaDown, isPDown} = this.props.PMEVariables;
-    var md = onMouseUp(event, isShiftDown, isCtrlDown, isMetaDown, isPDown, this.afterMouseUp, this.props.UserInput, this.props.APIData.StackResolution.data.currentVersion);
+    var md = onMouseUp(event, isShiftDown, isCtrlDown, isMetaDown, isPDown, this.afterMouseUp, this.props.UserInput, this.props.APIData.StackMetadata.data.currentVersion);
     this.props.updatePMEVariables({selectedMetadata: md})
   }
 

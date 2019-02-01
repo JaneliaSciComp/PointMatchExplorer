@@ -65,7 +65,6 @@ const APIDataInitialState = {
   "StackOwners": dataInitialState,
   "MatchOwners": dataInitialState,
   "MatchCollections": dataInitialState,
-  "StackResolution": dataInitialState,
   "StackMetadata": dataInitialState,
   "SectionData": dataInitialState,
   "StackIds": dataInitialState,

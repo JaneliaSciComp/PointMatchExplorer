@@ -49,7 +49,6 @@ class UserInputs extends Component {
   
   componentWillMount(){
     this.props.getData("StackOwners")
-    this.props.getData("StackResolution")
     this.props.getData("MatchOwners")
   }
   componentWillReceiveProps(nextProps){

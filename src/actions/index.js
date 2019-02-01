@@ -201,8 +201,6 @@ function mapDataTypeToURL(state, dataType, params){
       return `${STACK_BASE_URL}/stackIds`
     case "MatchCollections":
       return `${MATCH_BASE_URL}/matchCollections`
-    case "StackResolution":
-      return `${BASE_URL}/owner/flyTEM/project/FAFB00/stack/v12_align`
     case "StackMetadata":
       return `${STACK_BASE_URL}/project/${selectedProject}/stack/${selectedStack}`
     case "SectionData":
