@@ -16,6 +16,7 @@ import {
   RESET_MATCH_DATA,
   UPDATE_USER_INPUT
 } from "../actions"
+import URLSearchParams from "url-search-params";
 
 const dataInitialState = {
   isFetching: false,
@@ -24,20 +25,29 @@ const dataInitialState = {
   data: {}
 }
 
-//TODO: hook up to query params
-export const userInputInitialState = {
-  selectedProject: "",
-  selectedStack: "",
-  selectedMatchCollection: "",
-  selectedStackOwner: "",
-  selectedMatchOwner: "",
-  renderDataHost: "tem-services.int.janelia.org:8080",
-  dynamicRenderHost: "renderer.int.janelia.org:8080",
-  catmaidHost: "renderer-catmaid:8000",
-  mergeCollection: "",
-  startZ: "",
-  endZ: ""
+export const initialUrlSearchParams = new URLSearchParams(window.location.search);
+
+function getSafeInitParam(parameterName, defaultValue) {
+  let value = initialUrlSearchParams.get(parameterName);
+  if ((typeof value === "undefined") || (value === null)) {
+    value = (typeof defaultValue === "undefined") ? "" : defaultValue;
+  }
+  return value;
 }
+
+export const userInputInitialState = {
+  selectedProject: getSafeInitParam("renderStackProject"),
+  selectedStack: getSafeInitParam("renderStack"),
+  selectedMatchCollection: getSafeInitParam("matchCollection"),
+  selectedStackOwner: getSafeInitParam("renderStackOwner"),
+  selectedMatchOwner: getSafeInitParam("matchOwner"),
+  renderDataHost: getSafeInitParam("renderDataHost", window.location.host),
+  dynamicRenderHost: getSafeInitParam("dynamicRenderHost", window.location.host),
+  catmaidHost: getSafeInitParam("catmaidHost", "renderer-catmaid:8000"),
+  mergeCollection: getSafeInitParam("mergeCollection"),
+  startZ: getSafeInitParam("startZ"),
+  endZ: getSafeInitParam("endZ")
+};
 
 const PMEVariablesInitialState = {
   minWeight: null,
