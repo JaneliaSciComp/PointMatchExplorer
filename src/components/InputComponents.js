@@ -34,6 +34,30 @@ export const SpecsInput = (props) => {
   );
 }
 
+export const handleHelpClick = function() {
+  let helpMessage = `
+- Hold down left mouse button and move to rotate
+- Hold down right mouse button and move to pan
+- Scroll to zoom
+- Click on tile to highlight it and its point matches
+
+- Shift click on a tile to highlight all tiles 
+  and point matches of that tile's section
+
+- Command + click on a tile to view its section 
+  in CATMAID, zoomed in on that tile
+
+- Ctrl+click on a tile to view match data for 
+  the tile and its neighboring tiles
+
+- After selecting (clicking) one tile, 
+  hold p key and click second tile 
+  to view match data for the tile pair
+`;
+  alert(helpMessage);
+  return false;
+};
+
 export const LayerInput = (props) => {
   return (
     <div className = "layerInput">
@@ -41,7 +65,8 @@ export const LayerInput = (props) => {
       <br/>
       End Z: <input type="number" onChange={e => props.onChangeEndZ(e.target.value)} value={props.selectedEndZ}></input>
       <br/>
-      <button onClick={e => props.onRenderClick(e.target.value)}>Render Layers</button>
+      <button className = "layerButton" onClick={e => props.onRenderClick(e.target.value)}>Render Layers</button>
+      <button className = "layerButton" onClick={handleHelpClick}>Help</button>
     </div>
   );
 }
