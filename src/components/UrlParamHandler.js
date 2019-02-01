@@ -90,7 +90,9 @@ let userInputUrlMap = new urlParamStoreMapper({
   renderDataHost: "renderDataHost",
   dynamicRenderHost: "dynamicRenderHost",
   catmaidHost: "catmaidHost",
-  mergeCollection: "mergeCollection"
+  mergeCollection: "mergeCollection",
+  startZ: "startZ",
+  endZ: "endZ"
 })
 
 const mapStateToProps = function(state) {
