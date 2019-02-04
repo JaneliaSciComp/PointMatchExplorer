@@ -90,9 +90,6 @@ class UserInputs extends Component {
               selectedProject={UserInput.selectedProject}
               selectedStack={UserInput.selectedStack}
               selectedMatchCollection={UserInput.selectedMatchCollection}
-              selectedProject={UserInput.selectedProject}
-              selectedStack={UserInput.selectedStack}
-              selectedMatchCollection={UserInput.selectedMatchCollection}
               selectedStackOwner={UserInput.selectedStackOwner}
               selectedMatchOwner={UserInput.selectedMatchOwner}/>
             <LayerInput
