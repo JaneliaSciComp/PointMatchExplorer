@@ -1,6 +1,6 @@
 # PointMatchExplorer
-Point Match Explorer is a web app that aids in stitching of images from flyTEM with a visualization
-of point matches between tiles. 
+Point Match Explorer is a web app that supports visualization of tile specifications and corresponding 
+match data hosted by a [render web services](https://github.com/saalfeldlab/render) instance. 
 PME utilizes React/Redux for the front-end and  Three.js to render the visualization. 
 
 To build
@@ -39,4 +39,18 @@ Key/mouse mapping:
 - shift click on a tile to highlight all tiles and point matches of that tile's section
 - command + click on a tile to view its section in Catmaid, zoomed in on that tile
 - ctrl+click on a tile to view match data for the tile and its neighboring tiles
-- after selecting (clicking) one tile, hold p key and click second tile to view match data for the tile pair  
+- after selecting (clicking) one tile, hold p key and click second tile to view match data for the tile pair
+
+## Author Information
+PointMatchExplorer was originally written by Jenny Xing and Alex Weston.
+
+## Contributors
+- Eric Trautman
+
+[![Janelia Research Campus](images/hhmi_janelia_transparentbkgrnd.png)](http://www.janelia.org)
+
+[Scientific Computing](http://www.janelia.org/research-resources/computing-resources)
+
+[Janelia Research Campus](http://www.janelia.org)
+
+[Howard Hughes Medical Institute](http://www.hhmi.org)  
