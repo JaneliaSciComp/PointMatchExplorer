@@ -5,7 +5,7 @@ import {PMStrengthGradient} from "./components/PMStrengthGradient"
 import {MetadataInfo} from "./components/MetadataInfo"
 import {fetchDataIfNeeded, invalidateData, updateTileData, updatePMEVariables} from "./actions"
 import {getTileData} from "./helpers/utils.js"
-import {camera, generateVisualization, onMouseMove, onMouseUp, onMouseDown, disposeThreeScene} from "./helpers/utils-three.js"
+import {camera, pm_connection_strength_gradient_colors, generateVisualization, onMouseMove, onMouseUp, onMouseDown, disposeThreeScene} from "./helpers/utils-three.js"
 import "whatwg-fetch"
 import isEmpty from "lodash/isEmpty"
 import UrlParamHandler from "./components/UrlParamHandler"
@@ -33,8 +33,7 @@ class App extends Component {
       this.props.invalidateData("TileBounds")
       this.props.invalidateData("SectionData")
       this.props.invalidateData("StackMetadata")
-      this.props.invalidateData("MatchesWithinGroup")
-      this.props.invalidateData("MatchesOutsideGroup")
+      this.props.invalidateData("MatchCounts")
       canvas.removeEventListener("mousemove", this.processMouseMove, false)
       canvas.removeEventListener("mousedown", this.processMouseDown, false)
       canvas.removeEventListener("mouseup", this.processMouseUp, false)
@@ -99,9 +98,9 @@ class App extends Component {
   }
 
   readyToFetchTiles(nextProps){
-    const {SectionBounds,TileBounds, SectionData, MatchesWithinGroup, MatchesOutsideGroup} = nextProps.APIData
-    return SectionBounds.Fetched && TileBounds.Fetched && SectionData.Fetched && 
-      MatchesWithinGroup.Fetched && MatchesOutsideGroup.Fetched && isEmpty(nextProps.tileData)
+    const {SectionBounds,TileBounds, SectionData, MatchCounts} = nextProps.APIData
+    return SectionBounds.Fetched && TileBounds.Fetched && SectionData.Fetched &&
+           MatchCounts.Fetched && isEmpty(nextProps.tileData)
   }
 
   render() {
@@ -121,7 +120,6 @@ class App extends Component {
     var metadata_display
     var selected_metadata_display
     var mouseover_metadata_display
-    var pm_connection_strength_gradient_colors = ["#c33f2e", "#fc9d59", "#fee08b", "#e0f381", "#76c76f", "#3288bd"]
     //how many steps to generate the gradient in
     var pm_connection_strength_gradient_steps = 20
 

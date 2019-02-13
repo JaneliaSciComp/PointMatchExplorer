@@ -28,10 +28,7 @@ export const getSectionsForZ = function(z, SectionData){
 //remove point matches of tiles that are not drawn
 const filterPointMatches = function(tileData){
   _.forEach(tileData, function(layer){
-    _.remove(layer.pointMatches.matchesWithinGroup, function(match){
-      return getTileCoordinates(match.pId, tileData) === undefined || getTileCoordinates(match.qId, tileData) === undefined
-    })
-    _.remove(layer.pointMatches.matchesOutsideGroup, function(match){
+    _.remove(layer.pointMatches.matchCounts, function(match){
       return getTileCoordinates(match.pId, tileData) === undefined || getTileCoordinates(match.qId, tileData) === undefined
     })
   })
@@ -68,7 +65,7 @@ const getTranslatedTileCoordinates = function(z, tileBounds, translation){
 }
 
 export const getTileData = function(APIData, UserInput){
-  const {MatchesWithinGroup, MatchesOutsideGroup, SectionBounds, TileBounds} = APIData
+  const {MatchCounts, SectionBounds, TileBounds} = APIData
   let tileData = []
   const {startZ, endZ} = UserInput
   for (var z = startZ; z <= endZ; z++){
@@ -76,8 +73,7 @@ export const getTileData = function(APIData, UserInput){
     layerData.z = parseFloat(z)
     layerData.tileCoordinates = getTranslatedTileCoordinates(z, TileBounds.data[z], calculateTranslation(startZ, endZ, SectionBounds.data))
     let pointMatches = {}
-    pointMatches.matchesWithinGroup = MatchesWithinGroup.data[z]
-    pointMatches.matchesOutsideGroup = MatchesOutsideGroup.data[z]
+    pointMatches.matchCounts = MatchCounts.data[z]
     layerData.pointMatches = pointMatches
     tileData.push(layerData)
   }

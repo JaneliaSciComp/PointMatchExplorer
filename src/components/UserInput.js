@@ -63,8 +63,7 @@ class UserInputs extends Component {
     }
 
     if (SectionData.Fetched){
-      nextProps.getData("MatchesWithinGroup")
-      nextProps.getData("MatchesOutsideGroup")
+      nextProps.getData("MatchCounts")
     }
   }
 

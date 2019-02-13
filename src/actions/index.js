@@ -143,7 +143,9 @@ function fetchData(dataType){
         return allBounds
       })
       .then(allBounds => dispatch(receiveData(dataType, allBounds)))
-    }else if(dataType == "MatchesWithinGroup" || dataType == "MatchesOutsideGroup"){
+
+    } else if (dataType === "MatchCounts") {
+
       let urls = []
       let urlIndexToZ = {}
       let indexCount = 0
@@ -209,10 +211,8 @@ function mapDataTypeToURL(state, dataType, params){
       return `${STACK_BASE_URL}/project/${selectedProject}/stack/${selectedStack}/z/${params.z}/tileBounds`
     case "SectionBounds":
       return `${STACK_BASE_URL}/project/${selectedProject}/stack/${selectedStack}/z/${params.z}/bounds`
-    case "MatchesWithinGroup":
-      return `${MATCH_BASE_URL}/matchCollection/${selectedMatchCollection}/group/${params.groupId}/matchesWithinGroup${matchQueryParameters}`
-    case "MatchesOutsideGroup":
-      return `${MATCH_BASE_URL}/matchCollection/${selectedMatchCollection}/group/${params.groupId}/matchesOutsideGroup${matchQueryParameters}`
+    case "MatchCounts":
+      return `${MATCH_BASE_URL}/matchCollection/${selectedMatchCollection}/pGroup/${params.groupId}/matchCounts${matchQueryParameters}`
     default:
       return null
   }

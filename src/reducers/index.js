@@ -29,7 +29,7 @@ export const initialUrlSearchParams = new URLSearchParams(window.location.search
 
 function getSafeInitParam(parameterName, defaultValue) {
   let value = initialUrlSearchParams.get(parameterName);
-  if ((typeof value === "undefined") || (value === null)) {
+  if ((typeof value === "undefined") || (value === null) || (value.trim().length === 0)) {
     value = (typeof defaultValue === "undefined") ? "" : defaultValue;
   }
   return value;
@@ -58,7 +58,8 @@ const PMEVariablesInitialState = {
   isCtrlDown: false,
   isMetaDown: false,
   isPDown: false,
-  rendered: false
+  rendered: false,
+
 }
 
 const APIDataInitialState = {
@@ -70,8 +71,7 @@ const APIDataInitialState = {
   "StackIds": dataInitialState,
   "TileBounds": dataInitialState,
   "SectionBounds": dataInitialState,
-  "MatchesWithinGroup": dataInitialState,
-  "MatchesOutsideGroup": dataInitialState,
+  "MatchCounts": dataInitialState,
 }
 
 function UserInput(state = userInputInitialState, action){

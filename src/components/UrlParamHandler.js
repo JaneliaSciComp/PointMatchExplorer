@@ -16,7 +16,7 @@ class UrlParamHandler extends Component {
       const paramTracker = new URLSearchParams(window.location.search)
       let inputData = {}
       for(let [key, val] of paramTracker.entries()){
-        if(this.props.StoreData.hasOwnProperty(key)){
+        if (this.props.StoreData.hasOwnProperty(key) && (val.trim().length > 0)) {
           inputData[key] = val
         }
       }
@@ -32,8 +32,10 @@ class UrlParamHandler extends Component {
     //update the url params
     const paramTracker = new URLSearchParams(window.location.search)
 
-    _.each(nextProps.StoreData, function(val,key){
-      paramTracker.set(key,val)
+    _.each(nextProps.StoreData, function(val,key) {
+      if (val.trim().length > 0) {
+        paramTracker.set(key, val)
+      }
     })
     this.updateUrl(paramTracker)
 

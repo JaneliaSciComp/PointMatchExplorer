@@ -5,6 +5,11 @@ import "lodash"
 import chroma from "chroma-js"
 
 export var camera
+export var pm_connection_strength_gradient_colors = ["#c33f2e", "#fc9d59", "#fee08b", "#e0f381", "#76c76f", "#3288bd"];
+
+// flipped gradient with strongest connections marked as red
+//export var pm_connection_strength_gradient_colors = ["#3288bd", "#76c76f", "#e0f381", "#fee08b", "#fc9d59", "#c33f2e"];
+
 var scene, renderer, controls
 var intersected, selected
 
@@ -33,7 +38,6 @@ var merged_tiles, merged_line
 //max and min strength of pm connections
 var maxWeight, minWeight
 
-var pm_connection_strength_gradient_colors = ["#c33f2e", "#fc9d59", "#fee08b", "#e0f381", "#76c76f", "#3288bd"]
 //how many steps to generate the gradient in
 var pm_connection_strength_chroma_scale
 var tile_gradient_colors = ["#fc66ff", "#66fcff"]
@@ -117,10 +121,9 @@ var getTileCoordinates = function(tileId, tileData){
 }
 
 let getMatchWeight = function(canvasMatches) {
-  let weight = 0;
-  if ((typeof canvasMatches.matches !== "undefined") &&
-      (typeof canvasMatches.matches.w !== "undefined")) {
-    weight = canvasMatches.matches.w.length;
+  let weight = 1;
+  if (typeof canvasMatches.matchCount !== "undefined") {
+    weight = canvasMatches.matchCount;
   }
   return weight;
 };
@@ -132,12 +135,7 @@ let calculateWeightRange = function(tileData) {
   let maxWeight = 0;
   let minWeight = Number.MAX_VALUE;
   _.forEach(tileData, function(layer) {
-    _.forEach(layer.pointMatches.matchesWithinGroup, function(m) {
-      weight = getMatchWeight(m);
-      maxWeight = Math.max(maxWeight, weight);
-      minWeight = Math.min(minWeight, weight);
-    });
-    _.forEach(layer.pointMatches.matchesOutsideGroup, function(m) {
+    _.forEach(layer.pointMatches.matchCounts, function(m) {
       weight = getMatchWeight(m);
       maxWeight = Math.max(maxWeight, weight);
       minWeight = Math.min(minWeight, weight);
@@ -200,18 +198,28 @@ var drawPMLines = function(tileData){
 
   //create intra-layer lines
   _.forEach(tileData, function(layer) {
-    _.forEach(layer.pointMatches.matchesWithinGroup, function(m) {
+    _.forEach(layer.pointMatches.matchCounts, function(m) {
       let matchWeight = getMatchWeight(m);
       if (matchWeight > 0) {
         m.pTile = getTileCoordinates(m.pId, tileData);
         m.qTile = getTileCoordinates(m.qId, tileData);
-        //calculates new coordinates to draw the intra-layer lines so that they do not begin and start in the middle of the tile
-        let xlen = m.qTile.xPos - m.pTile.xPos;
-        let ylen = m.qTile.yPos - m.pTile.yPos;
-        let hlen = Math.sqrt(Math.pow(xlen, 2) + Math.pow(ylen, 2));
-        let ratio = line_shorten_factor / hlen;
-        let smallerXLen = xlen * ratio;
-        let smallerYLen = ylen * ratio;
+
+        let smallerXLen = 0;
+        let smallerYLen = 0;
+
+        if (m.pTile.zPos === m.qTile.zPos) {
+
+          // calculates new coordinates to draw the intra-layer lines
+          // so that they do not begin and start in the middle of the tile
+
+          let xlen = m.qTile.xPos - m.pTile.xPos;
+          let ylen = m.qTile.yPos - m.pTile.yPos;
+          let hlen = Math.sqrt(Math.pow(xlen, 2) + Math.pow(ylen, 2));
+          let ratio = line_shorten_factor / hlen;
+          smallerXLen = xlen * ratio;
+          smallerYLen = ylen * ratio;
+
+        } // else inter-layer lines are drawn from the center of the tiles, no calculations need to be done
 
         merged_line_geometry.vertices.push(
           new THREE.Vector3(m.pTile.xPos + smallerXLen, m.pTile.yPos + smallerYLen, m.pTile.zPos),
@@ -235,35 +243,6 @@ var drawPMLines = function(tileData){
     });
   });
 
-  //create inter-layer lines
-  _.forEach(removeDuplicatePMs(tileData), function(m) {
-    let matchWeight = getMatchWeight(m);
-    if (matchWeight > 0) {
-      m.pTile = getTileCoordinates(m.pId, tileData);
-      m.qTile = getTileCoordinates(m.qId, tileData);
-
-      //since inter-layer lines are drawn from the center of the tiles, no calculations need to be done
-      merged_line_geometry.vertices.push(
-        new THREE.Vector3(m.pTile.xPos, m.pTile.yPos, m.pTile.zPos),
-        new THREE.Vector3(m.qTile.xPos, m.qTile.yPos, m.qTile.zPos)
-      );
-
-      let PMInfo = {
-        startX: m.pTile.xPos,
-        startY: m.pTile.yPos,
-        startZ: m.pTile.zPos,
-        endX: m.qTile.xPos,
-        endY: m.qTile.yPos,
-        endZ: m.qTile.zPos,
-        connection_strength: matchWeight,
-        strength_color: pm_connection_strength_chroma_scale(matchWeight)
-      };
-
-      addPointMatchInfoToTile(m.pTile, PMInfo);
-      addPointMatchInfoToTile(m.qTile, PMInfo);
-    }
-  });
-
   //merged_line is what is drawn on the canvas (improves performance)
   merged_line = new THREE.LineSegments(merged_line_geometry, merged_line_material);
   scene.add(merged_line);
@@ -272,21 +251,6 @@ var drawPMLines = function(tileData){
 var addPointMatchInfoToTile = function(tile, PMInfo){
   if (!tile.PMList){ tile.PMList = [] }
   tile.PMList.push(PMInfo)
-}
-
-//removes duplicate inter-layer point_matches
-var removeDuplicatePMs = function(tileData){
-  //gets the matchesOutsideGroup for all layers
-  var allMatchesOutsideGroup = _.map(tileData, function(l){
-    return l.pointMatches.matchesOutsideGroup
-  })
-  //combines the matchesOutsideGroup into one array
-  var combinedMatchesOutsideGroup = _.concat.apply(_, allMatchesOutsideGroup)
-  //get unique matches by using the pId and qId as the iteree for uniqueness
-  var uniqueMatchesOutsideGroup = _.uniqBy(combinedMatchesOutsideGroup, function(m){
-    return [m.pId, m.qId].join()
-  })
-  return uniqueMatchesOutsideGroup
 }
 
 var renderPME = function(){
