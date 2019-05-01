@@ -133,16 +133,16 @@ function fetchData(dataType){
       }
       const promises = urls.map(url => fetch(url).then(response => response.json()))
       return Promise.all(promises)
-      .then(responses  => {
+        .then(responses  => {
         //maps Z layer to the bounds
-        let allBounds = {}
-        for (var i = 0; i < responses.length; i++){
+          let allBounds = {}
+          for (var i = 0; i < responses.length; i++){
           //hacky way of getting the Z for the bound
-          allBounds[parseInt(startZ)+i] = responses[i]
-        }
-        return allBounds
-      })
-      .then(allBounds => dispatch(receiveData(dataType, allBounds)))
+            allBounds[parseInt(startZ)+i] = responses[i]
+          }
+          return allBounds
+        })
+        .then(allBounds => dispatch(receiveData(dataType, allBounds)))
 
     } else if (dataType === "MatchCounts") {
 
@@ -160,20 +160,20 @@ function fetchData(dataType){
       }
       var promises = urls.map(url => fetch(url).then(response => response.json()))
       return Promise.all(promises)
-      .then(responses  => {
-        let matches = {}
-        //the return value maintains the order of the original iterable
-        //urlIndexToZ is used to determine what Z corresponds to each response
-        for (var i = 0; i < responses.length; i++){
-          const z = urlIndexToZ[i]
-          if (!matches[z]){
-            matches[z] = []
+        .then(responses  => {
+          let matches = {}
+          //the return value maintains the order of the original iterable
+          //urlIndexToZ is used to determine what Z corresponds to each response
+          for (var i = 0; i < responses.length; i++){
+            const z = urlIndexToZ[i]
+            if (!matches[z]){
+              matches[z] = []
+            }
+            matches[z] = matches[z].concat(responses[i])
           }
-          matches[z] = matches[z].concat(responses[i])
-        }
-        return matches
-      })
-      .then(matches => dispatch(receiveData(dataType, matches)))
+          return matches
+        })
+        .then(matches => dispatch(receiveData(dataType, matches)))
     }else{
       return fetch(mapDataTypeToURL(getState(), dataType))
         .then(response => response.json())
@@ -189,9 +189,9 @@ function mapDataTypeToURL(state, dataType, params){
   const MATCH_BASE_URL = `${BASE_URL}/owner/${selectedMatchOwner}`
   const STACK_BASE_URL = `${BASE_URL}/owner/${selectedStackOwner}`
 
-  var matchQueryParameters = "";
+  var matchQueryParameters = ""
   if (mergeCollection.length > 0) {
-    matchQueryParameters = "?mergeCollection=" + mergeCollection;
+    matchQueryParameters = "?mergeCollection=" + mergeCollection
   }
 
   switch(dataType) {

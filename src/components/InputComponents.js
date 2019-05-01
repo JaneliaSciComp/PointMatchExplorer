@@ -1,17 +1,17 @@
-import React from "react";
+import React from "react"
 
 export const SpecsInput = (props) => {
-  let stackDisabled = true;
-  let matchDisabled = true;
-  let projectDisabled = true;
+  let stackDisabled = true
+  let matchDisabled = true
+  let projectDisabled = true
   if (props.selectedProject && props.stacks){
-    stackDisabled = false;
+    stackDisabled = false
   }
   if (props.selectedStackOwner && props.projects){
-    projectDisabled = false;
+    projectDisabled = false
   }
   if (props.selectedMatchOwner && props.match_collections){
-    matchDisabled =false;
+    matchDisabled =false
   }
 
   return (
@@ -31,7 +31,7 @@ export const SpecsInput = (props) => {
       <Dropdown className = "specsInput" dropdownName="Select Match Collection" onChange={props.onMatchCollectionSelect}
         values={ matchDisabled ? [] : props.match_collections} value={props.selectedMatchCollection} disabled={matchDisabled}/>
     </div>
-  );
+  )
 }
 
 export const handleHelpClick = function() {
@@ -53,10 +53,10 @@ export const handleHelpClick = function() {
 - After selecting (clicking) one tile, 
   hold p key and click second tile 
   to view match data for the tile pair
-`;
-  alert(helpMessage);
-  return false;
-};
+`
+  alert(helpMessage)
+  return false
+}
 
 export const LayerInput = (props) => {
   return (
@@ -68,18 +68,18 @@ export const LayerInput = (props) => {
       <button className = "layerButton" onClick={e => props.onRenderClick(e.target.value)}>Render Layers</button>
       <button className = "layerButton" onClick={handleHelpClick}>Help</button>
     </div>
-  );
+  )
 }
 
 const Dropdown = (props) => {
   return (
-      <select disabled={props.disabled} id={props.dropdownId} required onChange={e => props.onChange(e.target.value)} value={props.value}>
-        <option value="" disabled>{props.dropdownName}</option>
-        {
-          props.values.map(value =>
-            <option key={value}
-              value={value}>{value}</option>)
-        }
-      </select>
-  );
+    <select disabled={props.disabled} id={props.dropdownId} required onChange={e => props.onChange(e.target.value)} value={props.value}>
+      <option value="" disabled>{props.dropdownName}</option>
+      {
+        props.values.map(value =>
+          <option key={value}
+            value={value}>{value}</option>)
+      }
+    </select>
+  )
 }

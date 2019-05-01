@@ -1,12 +1,16 @@
-var path = require('path');
-var webpack = require('webpack');
+const path = require('path');
 
-var defaultPort = 3000;
+process.traceDeprecation = true;
+
+const defaultPort = 3000;
 module.exports = {
-  entry: './src/root.js',
+  mode: "production", // "production" | "development" | "none"
+  entry: {
+    pme: './src/root.js'
+  },
   output: { 
     path: __dirname, 
-    filename: 'bundle.js' 
+    filename: 'bundle.js'
   },
   devServer: {
     contentBase: path.resolve(__dirname),
@@ -33,13 +37,4 @@ module.exports = {
       },
     ],
   },
-  plugins: [
-          function() {
-              //show timestamp before compiling
-              this.plugin('watch-run', function(watching, callback) {
-                  console.log('Begin compile at ' + new Date());
-                  callback();
-              })
-          }
-  ],
 };

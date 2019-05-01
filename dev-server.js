@@ -22,7 +22,7 @@ new WebpackDevServer(compiler, config.devServer)
   console.log('Listening at localhost:' + config.devServer.port);
 });
 
-compiler.plugin('done', () => {
+compiler.hooks.done.tap('MyPlugin', (context, entry) => {
   if (isInitialCompilation) {
     // Ensures that we log after webpack printed its stats (is there a better way?)
     setTimeout(() => {

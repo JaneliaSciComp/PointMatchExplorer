@@ -1,4 +1,4 @@
-import React, {Component} from "react";
+import React, {Component} from "react"
 import {connect} from "react-redux"
 import {fetchDataIfNeeded, invalidateData, updateMatchCollection, updateStartZ, updateEndZ, updateProject, 
   updateStack, updateStackOwner, updateMatchOwner, resetStackData, resetMatchData} from "../actions"
@@ -75,30 +75,30 @@ class UserInputs extends Component {
       <div>
         {dropdownValues &&
         <div>
-            <SpecsInput
-              projects={dropdownValues.projects}
-              stacks={dropdownValues.stacks}
-              match_collections={dropdownValues.match_collections}
-              stack_owners={dropdownValues.stack_owners}
-              match_owners={dropdownValues.match_owners}
-              onProjectSelect={this.handleProjectSelect}
-              onStackSelect={this.handleStackSelect}
-              onMatchCollectionSelect={this.handleMatchCollectionSelect}
-              onStackOwnerSelect={this.handleStackOwnerSelect}
-              onMatchOwnerSelect={this.handleMatchOwnerSelect}
-              selectedProject={UserInput.selectedProject}
-              selectedStack={UserInput.selectedStack}
-              selectedMatchCollection={UserInput.selectedMatchCollection}
-              selectedStackOwner={UserInput.selectedStackOwner}
-              selectedMatchOwner={UserInput.selectedMatchOwner}/>
-            <LayerInput
-              onRenderClick={this.props.onRenderClick}
-              onChangeStartZ={this.handleChangeStartZ}
-              selectedStartZ={UserInput.startZ}
-              onChangeEndZ={this.handleChangeEndZ} 
-              selectedEndZ={UserInput.endZ}/>
+          <SpecsInput
+            projects={dropdownValues.projects}
+            stacks={dropdownValues.stacks}
+            match_collections={dropdownValues.match_collections}
+            stack_owners={dropdownValues.stack_owners}
+            match_owners={dropdownValues.match_owners}
+            onProjectSelect={this.handleProjectSelect}
+            onStackSelect={this.handleStackSelect}
+            onMatchCollectionSelect={this.handleMatchCollectionSelect}
+            onStackOwnerSelect={this.handleStackOwnerSelect}
+            onMatchOwnerSelect={this.handleMatchOwnerSelect}
+            selectedProject={UserInput.selectedProject}
+            selectedStack={UserInput.selectedStack}
+            selectedMatchCollection={UserInput.selectedMatchCollection}
+            selectedStackOwner={UserInput.selectedStackOwner}
+            selectedMatchOwner={UserInput.selectedMatchOwner}/>
+          <LayerInput
+            onRenderClick={this.props.onRenderClick}
+            onChangeStartZ={this.handleChangeStartZ}
+            selectedStartZ={UserInput.startZ}
+            onChangeEndZ={this.handleChangeEndZ} 
+            selectedEndZ={UserInput.endZ}/>
         </div>
-      }
+        }
       </div>
     )
   }

@@ -5,7 +5,7 @@ import "lodash"
 import chroma from "chroma-js"
 
 export var camera
-export var pm_connection_strength_gradient_colors = ["#c33f2e", "#fc9d59", "#fee08b", "#e0f381", "#76c76f", "#3288bd"];
+export var pm_connection_strength_gradient_colors = ["#c33f2e", "#fc9d59", "#fee08b", "#e0f381", "#76c76f", "#3288bd"]
 
 // flipped gradient with strongest connections marked as red
 //export var pm_connection_strength_gradient_colors = ["#3288bd", "#76c76f", "#e0f381", "#fee08b", "#fc9d59", "#c33f2e"];
@@ -121,28 +121,28 @@ var getTileCoordinates = function(tileId, tileData){
 }
 
 let getMatchWeight = function(canvasMatches) {
-  let weight = 1;
+  let weight = 1
   if (typeof canvasMatches.matchCount !== "undefined") {
-    weight = canvasMatches.matchCount;
+    weight = canvasMatches.matchCount
   }
-  return weight;
-};
+  return weight
+}
 
 //calculate max and min connection strength based on number of point matches
 //for use in selecting the color indicating the strength
 let calculateWeightRange = function(tileData) {
-  let weight = 0;
-  let maxWeight = 0;
-  let minWeight = Number.MAX_VALUE;
+  let weight = 0
+  let maxWeight = 0
+  let minWeight = Number.MAX_VALUE
   _.forEach(tileData, function(layer) {
     _.forEach(layer.pointMatches.matchCounts, function(m) {
-      weight = getMatchWeight(m);
-      maxWeight = Math.max(maxWeight, weight);
-      minWeight = Math.min(minWeight, weight);
-    });
-  });
-  return { minWeight: minWeight, maxWeight: maxWeight };
-};
+      weight = getMatchWeight(m)
+      maxWeight = Math.max(maxWeight, weight)
+      minWeight = Math.min(minWeight, weight)
+    })
+  })
+  return { minWeight: minWeight, maxWeight: maxWeight }
+}
 
 var drawTiles = function(tileData){
   var merged_tile_geometry = new THREE.Geometry()
@@ -199,32 +199,32 @@ var drawPMLines = function(tileData){
   //create intra-layer lines
   _.forEach(tileData, function(layer) {
     _.forEach(layer.pointMatches.matchCounts, function(m) {
-      let matchWeight = getMatchWeight(m);
+      let matchWeight = getMatchWeight(m)
       if (matchWeight > 0) {
-        m.pTile = getTileCoordinates(m.pId, tileData);
-        m.qTile = getTileCoordinates(m.qId, tileData);
+        m.pTile = getTileCoordinates(m.pId, tileData)
+        m.qTile = getTileCoordinates(m.qId, tileData)
 
-        let smallerXLen = 0;
-        let smallerYLen = 0;
+        let smallerXLen = 0
+        let smallerYLen = 0
 
         if (m.pTile.zPos === m.qTile.zPos) {
 
           // calculates new coordinates to draw the intra-layer lines
           // so that they do not begin and start in the middle of the tile
 
-          let xlen = m.qTile.xPos - m.pTile.xPos;
-          let ylen = m.qTile.yPos - m.pTile.yPos;
-          let hlen = Math.sqrt(Math.pow(xlen, 2) + Math.pow(ylen, 2));
-          let ratio = line_shorten_factor / hlen;
-          smallerXLen = xlen * ratio;
-          smallerYLen = ylen * ratio;
+          let xlen = m.qTile.xPos - m.pTile.xPos
+          let ylen = m.qTile.yPos - m.pTile.yPos
+          let hlen = Math.sqrt(Math.pow(xlen, 2) + Math.pow(ylen, 2))
+          let ratio = line_shorten_factor / hlen
+          smallerXLen = xlen * ratio
+          smallerYLen = ylen * ratio
 
         } // else inter-layer lines are drawn from the center of the tiles, no calculations need to be done
 
         merged_line_geometry.vertices.push(
           new THREE.Vector3(m.pTile.xPos + smallerXLen, m.pTile.yPos + smallerYLen, m.pTile.zPos),
           new THREE.Vector3(m.qTile.xPos - smallerXLen, m.qTile.yPos - smallerYLen, m.qTile.zPos)
-        );
+        )
 
         var PMInfo = {
           startX: m.pTile.xPos + smallerXLen,
@@ -235,18 +235,18 @@ var drawPMLines = function(tileData){
           endZ: m.qTile.zPos,
           connection_strength: matchWeight,
           strength_color: pm_connection_strength_chroma_scale(matchWeight)
-        };
+        }
 
-        addPointMatchInfoToTile(m.pTile, PMInfo);
-        addPointMatchInfoToTile(m.qTile, PMInfo);
+        addPointMatchInfoToTile(m.pTile, PMInfo)
+        addPointMatchInfoToTile(m.qTile, PMInfo)
       }
-    });
-  });
+    })
+  })
 
   //merged_line is what is drawn on the canvas (improves performance)
-  merged_line = new THREE.LineSegments(merged_line_geometry, merged_line_material);
-  scene.add(merged_line);
-};
+  merged_line = new THREE.LineSegments(merged_line_geometry, merged_line_material)
+  scene.add(merged_line)
+}
 
 var addPointMatchInfoToTile = function(tile, PMInfo){
   if (!tile.PMList){ tile.PMList = [] }
@@ -324,7 +324,7 @@ export const onMouseUp = function(event, isShiftDown, isCtrlDown, isMetaDown, is
       if (selected){
         dehighlight(selected.faceIndex, true)
         if (isPDown) {
-          openTilePair(selected.faceIndex, upobj.faceIndex, userInput);
+          openTilePair(selected.faceIndex, upobj.faceIndex, userInput)
         }
       }
       selected = upobj
@@ -360,10 +360,10 @@ export const onMouseUp = function(event, isShiftDown, isCtrlDown, isMetaDown, is
 
 var openTileImageWithNeighbors = function openTileImageWithNeighbors(faceIndex, userInput) {
 
-  var tile = faceIndexToTileInfo[faceIndex];
+  var tile = faceIndexToTileInfo[faceIndex]
 
-  var width = tile.maxX - tile.minX + 1;
-  var renderScale = 400.0 / width;
+  var width = tile.maxX - tile.minX + 1
+  var renderScale = 400.0 / width
 
   var url = "http://" + userInput.dynamicRenderHost + "/render-ws/view/tile-with-neighbors.html?tileId=" +
             tile.tileId +
@@ -372,18 +372,18 @@ var openTileImageWithNeighbors = function openTileImageWithNeighbors(faceIndex, 
             "&renderStackProject=" + userInput.selectedProject +
             "&renderStack=" + userInput.selectedStack +
             "&matchOwner=" + userInput.selectedMatchOwner +
-            "&matchCollection=" + userInput.selectedMatchCollection;
+            "&matchCollection=" + userInput.selectedMatchCollection
 
-  window.open(url);
-};
+  window.open(url)
+}
 
 var openTilePair = function openTilePair(faceIndexA, faceIndexB, userInput) {
 
-  var pTile = faceIndexToTileInfo[faceIndexA];
-  var qTile = faceIndexToTileInfo[faceIndexB];
+  var pTile = faceIndexToTileInfo[faceIndexA]
+  var qTile = faceIndexToTileInfo[faceIndexB]
 
-  var maxWidth = Math.max((pTile.maxX - pTile.minX + 1), (qTile.maxX - qTile.minX + 1));
-  var renderScale = 700.0 / maxWidth;
+  var maxWidth = Math.max((pTile.maxX - pTile.minX + 1), (qTile.maxX - qTile.minX + 1))
+  var renderScale = 700.0 / maxWidth
 
   var url = "http://" + userInput.dynamicRenderHost + "/render-ws/view/tile-pair.html?pId=" + pTile.tileId +
             "&qId=" + qTile.tileId +
@@ -392,14 +392,14 @@ var openTilePair = function openTilePair(faceIndexA, faceIndexB, userInput) {
             "&renderStackProject=" + userInput.selectedProject +
             "&renderStack=" + userInput.selectedStack +
             "&matchOwner=" + userInput.selectedMatchOwner +
-            "&matchCollection=" + userInput.selectedMatchCollection;
+            "&matchCollection=" + userInput.selectedMatchCollection
 
-  window.open(url);
-};
+  window.open(url)
+}
 
 var openStackInCatmaid = function(faceIndex, userInput, stackResolution){
   var tileInfo = faceIndexToTileInfo[faceIndex]
-  var url = "http://" + userInput.catmaidHost + "/?";
+  var url = "http://" + userInput.catmaidHost + "/?"
   url += "pid=" + userInput.selectedStackOwner + "__" + userInput.selectedProject
   url += "&zp=" + tileInfo.tileZ*stackResolution.stackResolutionZ
   url += "&yp=" + (tileInfo.minY+tileInfo.maxY)/2*stackResolution.stackResolutionY
@@ -538,7 +538,7 @@ var getSelectedMetadata = function(faceIndex, isShiftDown){
         pointMatchSetsCount += tile.PMList.length
       }
     })
-      //needs to be halved since they each tile has 2 faces and they are counted twice
+    //needs to be halved since they each tile has 2 faces and they are counted twice
     pointMatchSetsCount = pointMatchSetsCount/2
     md = [
       {
@@ -597,12 +597,12 @@ export const disposeThreeScene = function(){
 
 }
 
-window.addEventListener( "resize", onWindowResize, false );
+window.addEventListener( "resize", onWindowResize, false )
 
 function onWindowResize(){
   if(camera && renderer){
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize( window.innerWidth, window.innerHeight );
+    camera.aspect = window.innerWidth / window.innerHeight
+    camera.updateProjectionMatrix()
+    renderer.setSize( window.innerWidth, window.innerHeight )
   }
 }

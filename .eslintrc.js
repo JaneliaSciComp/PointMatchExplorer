@@ -5,8 +5,8 @@ module.exports = {
     },
     "extends": "eslint:recommended",
     "parserOptions": {
+        "ecmaVersion": 6,
         "ecmaFeatures": {
-            "experimentalObjectRestSpread": true,
             "jsx": true
         },
         "sourceType": "module"
@@ -34,9 +34,6 @@ module.exports = {
         ],
         "react/jsx-uses-react": ["error"],
         "react/jsx-uses-vars": ["error"],
-    },
-    "ecmaFeatures": {
-        "jsx": true
     },
     "globals": {
         "_": true,

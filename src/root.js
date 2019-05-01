@@ -11,15 +11,15 @@ import App from "./app"
 const loggerMiddleware = createLogger() // eslint-disable-line
 
 const store = createStore(
-	pmeApp,
-	{},
-	applyMiddleware(thunkMiddleware),
-	window.devToolsExtension ? window.devToolsExtension() : f => f
+  pmeApp,
+  {},
+  applyMiddleware(thunkMiddleware),
+  window.devToolsExtension ? window.devToolsExtension() : f => f
 )
 
 render(
-	<Provider store={store}>
-		<App />
-	</Provider>,
-	document.getElementById("content")
-);
+  <Provider store={store}>
+    <App />
+  </Provider>,
+  document.getElementById("content")
+)
