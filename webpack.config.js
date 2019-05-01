@@ -12,7 +12,8 @@ module.exports = {
     contentBase: path.resolve(__dirname),
     port: defaultPort,
   },
-  module: {
+  devtool: "source-map",
+  module: {
     rules: [
       {
         test: /\.js$/,
