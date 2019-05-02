@@ -1,4 +1,4 @@
-import THREE from "three"
+import * as THREE from "three"
 import { MeshLine, MeshLineMaterial } from "three.meshline" 
 import TrackballControls from "three-trackballcontrols"
 import "lodash"
@@ -45,7 +45,7 @@ var tile_gradient_chroma_scale
 
 var line_color = 0xaaaaaa
 var line_width = 1
-var line_highlight_width = 10
+let line_highlight_width = 20;
 
 var tile_opacity = 0.9
 // var tile_highlight_opacity = 0.9;
@@ -167,6 +167,7 @@ var drawTiles = function(tileData){
       c.yPos = -position_scale * c.minYtranslated
       c.zPos = z_offset
       c.PMList = []
+      c.layerPMList = [];
 
       //creating geometries and drawing the tile
       //the merged tiles are what are drawn on the canvas
@@ -198,6 +199,9 @@ var drawPMLines = function(tileData){
 
   //create intra-layer lines
   _.forEach(tileData, function(layer) {
+
+    let layerPMList = [];
+
     _.forEach(layer.pointMatches.matchCounts, function(m) {
       let matchWeight = getMatchWeight(m)
       if (matchWeight > 0) {
@@ -239,6 +243,13 @@ var drawPMLines = function(tileData){
 
         addPointMatchInfoToTile(m.pTile, PMInfo)
         addPointMatchInfoToTile(m.qTile, PMInfo)
+
+        if (m.pTile.zPos === m.qTile.zPos) {
+          layerPMList.push(PMInfo);
+          m.pTile.layerPMList = layerPMList;
+          m.qTile.layerPMList = layerPMList;
+        }
+
       }
     })
   })
@@ -410,22 +421,19 @@ var openStackInCatmaid = function(faceIndex, userInput, stackResolution){
   window.open(url)
 }
 
-var highlight = function(faceIndex, isSelected, isShiftDown){
+let highlight = function(faceIndex, isSelected, isShiftDown) {
+
+  let tile = faceIndexToTileInfo[faceIndex];
 
   if (isShiftDown){
-    var zLayer = faceIndexToTileInfo[faceIndex].tileZ
-    var selected_layer_PM_lines = new THREE.Group()
-    _.forEach(faceIndexToTileInfo, function(tile){
-      //draw the point match lines for all the tiles in that layer
-      if (tile.tileZ == zLayer){
-        addHighlightedPMLine(selected_layer_PM_lines, tile)
-      }
-    })
+    //draw the point match lines for all the tiles in that layer
+    let selected_layer_PM_lines = new THREE.Group();
+    addHighlightedPMLines(selected_layer_PM_lines, tile.layerPMList);
+    selected_layer_PM_lines.name = "selectedLayer";
+    scene.add(selected_layer_PM_lines);
 
-    selected_layer_PM_lines.name = "selectedLayer"
-    scene.add(selected_layer_PM_lines)
-  }else{
-    var tile = faceIndexToTileInfo[faceIndex]
+  } else {
+
     //draw the tile border
     var tileBorder = createTileBorder(tile, isSelected)
     //draw the point match lines
@@ -444,8 +452,13 @@ var highlight = function(faceIndex, isSelected, isShiftDown){
   }
 }
 
-var addHighlightedPMLine = function(group, tile){
-  _.forEach(tile.PMList, function(pm){
+let addHighlightedPMLines = function(group, PMList) {
+  // /*eslint no-console: "off"*/
+  // console.log("addHighlightedPMLines: entry, PMList length is: " + PMList.length);
+
+  const canvasResolution = new THREE.Vector2(window.innerWidth, window.innerHeight);
+
+  _.forEach(PMList, function(pm) {
     var line_geometry = new THREE.Geometry()
     line_geometry.vertices.push(
       new THREE.Vector3(pm.startX, pm.startY, pm.startZ),
@@ -457,12 +470,14 @@ var addHighlightedPMLine = function(group, tile){
       color: new THREE.Color(pm.strength_color.hex()),
       lineWidth: line_highlight_width,
       sizeAttenuation: true,
-      resolution: new THREE.Vector2(window.innerWidth, window.innerHeight)
+      resolution: canvasResolution
 
     })
     var meshLine = new THREE.Mesh(line.geometry, line_material)
     group.add(meshLine)
   })
+  // /*eslint no-console: "off"*/
+  // console.log("addHighlightedPMLines: exit");
 }
 
 var createTileBorder = function(tile){
@@ -489,7 +504,7 @@ var createTileBorder = function(tile){
 
 var createLines = function(tile){
   var PMGroup = new THREE.Group()
-  addHighlightedPMLine(PMGroup, tile)
+  addHighlightedPMLines(PMGroup, tile.PMList);
   return PMGroup
 }
 
