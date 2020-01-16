@@ -1,17 +1,14 @@
 //checks if tile exists, and if so, return the tile coordinate information
-const getTileCoordinates = function(tileId, tileData){
-  let tileCoordinates;
+const tileExists = function(tileId, tileData){
+  let exists = false;
   //loop through all tiles in each layer to find tile
-  _.forEach(tileData, function(layer){
-    //since tileCoordinates is a dictionary, just check if tileId exists in the keys
-    if (tileId in layer.tileCoordinates){
-      tileCoordinates = layer.tileCoordinates[tileId]
+  tileData.some(function(layer) {
+    if (tileId in layer.tileCoordinates) {
+      exists = true;
     }
-    if (tileCoordinates){
-      return false
-    }
+    return exists;
   });
-  return tileCoordinates
+  return exists;
 };
 
 /**
@@ -48,8 +45,8 @@ export const getSectionsForZ = function(z, SectionData){
  */
 const filterPointMatches = function(tileData){
   _.forEach(tileData, function(layer){
-    _.remove(layer.pointMatches.matchCounts, function(match){
-      return getTileCoordinates(match.pId, tileData) === undefined || getTileCoordinates(match.qId, tileData) === undefined
+    _.remove(layer.pointMatches.matchCounts, function(match) {
+      return (! tileExists(match.pId, tileData)) && (! tileExists(match.qId, tileData));
     })
   })
 };
