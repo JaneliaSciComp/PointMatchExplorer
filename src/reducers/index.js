@@ -23,7 +23,7 @@ const dataInitialState = {
   didInvalidate: false,
   Fetched: false,
   data: {}
-}
+};
 
 export const initialUrlSearchParams = new URLSearchParams(window.location.search);
 
@@ -60,7 +60,7 @@ const PMEVariablesInitialState = {
   isPDown: false,
   rendered: false,
 
-}
+};
 
 const APIDataInitialState = {
   "StackOwners": dataInitialState,
@@ -72,44 +72,44 @@ const APIDataInitialState = {
   "TileBounds": dataInitialState,
   "SectionBounds": dataInitialState,
   "MatchCounts": dataInitialState,
-}
+};
 
 function UserInput(state = userInputInitialState, action){
   switch (action.type) {
     case UPDATE_START_Z:
       return Object.assign({}, state, {
         startZ: action.zValue
-      })
+      });
     case UPDATE_END_Z:
       return Object.assign({}, state, {
         endZ: action.zValue
-      })
+      });
     case UPDATE_PROJECT:
       return Object.assign({}, state, {
         selectedProject: action.project,
         selectedStack: ""
-      })
+      });
     case UPDATE_STACK_OWNER:
       return Object.assign({}, state, {
         selectedStackOwner: action.stackOwner,
         selectedProject:"",
         selectedStack: ""
-      })
+      });
     case UPDATE_STACK:
       return Object.assign({}, state, {
         selectedStack: action.stack
-      })
+      });
     case UPDATE_MATCH_OWNER:
       return Object.assign({}, state, {
         selectedMatchOwner: action.matchOwner,
         selectedMatchCollection: ""
-      })
+      });
     case UPDATE_MATCH_COLLECTION:
       return Object.assign({}, state, {
         selectedMatchCollection: action.matchCollection
-      })
+      });
     case UPDATE_USER_INPUT:
-      return Object.assign({}, state, action.userInputData)
+      return Object.assign({}, state, action.userInputData);
     default:
       return state
   }
@@ -121,20 +121,20 @@ function getData(state = dataInitialState, action){
       return Object.assign({}, state, {
         didInvalidate: true,
         Fetched: false,
-      })
+      });
     case REQUEST_DATA:
       return Object.assign({}, state, {
         isFetching: true,
         didInvalidate: false,
         Fetched: false
-      })
+      });
     case RECEIVE_DATA:
       return Object.assign({}, state, {
         isFetching: false,
         didInvalidate: false,
         Fetched: true,
         data: action.data
-      })
+      });
     default:
       return state
   }
@@ -147,37 +147,35 @@ function APIData(state = APIDataInitialState, action){
     case REQUEST_DATA:
       return Object.assign({}, state, {
         [action.dataType] : getData(state[action.dataType], action)
-      })
+      });
     case RESET_STACK_DATA:
       return Object.assign({}, state, {
         "StackIds": dataInitialState,
         "StackMetadata": dataInitialState,
         "SectionData": dataInitialState,
-      })
+      });
     case RESET_MATCH_DATA:
       return Object.assign({}, state, {
         "MatchCollections": dataInitialState,
-      })
+      });
     default:
       return state
   }
 }
 
 function tileData(state = {}, action){
-  switch (action.type) {
-    case UPDATE_TILE_DATA:
-      return action.tileData
-    default:
-      return state
+  if (action.type === UPDATE_TILE_DATA) {
+    return action.tileData;
+  } else {
+    return state
   }
 }
 
 function PMEVariables(state = PMEVariablesInitialState, action){
-  switch (action.type) {
-    case UPDATE_PME_VARIABLES:
-      return Object.assign({}, state, action.PMEVariables)
-    default:
-      return state
+  if (action.type === UPDATE_PME_VARIABLES) {
+    return Object.assign({}, state, action.PMEVariables);
+  } else {
+    return state
   }
 }
 
@@ -186,6 +184,6 @@ const pmeApp = combineReducers({
   APIData,
   tileData,
   PMEVariables
-})
+});
 
 export default pmeApp
