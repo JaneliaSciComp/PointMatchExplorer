@@ -7,13 +7,13 @@ import {SpecsInput, LayerInput} from "./InputComponents.js"
 
 class UserInputs extends Component {
   constructor(props){
-    super(props)
-    this.handleChangeStartZ = this.handleChangeStartZ.bind(this)
-    this.handleChangeEndZ = this.handleChangeEndZ.bind(this)
-    this.handleProjectSelect = this.handleProjectSelect.bind(this)
-    this.handleStackSelect = this.handleStackSelect.bind(this)
-    this.handleMatchCollectionSelect = this.handleMatchCollectionSelect.bind(this)
-    this.handleStackOwnerSelect = this.handleStackOwnerSelect.bind(this)
+    super(props);
+    this.handleChangeStartZ = this.handleChangeStartZ.bind(this);
+    this.handleChangeEndZ = this.handleChangeEndZ.bind(this);
+    this.handleProjectSelect = this.handleProjectSelect.bind(this);
+    this.handleStackSelect = this.handleStackSelect.bind(this);
+    this.handleMatchCollectionSelect = this.handleMatchCollectionSelect.bind(this);
+    this.handleStackOwnerSelect = this.handleStackOwnerSelect.bind(this);
     this.handleMatchOwnerSelect = this.handleMatchOwnerSelect.bind(this)
   }
 
@@ -38,22 +38,22 @@ class UserInputs extends Component {
   }
 
   handleStackOwnerSelect(stackOwner){
-    this.props.resetStackData()
+    this.props.resetStackData();
     this.props.updateStackOwner(stackOwner)
   }
 
   handleMatchOwnerSelect(matchOwner){
-    this.props.resetMatchData()
+    this.props.resetMatchData();
     this.props.updateMatchOwner(matchOwner)
   }
   
   componentWillMount(){
-    this.props.getData("StackOwners")
+    this.props.getData("StackOwners");
     this.props.getData("MatchOwners")
   }
   componentWillReceiveProps(nextProps){
-    const {StackOwners, MatchOwners, SectionData} = nextProps.APIData
-    const {selectedStackOwner, selectedMatchOwner} = nextProps.UserInput
+    const {StackOwners, MatchOwners, SectionData} = nextProps.APIData;
+    const {selectedStackOwner, selectedMatchOwner} = nextProps.UserInput;
 
     if(StackOwners.Fetched && selectedStackOwner){
       nextProps.getData("StackIds")
@@ -68,8 +68,8 @@ class UserInputs extends Component {
   }
 
   render(){
-    const {APIData, UserInput} = this.props
-    const dropdownValues = getUserInputSelectLists(APIData, UserInput)
+    const {APIData, UserInput} = this.props;
+    const dropdownValues = getUserInputSelectLists(APIData, UserInput);
     
     return (
       <div>
@@ -106,12 +106,12 @@ class UserInputs extends Component {
 }
 
 const mapStateToProps = function(state) {
-  const {APIData, UserInput} = state
+  const {APIData, UserInput} = state;
   return {
     APIData,
     UserInput
   }
-}
+};
 
 const mapDispatchToProps = function(dispatch) {
   return {
@@ -149,6 +149,6 @@ const mapDispatchToProps = function(dispatch) {
       dispatch(resetMatchData())
     }
   }
-}
+};
 
 export default connect(mapStateToProps, mapDispatchToProps)(UserInputs)
