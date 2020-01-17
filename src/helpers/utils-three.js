@@ -105,8 +105,7 @@ export const generateVisualization = function(canvas, tileData){
 };
 
 //checks if tile exists, and if so, return the tile coordinate information
-const getTileCoordinates = function (tileId,
-                                     tileData) {
+const getTileCoordinates = function (tileId, tileData) {
   let tileCoordinates;
   //loop through all tiles in each layer to find tile
   _.forEach(tileData, function (layer) {
@@ -147,12 +146,13 @@ let calculateWeightRange = function(tileData) {
 
 const drawTiles = function(tileData){
   const merged_tile_geometry = new THREE.Geometry();
-  const merged_tile_material = new THREE.MeshBasicMaterial({
-                                                             transparent: true,
-                                                             opacity: tile_opacity,
-                                                             side: THREE.DoubleSide,
-                                                             vertexColors: THREE.FaceColors,
-                                                           });
+  const materialParameters = {
+    transparent: true,
+    opacity: tile_opacity,
+    side: THREE.DoubleSide,
+    vertexColors: THREE.FaceColors,
+  };
+  const merged_tile_material = new THREE.MeshBasicMaterial(materialParameters);
 
   let faceIndexCounter = 0;
   _.forEach(tileData, function(layer, index){
@@ -193,10 +193,11 @@ const drawTiles = function(tileData){
 
 const drawPMLines = function(tileData){
   const merged_line_geometry = new THREE.Geometry();
-  const merged_line_material = new THREE.LineBasicMaterial({
-                                                             color: line_color,
-                                                             linewidth: line_width
-                                                           });
+  const materialParameters = {
+    color: line_color,
+    linewidth: line_width
+  };
+  const merged_line_material = new THREE.LineBasicMaterial(materialParameters);
 
   //create intra-layer lines
   _.forEach(tileData, function(layer) {
@@ -467,13 +468,14 @@ let addHighlightedPMLines = function(group, PMList) {
     );
     const line = new MeshLine();
     line.setGeometry(line_geometry);
-    const line_material = new MeshLineMaterial({
-                                                 color: new THREE.Color(pm.strength_color.hex()),
-                                                 lineWidth: line_highlight_width,
-                                                 sizeAttenuation: true,
-                                                 resolution: canvasResolution
 
-                                               });
+    const materialParameters = {
+      color: new THREE.Color(pm.strength_color.hex()),
+      lineWidth: line_highlight_width,
+      sizeAttenuation: true,
+      resolution: canvasResolution
+    };
+    const line_material = new MeshLineMaterial(materialParameters);
     const meshLine = new THREE.Mesh(line.geometry, line_material);
     group.add(meshLine)
   })
@@ -484,11 +486,13 @@ let addHighlightedPMLines = function(group, PMList) {
 const createTileBorder = function(tile){
   //draws 4 lines to form the border around the tile
   const border_geometry = new THREE.Geometry();
-  const border_material = new THREE.LineBasicMaterial({
-                                                        color: tile_border_color,
-                                                        linewidth: tile_border_width,
-                                                        visible: true
-                                                      });
+  const materialParameters = {
+    color: tile_border_color,
+    linewidth: tile_border_width,
+    visible: true
+  };
+  const border_material = new THREE.LineBasicMaterial(materialParameters);
+
   //xPos and yPos are the centers of the tiles, a corner needs to be calcuated in order to draw the border_geometry
   const cornerX = tile.xPos - 0.5 * tile.width;
   const cornerY = tile.yPos - 0.5 * tile.height;
