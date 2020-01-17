@@ -67,10 +67,9 @@ const APIDataInitialState = {
   "MatchOwners": dataInitialState,
   "MatchCollections": dataInitialState,
   "StackMetadata": dataInitialState,
-  "SectionData": dataInitialState,
+  "StackSubVolume": dataInitialState,
   "StackIds": dataInitialState,
   "TileBounds": dataInitialState,
-  "SectionBounds": dataInitialState,
   "MatchCounts": dataInitialState,
 };
 
@@ -152,7 +151,7 @@ function APIData(state = APIDataInitialState, action){
       return Object.assign({}, state, {
         "StackIds": dataInitialState,
         "StackMetadata": dataInitialState,
-        "SectionData": dataInitialState,
+        "StackSubVolume": dataInitialState,
       });
     case RESET_MATCH_DATA:
       return Object.assign({}, state, {

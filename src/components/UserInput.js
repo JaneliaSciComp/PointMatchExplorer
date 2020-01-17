@@ -51,19 +51,20 @@ class UserInputs extends Component {
     this.props.getData("StackOwners");
     this.props.getData("MatchOwners")
   }
-  componentWillReceiveProps(nextProps){
-    const {StackOwners, MatchOwners, SectionData} = nextProps.APIData;
+
+  componentWillReceiveProps(nextProps) {
+    const {StackOwners, MatchOwners, StackSubVolume} = nextProps.APIData;
     const {selectedStackOwner, selectedMatchOwner} = nextProps.UserInput;
 
-    if(StackOwners.Fetched && selectedStackOwner){
-      nextProps.getData("StackIds")
+    if (StackOwners.Fetched && selectedStackOwner) {
+      nextProps.getData("StackIds");
     }
-    if (MatchOwners.Fetched && selectedMatchOwner){
-      nextProps.getData("MatchCollections")
+    if (MatchOwners.Fetched && selectedMatchOwner) {
+      nextProps.getData("MatchCollections");
     }
 
-    if (SectionData.Fetched){
-      nextProps.getData("MatchCounts")
+    if (StackSubVolume.Fetched) {
+      nextProps.getData("MatchCounts");
     }
   }
 

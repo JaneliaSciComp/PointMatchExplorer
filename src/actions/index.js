@@ -1,5 +1,3 @@
-import {getSectionsForZ} from "../helpers/utils.js"
-
 export const INVALIDATE_DATA = "INVALIDATE_DATA";
 export const REQUEST_DATA = "REQUEST_DATA";
 export const RECEIVE_DATA = "RECEIVE_DATA";
@@ -120,71 +118,136 @@ export function updatePMEVariables(PMEVariables){
   }
 }
 
+/**
+ * @typedef {Object} SectionData
+ * @property {String} sectionId
+ * @property {Number} z
+ * @property {Number} tileCount
+ * @property {Number} minX
+ * @property {Number} minY
+ * @property {Number} maxX
+ * @property {Number} maxY
+ */
 function fetchData(dataType){
   return (dispatch, getState) => {
+
     dispatch(requestData(dataType));
+
     const state = getState();
-    const {startZ, endZ} = state.UserInput;
-    if (dataType === "SectionBounds" || dataType === "TileBounds"){
-      let urls = [];
-      //get a list of string URLs
-      for (let z = parseInt(startZ); z <= parseInt(endZ); z++){
-        urls.push(mapDataTypeToURL(getState(), dataType, {z:z}))
-      }
-      const promises = urls.map(url => fetch(url).then(response => response.json()));
-      return Promise.all(promises)
-        .then(responses  => {
-        //maps Z layer to the bounds
-          let allBounds = {};
-          for (let i = 0; i < responses.length; i++){
-          //hacky way of getting the Z for the bound
-            allBounds[parseInt(startZ)+i] = responses[i]
-          }
-          return allBounds
+
+    if (dataType === "TileBounds") {
+
+      fetch(mapDataTypeToURL(getState(), "StackZValues"))
+        .then(response => response.json())
+        .then(zValues => {
+          const urls = [];
+          zValues.forEach(z => {
+            urls.push(mapDataTypeToURL(getState(), dataType, {z:z}))
+          });
+          const promises = urls.map(url => fetch(url).then(response => response.json()));
+          return Promise.all(promises)
+            .then(responses  => {
+              const zToTileBoundsLists = {};
+              for (let i = 0; i < responses.length; i++) {
+                if (responses[i].length > 0) {
+                  const layerZ = responses[i][0].z;
+                  zToTileBoundsLists[layerZ] = responses[i]
+                }
+              }
+              return zToTileBoundsLists;
+            })
+            .then(zToTileBoundsLists => dispatch(receiveData(dataType, zToTileBoundsLists)));
+        });
+
+    } else if (dataType === "StackSubVolume") {
+
+      fetch(mapDataTypeToURL(getState(), dataType))
+        .then(response => response.json())
+        .then(sectionDataList => {
+
+          const subVolume = {
+            minX: Infinity,
+            minY: Infinity,
+            minZ: Infinity,
+            maxX: -Infinity,
+            maxY: -Infinity,
+            maxZ: -Infinity,
+            tileCount: 0,
+            sectionIdToZ: {},
+            zValues: {},
+            orderedZValues: [],
+          };
+
+          sectionDataList.forEach(
+            sectionData => {
+              subVolume.minX = Math.min(subVolume.minX, sectionData.minX);
+              subVolume.minY = Math.min(subVolume.minY, sectionData.minY);
+              subVolume.minZ = Math.min(subVolume.minZ, sectionData.z);
+              subVolume.maxX = Math.max(subVolume.maxX, sectionData.maxX);
+              subVolume.maxY = Math.max(subVolume.maxY, sectionData.maxY);
+              subVolume.maxZ = Math.max(subVolume.maxZ, sectionData.z);
+              subVolume.tileCount += sectionData.tileCount;
+              subVolume.sectionIdToZ[sectionData.sectionId] = sectionData.z;
+              subVolume.zValues[sectionData.z] = 1;
+            }
+          );
+
+          subVolume.orderedZValues = Object.keys(subVolume.zValues).sort();
+
+          return subVolume;
+
         })
-        .then(allBounds => dispatch(receiveData(dataType, allBounds)))
+        .then(subVolume => dispatch(receiveData(dataType, subVolume)));
 
     } else if (dataType === "MatchCounts") {
 
-      let urls = [];
-      let urlIndexToZ = {};
-      let indexCount = 0;
-      //get a list of string URLs
-      for (let z = parseInt(startZ); z <= parseInt(endZ); z++){
-        const sections = getSectionsForZ(z, state.APIData.SectionData.data);
-        _.forEach(sections, function(section){
-          urls.push(mapDataTypeToURL(getState(), dataType, {groupId: section}));
-          urlIndexToZ[indexCount] = z;
-          indexCount++
-        })
-      }
+      const urls = [];
+      const subVolume = state.APIData.StackSubVolume.data;
+      const subVolumeSectionIds = Object.keys(subVolume.sectionIdToZ);
+      subVolumeSectionIds.forEach(sectionId => {
+        urls.push(mapDataTypeToURL(getState(), dataType, {groupId: sectionId}))
+      });
+
       const promises = urls.map(url => fetch(url).then(response => response.json()));
+
       return Promise.all(promises)
-        .then(responses  => {
+        .then(listOfCanvasMatchesLists  => {
+
           let matches = {};
-          //the return value maintains the order of the original iterable
-          //urlIndexToZ is used to determine what Z corresponds to each response
-          for (let i = 0; i < responses.length; i++){
-            const z = urlIndexToZ[i];
-            if (!matches[z]){
-              matches[z] = []
-            }
-            matches[z] = matches[z].concat(responses[i])
-          }
-          return matches
+
+          listOfCanvasMatchesLists.forEach(canvasMatchesListForPGroup => {
+            canvasMatchesListForPGroup.forEach(canvasMatches => {
+              const pz = parseFloat(canvasMatches.pGroupId);
+              const qz = parseFloat(canvasMatches.qGroupId);
+              if ((pz in subVolume.zValues) && (qz in subVolume.zValues)) {
+                const minZ = Math.min(pz, qz);
+                if (!(minZ in matches)) {
+                  matches[minZ] = [];
+                }
+                matches[minZ].push(canvasMatches);
+              }
+            })
+
+          });
+
+          return matches;
+
         })
-        .then(matches => dispatch(receiveData(dataType, matches)))
+        .then(matches => dispatch(receiveData(dataType, matches)));
+
     } else {
+
       return fetch(mapDataTypeToURL(getState(), dataType))
         .then(response => response.json())
-        .then(json => dispatch(receiveData(dataType, json)))
+        .then(json => dispatch(receiveData(dataType, json)));
+
     }
   }
 }
 
 function mapDataTypeToURL(state, dataType, params){
   const {selectedProject, selectedStack, selectedMatchCollection, selectedStackOwner,
-    selectedMatchOwner, renderDataHost, mergeCollection } = state.UserInput;
+    selectedMatchOwner, renderDataHost, mergeCollection, startZ, endZ } = state.UserInput;
   const BASE_URL = `http://${renderDataHost}/render-ws/v1`;
   const MATCH_BASE_URL = `${BASE_URL}/owner/${selectedMatchOwner}`;
   const STACK_BASE_URL = `${BASE_URL}/owner/${selectedStackOwner}`;
@@ -205,12 +268,12 @@ function mapDataTypeToURL(state, dataType, params){
       return `${MATCH_BASE_URL}/matchCollections`;
     case "StackMetadata":
       return `${STACK_BASE_URL}/project/${selectedProject}/stack/${selectedStack}`;
-    case "SectionData":
-      return `${STACK_BASE_URL}/project/${selectedProject}/stack/${selectedStack}/sectionData`;
+    case "StackSubVolume":
+      return `${STACK_BASE_URL}/project/${selectedProject}/stack/${selectedStack}/sectionData?minZ=${startZ}&maxZ=${endZ}`;
+    case "StackZValues":
+      return `${STACK_BASE_URL}/project/${selectedProject}/stack/${selectedStack}/zValues?minZ=${startZ}&maxZ=${endZ}`;
     case "TileBounds":
       return `${STACK_BASE_URL}/project/${selectedProject}/stack/${selectedStack}/z/${params.z}/tileBounds`;
-    case "SectionBounds":
-      return `${STACK_BASE_URL}/project/${selectedProject}/stack/${selectedStack}/z/${params.z}/bounds`;
     case "MatchCounts":
       return `${MATCH_BASE_URL}/matchCollection/${selectedMatchCollection}/pGroup/${params.groupId}/matchCounts${matchQueryParameters}`;
     default:

@@ -1,4 +1,3 @@
-//checks if tile exists, and if so, return the tile coordinate information
 const tileExists = function(tileId, tileData){
   let exists = false;
   //loop through all tiles in each layer to find tile
@@ -9,28 +8,6 @@ const tileExists = function(tileId, tileData){
     return exists;
   });
   return exists;
-};
-
-/**
- * returns list of sections corresponding to a z
- *
- * @typedef {Object} SectionData
- * @property {String} sectionId
- * @property {Number} z
- * @property {Number} tileCount
- * @property {Number} minX
- * @property {Number} minY
- * @property {Number} maxX
- * @property {Number} maxY
- */
-export const getSectionsForZ = function(z, SectionData){
-  let sections = [];
-  _.forEach(SectionData, function(val){
-    if (val.z === z){
-      sections.push(val.sectionId)
-    }
-  });
-  return sections
 };
 
 /**
@@ -49,22 +26,6 @@ const filterPointMatches = function(tileData){
       return (! tileExists(match.pId, tileData)) && (! tileExists(match.qId, tileData));
     })
   })
-};
-
-// returns (x,y) that indicates how much the X and Y should be translated to center all of the sections around (0,0)
-const calculateTranslation = function(startZ, endZ, sectionBounds){
-  let minX = Number.MAX_VALUE;
-  let minY = Number.MAX_VALUE;
-  let maxX = 0;
-  let maxY = 0;
-  for (let z = startZ; z <= endZ; z++){
-    minX = Math.min(minX, sectionBounds[z]["minX"]);
-    minY = Math.min(minY, sectionBounds[z]["minY"]);
-    maxX = Math.max(maxX, sectionBounds[z]["maxX"]);
-    maxY = Math.max(maxY, sectionBounds[z]["maxY"])
-  }
-  // calculates the center of the bounds of all of the sections combined
-  return [0.5*(minX+maxX), 0.5*(minY+maxY)]
 };
 
 /**
@@ -90,20 +51,32 @@ const getTranslatedTileCoordinates = function(z, tileBounds, translation){
   return tileCoordinates
 };
 
-export const getTileData = function(APIData, UserInput){
-  const {MatchCounts, SectionBounds, TileBounds} = APIData;
+export const getTileData = function(APIData){
+
+  const {MatchCounts, TileBounds, StackSubVolume} = APIData;
+  const layerMatchCounts = MatchCounts.data;
+  const layerTileBoundsLists = TileBounds.data;
+  const subVolume = StackSubVolume.data;
+
   let tileData = [];
-  const {startZ, endZ} = UserInput;
-  for (let z = startZ; z <= endZ; z++){
+  subVolume.orderedZValues.forEach(z => {
     let layerData = {};
-    layerData.z = parseFloat(z);
-    layerData.tileCoordinates = getTranslatedTileCoordinates(z, TileBounds.data[z], calculateTranslation(startZ, endZ, SectionBounds.data));
+    layerData.z = z;
+
+    // calculates the center of the bounds of all of the sections combined
+    const offsetX = subVolume.minX + (0.5 * (subVolume.maxX - subVolume.minX));
+    const offsetY = subVolume.minY + (0.5 * (subVolume.maxY - subVolume.minY));
+    const translation = [offsetX, offsetY];
+
+    layerData.tileCoordinates = getTranslatedTileCoordinates(z, layerTileBoundsLists[z], translation);
     let pointMatches = {};
-    pointMatches.matchCounts = MatchCounts.data[z];
+    pointMatches.matchCounts = layerMatchCounts[z];
     layerData.pointMatches = pointMatches;
     tileData.push(layerData)
-  }
+  });
+
   filterPointMatches(tileData);
+
   return tileData
 };
 

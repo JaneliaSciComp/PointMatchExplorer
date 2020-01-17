@@ -29,9 +29,8 @@ class App extends Component {
     if (canvas) {
       this.props.updatePMEVariables({rendered: false});
       this.props.updateTileData([]);
-      this.props.invalidateData("SectionBounds");
+      this.props.invalidateData("StackSubVolume");
       this.props.invalidateData("TileBounds");
-      this.props.invalidateData("SectionData");
       this.props.invalidateData("StackMetadata");
       this.props.invalidateData("MatchCounts");
       canvas.removeEventListener("mousemove", this.processMouseMove, false);
@@ -42,9 +41,8 @@ class App extends Component {
       disposeThreeScene();
     }
     if (readyToRender){
-      this.props.getData("SectionBounds");
+      this.props.getData("StackSubVolume");
       this.props.getData("TileBounds");
-      this.props.getData("SectionData");
       this.props.getData("StackMetadata");
     }
   }
@@ -113,14 +111,13 @@ class App extends Component {
   componentWillReceiveProps(nextProps){
 
     if (this.readyToFetchTiles(nextProps)){
-      nextProps.updateTileData(getTileData(nextProps.APIData, nextProps.UserInput))
+      nextProps.updateTileData(getTileData(nextProps.APIData))
     }
   }
 
   readyToFetchTiles(nextProps){
-    const {SectionBounds,TileBounds, SectionData, MatchCounts} = nextProps.APIData;
-    return SectionBounds.Fetched && TileBounds.Fetched && SectionData.Fetched &&
-           MatchCounts.Fetched && isEmpty(nextProps.tileData)
+    const {StackSubVolume, TileBounds, MatchCounts} = nextProps.APIData;
+    return StackSubVolume.Fetched && TileBounds.Fetched && MatchCounts.Fetched && isEmpty(nextProps.tileData);
   }
 
   render() {
@@ -167,8 +164,14 @@ class App extends Component {
   componentDidUpdate(){
     const {tileData, PMEVariables} = this.props;
     const {rendered} = PMEVariables;
+
+    // TODO: show number of tiles to highlight nothing found cases
+
     if (!isEmpty(tileData) && !rendered){
       const canvas = this.refs.PMEcanvas;
+
+      // TODO: size canvas smaller so that inputs are not obscured
+
       canvas.addEventListener("resize", function(){
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();

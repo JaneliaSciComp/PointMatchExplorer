@@ -105,17 +105,14 @@ export const generateVisualization = function(canvas, tileData){
 };
 
 //checks if tile exists, and if so, return the tile coordinate information
-const getTileCoordinates = function (tileId, tileData) {
-  let tileCoordinates;
+const getTileCoordinates = function(tileId, tileData){
+  let tileCoordinates = undefined;
   //loop through all tiles in each layer to find tile
-  _.forEach(tileData, function (layer) {
-    //since tileCoordinates is a dictionary, just check if tileId exists in the keys
+  tileData.some(function(layer) {
     if (tileId in layer.tileCoordinates) {
       tileCoordinates = layer.tileCoordinates[tileId];
     }
-    if (tileCoordinates) {
-      return false;
-    }
+    return tileCoordinates;
   });
   return tileCoordinates;
 };
@@ -210,6 +207,11 @@ const drawPMLines = function(tileData){
         m.pTile = getTileCoordinates(m.pId, tileData);
         m.qTile = getTileCoordinates(m.qId, tileData);
 
+        if ((m.pTile === undefined) || (m.qTile === undefined)) {
+          // if one (or both) of the tiles in the match pair are missing, don't try to draw connection for pair
+          return;
+        }
+
         let smallerXLen = 0;
         let smallerYLen = 0;
 
@@ -240,7 +242,7 @@ const drawPMLines = function(tileData){
           endY: m.qTile.yPos - smallerYLen,
           endZ: m.qTile.zPos,
           connection_strength: matchWeight,
-          strength_color: pm_connection_strength_chroma_scale(matchWeight)
+          strength_color: pm_connection_strength_chroma_scale(matchWeight) // TODO: this is not working!
         };
 
         addPointMatchInfoToTile(m.pTile, PMInfo);
@@ -428,6 +430,9 @@ let highlight = function(faceIndex, isSelected, isShiftDown) {
   let tile = faceIndexToTileInfo[faceIndex];
 
   if (isShiftDown){
+
+    // TODO: this is still too slow
+
     //draw the point match lines for all the tiles in that layer
     let selected_layer_PM_lines = new THREE.Group();
     addHighlightedPMLines(selected_layer_PM_lines, tile.layerPMList);
