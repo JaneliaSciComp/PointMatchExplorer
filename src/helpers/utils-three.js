@@ -58,7 +58,7 @@ const background_color = 0xffffff;
 const camera_view_angle = 50;
 const initial_camera_X = 0;
 const initial_camera_Y = 0;
-const initial_camera_Z = 10000;
+// const initial_camera_Z = 5000;  // 10,000 - 100,000,   20,000 is good for size 20571 : 5,000 is good for size 1190
 
 const control_rotate_speed = 2;
 const control_zoom_speed = 0.5;
@@ -79,8 +79,8 @@ export const generateVisualization = function(canvas, tileData){
   raycaster = new THREE.Raycaster();
 
   const canvasArea = getCanvasArea();
-  camera = new THREE.PerspectiveCamera(camera_view_angle, canvasArea.clientWidth / canvasArea.clientHeight, 100, draw_distance);
-  camera.position.set(initial_camera_X, initial_camera_Y, initial_camera_Z);
+  const aspect = canvasArea.clientWidth / canvasArea.clientHeight;
+  camera = new THREE.PerspectiveCamera(camera_view_angle, aspect, 100, draw_distance);
   scene.add(camera);
 
   renderer = new THREE.WebGLRenderer({antialias: true, canvas: canvas});
@@ -103,7 +103,14 @@ export const generateVisualization = function(canvas, tileData){
   const weightRange = calculateWeightRange(tileData);
   pm_connection_strength_chroma_scale = chroma.scale(pm_connection_strength_gradient_colors).domain([minWeight, maxWeight]);
 
-  drawTiles(tileData);
+  const maxDimensionSize = drawTiles(tileData);
+
+  // observed that good size-to-zoom values were: 1200:5000, 21000:20000, 33000:40000
+  // derive magicZoom using parabolic equation ...
+  const magicZoom =  (maxDimensionSize * maxDimensionSize / 34980) + (215 * maxDimensionSize / 1749) + (255000 / 53);
+
+  camera.position.set(initial_camera_X, initial_camera_Y, magicZoom);
+
   drawPMLines(tileData);
   animate();
 
@@ -160,6 +167,11 @@ const drawTiles = function(tileData){
   };
   const merged_tile_material = new THREE.MeshBasicMaterial(materialParameters);
 
+  const bounds = {
+    minX: Infinity, minY: Infinity,
+    maxX: -Infinity, maxY: -Infinity
+  };
+
   let faceIndexCounter = 0;
   _.forEach(tileData, function(layer, index){
     const layer_color = tile_gradient_chroma_scale[index];
@@ -175,6 +187,11 @@ const drawTiles = function(tileData){
       c.zPos = z_offset;
       c.PMList = [];
       c.layerPMList = [];
+
+      bounds.minX = Math.min(c.xPos, bounds.minX);
+      bounds.maxX = Math.max(c.xPos, bounds.maxX);
+      bounds.minY = Math.min(c.yPos, bounds.minY);
+      bounds.maxY = Math.max(c.yPos, bounds.maxY);
 
       //creating geometries and drawing the tile
       //the merged tiles are what are drawn on the canvas
@@ -194,7 +211,12 @@ const drawTiles = function(tileData){
   });
   //merged_tiles is what is drawn on the canvas (improves performance)
   merged_tiles = new THREE.Mesh(merged_tile_geometry, merged_tile_material);
-  scene.add(merged_tiles)
+  scene.add(merged_tiles);
+
+  const width = bounds.maxX - bounds.minX;
+  const height = bounds.maxY - bounds.minY;
+
+  return Math.max(width, height);
 };
 
 const drawPMLines = function(tileData){
