@@ -1,35 +1,103 @@
 body {
-  margin: 0px;
-  overflow: hidden;
-  font-family:Monospace;
-  font-size:20px;
-  font-weight: bold;
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
 }
-.metaDataContainer {
-  position: absolute;
-  top: 0px; width: 50%;
-  height: 5em;
-  padding: 5px;
-  text-align:left;
-  z-index:99;
+
+#PMEDataArea {
+    float: right;
+    vertical-align: top;
+    text-align: left;
+    margin: 5px 5px 5px 5px;
+    width: 20%;
+    height: 100%;
 }
-.layerInput {
-  position: absolute;
-  top: 80px; width: 100%;
-  padding: 0 10px 0 0;
-  box-sizing: border-box;
-  text-align:right;
+
+#PMECanvasArea {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0;
+    border-right: solid 2px black;
+    height: 100%;
+    width: 79%;
 }
-.layerButton {
-  margin: 10px 0 0 10px;
+
+button {
+    font-size: smaller;
+    color: blue;
 }
-.specsInput {
-  position: absolute;
-  top: 0; width: 100%;
-  padding: 10px 10px 0 0;
-  box-sizing: border-box;
-  text-align:right;
+
+.dataGroupTitle {
+    text-decoration: underline;
+    font-weight: bold;
 }
+
+.topTen {
+    margin-top: 10px;
+}
+
+.indented {
+    padding-left: 5px;
+}
+
+/* see https://www.sitepoint.com/css-grid-web-form-layout/ */
+@supports (display: grid) {
+
+    .formGrid {
+        display: grid;
+        grid-template-columns: 0.7fr 1em 2.3fr; /* 3 columns (4 tracks) */
+        grid-gap: 0.3em 0.6em; /* row gap, column gap */
+        grid-auto-flow: dense;
+        align-items: center;
+    }
+
+    label {
+        grid-column: 1;
+    }
+
+    button.help {
+        grid-column: 4;
+    }
+
+    span.emptyArea {
+        grid-column: 2 / 3;
+    }
+
+    select {
+        grid-column: 2 / 4;
+        width: available;
+        margin: 0;
+    }
+
+    input, output, textarea, button, span.value {
+        grid-column: 2 / 4;
+        width: max-content;
+        margin: 0;
+    }
+
+    input[type="number"] {
+        text-align: right;
+    }
+
+    input[type="checkbox"], input[type="radio"] {
+        grid-column: 1 / 3;
+        justify-self: end;
+        margin: 0;
+    }
+
+    label, input[type="checkbox"] + label, input[type="radio"] + label {
+        width: auto;
+        padding: 0;
+        margin: 0;
+    }
+
+    textarea + label {
+        align-self: start;
+    }
+}
+
 .gradient {
     width: 175px;
     white-space: nowrap;
@@ -39,20 +107,21 @@ body {
     right: 30px;
     padding-bottom: 15px;
     padding-top: 25px;
-    text-align:center;
+    text-align: center;
 }
-.gradient .label {
-    position: absolute;
-    left: 0;
-    font-size: 15px;
-    top: 3px;
+
+.gradient .title {
+    font-weight: bold;
+    text-align: center;
 }
+
 .gradient .domain-min {
     position: absolute;
     left: 0;
     font-size: 15px;
     bottom: 3px;
 }
+
 .gradient .domain-med {
     position: absolute;
     right: 25%;
@@ -61,12 +130,14 @@ body {
     font-size: 15px;
     bottom: 3px;
 }
+
 .gradient .domain-max {
     position: absolute;
     right: 0;
     font-size: 15px;
     bottom: 3px;
 }
+
 .grad-step {
     display: inline-block;
     height: 20px;

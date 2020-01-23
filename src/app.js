@@ -2,13 +2,14 @@ import React, {Component} from "react"
 import {connect} from "react-redux"
 import UserInputs from "./components/userInput"
 import {PMStrengthGradient} from "./components/PMStrengthGradient"
-import {MetadataInfo} from "./components/MetadataInfo"
+import {TileInfo} from "./components/TileInfo"
 import {fetchDataIfNeeded, invalidateData, updateTileData, updatePMEVariables} from "./actions"
 import {getTileData} from "./helpers/utils.js"
 import {camera, pm_connection_strength_gradient_colors, generateVisualization, onMouseMove, onMouseUp, onMouseDown, disposeThreeScene} from "./helpers/utils-three.js"
 import "whatwg-fetch"
 import isEmpty from "lodash/isEmpty"
 import UrlParamHandler from "./components/UrlParamHandler"
+import {getCanvasArea} from "./helpers/utils-three";
 
 
 class App extends Component {
@@ -121,20 +122,7 @@ class App extends Component {
   }
 
   render() {
-    const PMEComponents = this.generatePMEComponents();
-    return (
-      <div>
-        <UserInputs onRenderClick={this.handleRenderClick.bind(this)}/>
-        {!isEmpty(this.props.tileData) ? PMEComponents : <div/>}
-        <UrlParamHandler />
-      </div>
-    )
-  }
-
-  generatePMEComponents() {
-    const canvas_node = <canvas ref="PMEcanvas"/>;
     let pm_connection_strength_gradient;
-    let metadata_display;
     let selected_metadata_display;
     let mouseover_metadata_display;
     //how many steps to generate the gradient in
@@ -145,20 +133,31 @@ class App extends Component {
     if (minWeight && maxWeight){
       pm_connection_strength_gradient = <PMStrengthGradient gradientTitle="Point Match Strength" colorList={pm_connection_strength_gradient_colors} numSteps={pm_connection_strength_gradient_steps} dmin={minWeight} dmax= {maxWeight} />
     }
-    if (selectedMetadata){
-      selected_metadata_display = (<div><MetadataInfo kvpairs={selectedMetadata}/><br/></div>)
+
+    if (selectedMetadata) {
+      selected_metadata_display = <TileInfo context={"Selected"} kvPairs={selectedMetadata}/>
     }
-    if (mouseoverMetadata){
-      mouseover_metadata_display = <MetadataInfo kvpairs={mouseoverMetadata}/>
+
+    if (mouseoverMetadata) {
+      mouseover_metadata_display = <TileInfo context={""} kvPairs={mouseoverMetadata}/>
     }
-    metadata_display =
-    (
-      <div className="metaDataContainer">
-        {selected_metadata_display}
-        {mouseover_metadata_display}
+
+    const canvas_node = isEmpty(this.props.tileData) ? "" : <canvas ref="PMEcanvas"/>;
+
+    return (
+      <div id="PMEAll">
+        <div id="PMECanvasArea">
+          {canvas_node}
+          {pm_connection_strength_gradient}
+        </div>
+        <div id="PMEDataArea">
+          <UserInputs onRenderClick={this.handleRenderClick.bind(this)}/>
+          {selected_metadata_display}
+          {mouseover_metadata_display}
+        </div>
+        <UrlParamHandler />
       </div>
-    );
-    return <div id="container">{pm_connection_strength_gradient}{metadata_display}{canvas_node}</div>
+    )
   }
 
   componentDidUpdate(){
@@ -173,9 +172,10 @@ class App extends Component {
       // TODO: size canvas smaller so that inputs are not obscured
 
       canvas.addEventListener("resize", function(){
-        camera.aspect = window.innerWidth / window.innerHeight;
+        const canvasArea = getCanvasArea();
+        camera.aspect = canvasArea.clientWidth / canvasArea.clientHeight;
         camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight)
+        renderer.setSize(canvasArea.clientWidth, canvasArea.clientHeight)
       }, false);
       canvas.addEventListener("mousemove", this.processMouseMove, false);
       canvas.addEventListener("mousedown", this.processMouseDown, false);

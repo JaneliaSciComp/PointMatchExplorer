@@ -65,19 +65,28 @@ const control_zoom_speed = 0.5;
 const control_min_distance = 0;
 const control_max_distance = 5000000;
 
+export const getCanvasArea = function() {
+  const dataArea = document.getElementById("PMEDataArea");
+  return {
+    clientWidth: window.innerWidth - dataArea.offsetWidth - 30,
+    clientHeight: window.innerHeight
+  };
+};
+
 export const generateVisualization = function(canvas, tileData){
   scene = new THREE.Scene();
   mouse = new THREE.Vector2();
   raycaster = new THREE.Raycaster();
 
-  camera = new THREE.PerspectiveCamera(camera_view_angle, window.innerWidth / window.innerHeight, 100, draw_distance);
+  const canvasArea = getCanvasArea();
+  camera = new THREE.PerspectiveCamera(camera_view_angle, canvasArea.clientWidth / canvasArea.clientHeight, 100, draw_distance);
   camera.position.set(initial_camera_X, initial_camera_Y, initial_camera_Z);
   scene.add(camera);
 
   renderer = new THREE.WebGLRenderer({antialias: true, canvas: canvas});
   renderer.setClearColor(background_color);
   renderer.setPixelRatio(window.devicePixelRatio);
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setSize(canvasArea.clientWidth, canvasArea.clientHeight);
 
   controls = new TrackballControls(camera, renderer.domElement);
   controls.rotateSpeed = control_rotate_speed;
@@ -279,8 +288,9 @@ const animate = function(){
 };
 
 const getRaycastIntersections = function (event) {
-  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  const canvasArea = getCanvasArea();
+  mouse.x = (event.clientX / canvasArea.clientWidth) * 2 - 1;
+  mouse.y = -(event.clientY / canvasArea.clientHeight) * 2 + 1;
   raycaster.setFromCamera(mouse, camera);
   return raycaster.intersectObjects([merged_tiles], true);
 };
@@ -463,7 +473,8 @@ let addHighlightedPMLines = function(group, PMList) {
   // /*eslint no-console: "off"*/
   // console.log("addHighlightedPMLines: entry, PMList length is: " + PMList.length);
 
-  const canvasResolution = new THREE.Vector2(window.innerWidth, window.innerHeight);
+  const canvasArea = getCanvasArea();
+  const canvasResolution = new THREE.Vector2(canvasArea.clientWidth, canvasArea.clientHeight);
 
   _.forEach(PMList, function(pm) {
     const line_geometry = new THREE.Geometry();
@@ -623,8 +634,9 @@ window.addEventListener( "resize", onWindowResize, false );
 
 function onWindowResize(){
   if(camera && renderer){
-    camera.aspect = window.innerWidth / window.innerHeight;
+    const canvasArea = getCanvasArea();
+    camera.aspect = canvasArea.clientWidth / canvasArea.clientHeight;
     camera.updateProjectionMatrix();
-    renderer.setSize( window.innerWidth, window.innerHeight )
+    renderer.setSize(canvasArea.clientWidth, canvasArea.clientHeight)
   }
 }
