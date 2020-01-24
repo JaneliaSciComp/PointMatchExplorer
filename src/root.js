@@ -7,10 +7,7 @@ import { Provider } from "react-redux";
 import { createLogger } from "redux-logger";
 import App from "./app"
 
-//TODO: look into logging
-
-// noinspection JSUnusedLocalSymbols
-const loggerMiddleware = createLogger(); // eslint-disable-line
+const loggerMiddleware = createLogger();
 
 // stolen from https://github.com/jhen0409/react-native-debugger/issues/280
 // noinspection JSUnresolvedVariable
@@ -18,7 +15,7 @@ const composeEnhancer = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
 
 const store = createStore(
   reducers,
-  composeEnhancer(applyMiddleware(thunk))
+  composeEnhancer(applyMiddleware(loggerMiddleware, thunk))
 );
 
 render(
