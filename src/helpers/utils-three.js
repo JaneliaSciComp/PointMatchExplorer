@@ -58,7 +58,6 @@ const background_color = 0xffffff;
 const camera_view_angle = 50;
 const initial_camera_X = 0;
 const initial_camera_Y = 0;
-// const initial_camera_Z = 5000;  // 10,000 - 100,000,   20,000 is good for size 20571 : 5,000 is good for size 1190
 
 const control_rotate_speed = 2;
 const control_zoom_speed = 0.5;
