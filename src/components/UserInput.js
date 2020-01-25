@@ -1,7 +1,8 @@
 import React, {Component} from "react"
 import {connect} from "react-redux"
 import {fetchDataIfNeeded, invalidateData, updateMatchCollection, updateStartZ, updateEndZ, updateProject, 
-  updateStack, updateStackOwner, updateMatchOwner, resetStackData, resetMatchData} from "../actions"
+  updateStack, updateStackOwner, updateMatchOwner, resetStackData, resetMatchData,
+  mapDataTypeToURL} from "../actions"
 import {getUserInputSelectLists} from "../helpers/utils.js"
 import {PMEInput} from "./InputComponents.js"
 
@@ -26,6 +27,7 @@ class UserInputs extends Component {
   }
 
   handleProjectSelect(project){
+    this.props.invalidateData("StackMetadata");
     this.props.updateProject(project)
   }
 
@@ -53,14 +55,19 @@ class UserInputs extends Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    const {StackOwners, MatchOwners, StackSubVolume} = nextProps.APIData;
-    const {selectedStackOwner, selectedMatchOwner} = nextProps.UserInput;
+    const {StackOwners, MatchOwners, StackIds, StackSubVolume} = nextProps.APIData;
+    const {selectedStackOwner, selectedMatchOwner, selectedStack} = nextProps.UserInput;
 
     if (StackOwners.Fetched && selectedStackOwner) {
       nextProps.getData("StackIds");
     }
+
     if (MatchOwners.Fetched && selectedMatchOwner) {
       nextProps.getData("MatchCollections");
+    }
+
+    if (StackIds.Fetched && selectedStack) {
+      nextProps.getData("StackMetadata");
     }
 
     if (StackSubVolume.Fetched) {
@@ -71,6 +78,7 @@ class UserInputs extends Component {
   render() {
     const {APIData, UserInput} = this.props;
     const dropdownValues = getUserInputSelectLists(APIData, UserInput);
+    const stackDetailsViewUrl = mapDataTypeToURL(this.props, "StackDetailsView", {});
 
     if (dropdownValues) {
       return (
@@ -87,6 +95,8 @@ class UserInputs extends Component {
           onMatchOwnerSelect={this.handleMatchOwnerSelect}
           selectedProject={UserInput.selectedProject}
           selectedStack={UserInput.selectedStack}
+          selectedStackMetadata={APIData.StackMetadata}
+          stackDetailsViewUrl={stackDetailsViewUrl}
           selectedMatchCollection={UserInput.selectedMatchCollection}
           selectedStackOwner={UserInput.selectedStackOwner}
           selectedMatchOwner={UserInput.selectedMatchOwner}
