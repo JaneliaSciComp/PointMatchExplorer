@@ -32,7 +32,6 @@ class App extends Component {
       this.props.updateTileData([]);
       this.props.invalidateData("StackSubVolume");
       this.props.invalidateData("TileBounds");
-      this.props.invalidateData("StackMetadata");
       this.props.invalidateData("MatchCounts");
       canvas.removeEventListener("mousemove", this.processMouseMove, false);
       canvas.removeEventListener("mousedown", this.processMouseDown, false);
@@ -44,7 +43,6 @@ class App extends Component {
     if (readyToRender){
       this.props.getData("StackSubVolume");
       this.props.getData("TileBounds");
-      this.props.getData("StackMetadata");
     }
   }
 
@@ -139,7 +137,7 @@ class App extends Component {
     }
 
     if (mouseoverMetadata) {
-      mouseover_metadata_display = <TileInfo context={""} kvPairs={mouseoverMetadata}/>
+      mouseover_metadata_display = <TileInfo context={"Hover"} kvPairs={mouseoverMetadata}/>
     }
 
     const canvas_node = isEmpty(this.props.tileData) ? "" : <canvas ref="PMEcanvas"/>;
@@ -166,25 +164,26 @@ class App extends Component {
 
     // TODO: show number of tiles to highlight nothing found cases
 
-    if (!isEmpty(tileData) && !rendered){
-      const canvas = this.refs.PMEcanvas;
+    if (! isEmpty(tileData)) {
 
-      // TODO: size canvas smaller so that inputs are not obscured
+      if (! rendered) {
+        const canvas = this.refs.PMEcanvas;
+        canvas.addEventListener("resize", function () {
+          const canvasArea = getCanvasArea();
+          camera.aspect = canvasArea.clientWidth / canvasArea.clientHeight;
+          camera.updateProjectionMatrix();
+          renderer.setSize(canvasArea.clientWidth, canvasArea.clientHeight)
+        }, false);
+        canvas.addEventListener("mousemove", this.processMouseMove, false);
+        canvas.addEventListener("mousedown", this.processMouseDown, false);
+        canvas.addEventListener("mouseup", this.processMouseUp, false);
+        document.addEventListener("keydown", this.detectKeyDown, false);
+        document.addEventListener("keyup", this.detectKeyUp, false);
+        const updatedPMEVariables = generateVisualization(this.refs.PMEcanvas, tileData);
+        updatedPMEVariables.rendered = true;
+        this.props.updatePMEVariables(updatedPMEVariables)
+      }
 
-      canvas.addEventListener("resize", function(){
-        const canvasArea = getCanvasArea();
-        camera.aspect = canvasArea.clientWidth / canvasArea.clientHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(canvasArea.clientWidth, canvasArea.clientHeight)
-      }, false);
-      canvas.addEventListener("mousemove", this.processMouseMove, false);
-      canvas.addEventListener("mousedown", this.processMouseDown, false);
-      canvas.addEventListener("mouseup", this.processMouseUp, false);
-      document.addEventListener("keydown", this.detectKeyDown, false);
-      document.addEventListener("keyup", this.detectKeyUp, false);
-      const updatedPMEVariables = generateVisualization(this.refs.PMEcanvas, tileData);
-      updatedPMEVariables.rendered = true;
-      this.props.updatePMEVariables(updatedPMEVariables)
     }
   }
 

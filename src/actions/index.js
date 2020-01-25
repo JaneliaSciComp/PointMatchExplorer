@@ -245,12 +245,16 @@ function fetchData(dataType){
   }
 }
 
-function mapDataTypeToURL(state, dataType, params){
-  const {selectedProject, selectedStack, selectedMatchCollection, selectedStackOwner,
-    selectedMatchOwner, renderDataHost, mergeCollection, startZ, endZ } = state.UserInput;
-  const BASE_URL = `http://${renderDataHost}/render-ws/v1`;
-  const MATCH_BASE_URL = `${BASE_URL}/owner/${selectedMatchOwner}`;
-  const STACK_BASE_URL = `${BASE_URL}/owner/${selectedStackOwner}`;
+export function mapDataTypeToURL(state, dataType, params) {
+  const {
+    selectedStackOwner, selectedProject, selectedStack, startZ, endZ,
+    selectedMatchOwner, selectedMatchCollection, mergeCollection,
+    renderDataHost, dynamicRenderHost, catmaidHost
+  } = state.UserInput;
+
+  const BASE_URL = `http://${renderDataHost}/render-ws`;
+  const MATCH_BASE_URL = `${BASE_URL}/v1/owner/${selectedMatchOwner}`;
+  const STACK_BASE_URL = `${BASE_URL}/v1/owner/${selectedStackOwner}`;
 
   let matchQueryParameters = "";
   if (mergeCollection.length > 0) {
@@ -259,9 +263,9 @@ function mapDataTypeToURL(state, dataType, params){
 
   switch(dataType) {
     case "StackOwners": 
-      return `${BASE_URL}/owners`;
+      return `${BASE_URL}/v1/owners`;
     case "MatchOwners":
-      return `${BASE_URL}/matchCollectionOwners`;
+      return `${BASE_URL}/v1/matchCollectionOwners`;
     case "StackIds":
       return `${STACK_BASE_URL}/stackIds`;
     case "MatchCollections":
@@ -272,6 +276,10 @@ function mapDataTypeToURL(state, dataType, params){
       return `${STACK_BASE_URL}/project/${selectedProject}/stack/${selectedStack}/sectionData?minZ=${startZ}&maxZ=${endZ}`;
     case "StackZValues":
       return `${STACK_BASE_URL}/project/${selectedProject}/stack/${selectedStack}/zValues?minZ=${startZ}&maxZ=${endZ}`;
+    case "StackDetailsView":
+      return `${BASE_URL}/view/stack-details.html` +
+             `?renderStackOwner=${selectedStackOwner}&renderStackProject=${selectedProject}&renderStack=${selectedStack}` +
+             `&dynamicRenderHost=${dynamicRenderHost}&catmaidHost=${catmaidHost}`;
     case "TileBounds":
       return `${STACK_BASE_URL}/project/${selectedProject}/stack/${selectedStack}/z/${params.z}/tileBounds`;
     case "MatchCounts":

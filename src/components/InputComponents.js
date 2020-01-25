@@ -1,25 +1,35 @@
 import React from "react"
 
 export const PMEInput = (props) => {
-  let stackDisabled = true;
-  let matchDisabled = true;
-  let projectDisabled = true;
-  if (props.selectedProject && props.stacks){
-    stackDisabled = false
-  }
-  if (props.selectedStackOwner && props.projects){
-    projectDisabled = false
-  }
-  if (props.selectedMatchOwner && props.match_collections){
-    matchDisabled =false
-  }
 
+  const stackDisabled = (! props.selectedProject) || (! props.stacks);
+  const zDisabled = (! props.selectedStack) || (! props.stacks);
+  const matchDisabled = (! props.selectedMatchOwner) || (! props.match_collections);
+  const projectDisabled = (! props.selectedStackOwner) || (! props.projects);
+
+  let selectedStackZRange = "";
+  let selectedStackDetails = "";
+  let selectedStackDetailsUrl = "#";
+  let minZ = 1;
+  let maxZ = Infinity;
+  if (props.selectedStackMetadata.Fetched) {
+    const stackStats = props.selectedStackMetadata.data.stats;
+    if (stackStats) {
+      minZ = stackStats.stackBounds.minZ;
+      maxZ = stackStats.stackBounds.maxZ;
+      selectedStackZRange = "(z range: " + minZ.toLocaleString() + " to " + maxZ.toLocaleString() + ")";
+      selectedStackDetails = "stack details";
+      selectedStackDetailsUrl = props.stackDetailsViewUrl;
+    }
+  }
+  
   return (
 
     <div id="PMEInput" className="formGrid">
 
-      <span className={"dataGroupTitle"}>Render</span><span className={"emptyArea"}>&nbsp;</span>
-      <button className={"help"} onClick={handleHelpClick}>?</button>
+      <label className={"dataGroupTitle"}>Render</label>
+      <span className={"col2to6"}>&nbsp;</span>
+      <button className={"col6"} onClick={handleHelpClick}>?</button>
 
       <label className={"indented"}>Owner:</label>
       <Dropdown dropdownName="Select Stack Owner" onChange={props.onStackOwnerSelect}
@@ -33,7 +43,17 @@ export const PMEInput = (props) => {
       <Dropdown dropdownName="Select Stack" onChange={props.onStackSelect}
         values={ stackDisabled ? [] : props.stacks} value={props.selectedStack} disabled={stackDisabled}/>
 
-      <label className={"dataGroupTitle topTen"}>Match</label><span className={"emptyArea"}>&nbsp;</span>
+      <label>&nbsp;</label>
+      <a className={"col2to4"} href={selectedStackDetailsUrl} target={"_blank"}>{selectedStackDetails}</a>
+      <span className={"col4to6 stackInfo"}>{selectedStackZRange}</span>
+
+      <label className={"indented topTen"}>Display Z:</label>
+      <input className={"col2to4 topTen"} type="number" min={minZ} max={maxZ} step={0.1} onChange={e => props.onChangeStartZ(e.target.value)} value={props.selectedStartZ}  disabled={zDisabled}/>
+      <span className={"col4 centered topTen"}>to</span>
+      <input className={"col5 topTen"} type="number" min={minZ} max={maxZ} step={0.1} onChange={e => props.onChangeEndZ(e.target.value)} value={props.selectedEndZ}  disabled={zDisabled}/>
+
+      <label className={"dataGroupTitle topTen"}>Match</label>
+      <span className={"col2to6"}>&nbsp;</span>
       <label className={"indented"}>Owner:</label>
       <Dropdown dropdownName="Select Match Owner" onChange={props.onMatchOwnerSelect}
         values={props.match_owners} value={props.selectedMatchOwner}/>
@@ -42,15 +62,7 @@ export const PMEInput = (props) => {
       <Dropdown dropdownName="Select Match Collection" onChange={props.onMatchCollectionSelect}
         values={ matchDisabled ? [] : props.match_collections} value={props.selectedMatchCollection} disabled={matchDisabled}/>
 
-      <label className={"topTen"}>Start Z:</label>
-      <input className={"topTen"} type="number" onChange={e => props.onChangeStartZ(e.target.value)} value={props.selectedStartZ}/>
-
-      <label>End Z:</label>
-      <input type="number" onChange={e => props.onChangeEndZ(e.target.value)} value={props.selectedEndZ}/>
-
-      <br/>
-
-      <button className={"topTen"} onClick={e => props.onRenderClick(e.target.value)}>Render Layers</button>
+      <button className={"topTen col3"} onClick={e => props.onRenderClick(e.target.value)}>Render Layers</button>
 
 
     </div>
