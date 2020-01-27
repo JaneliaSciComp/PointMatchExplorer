@@ -22,6 +22,11 @@ export const PMEInput = (props) => {
       selectedStackDetailsUrl = props.stackDetailsViewUrl;
     }
   }
+
+  let selectedStackSubVolumeTileCount = "";
+  if (props.selectedStackSubVolume.Fetched) {
+    selectedStackSubVolumeTileCount = "(" + props.selectedStackSubVolume.data.tileCount.toLocaleString() + " tiles)";
+  }
   
   return (
 
@@ -44,13 +49,19 @@ export const PMEInput = (props) => {
         values={ stackDisabled ? [] : props.stacks} value={props.selectedStack} disabled={stackDisabled}/>
 
       <label>&nbsp;</label>
-      <a className={"col2to4"} href={selectedStackDetailsUrl} target={"_blank"}>{selectedStackDetails}</a>
-      <span className={"col4to6 stackInfo"}>{selectedStackZRange}</span>
+      <div className={"col2to6"}>
+        <a href={selectedStackDetailsUrl} target={"_blank"}>{selectedStackDetails}</a>
+        <span className={"indented stackInfo"}>{selectedStackZRange}</span>
+      </div>
 
-      <label className={"indented topTen"}>Display Z:</label>
-      <input className={"col2to4 topTen"} type="number" min={minZ} max={maxZ} step={0.1} onChange={e => props.onChangeStartZ(e.target.value)} value={props.selectedStartZ}  disabled={zDisabled}/>
-      <span className={"col4 centered topTen"}>to</span>
-      <input className={"col5 topTen"} type="number" min={minZ} max={maxZ} step={0.1} onChange={e => props.onChangeEndZ(e.target.value)} value={props.selectedEndZ}  disabled={zDisabled}/>
+      <label className={"indented topTen"}>Z Range:</label>
+      <div className={"col2to6 topTen"}>
+        <input type="number" min={minZ} max={maxZ} step={0.1} onChange={e => props.onChangeStartZ(e.target.value)} value={props.selectedStartZ}  disabled={zDisabled}/>
+        <span>&nbsp;to&nbsp;</span>
+        <input type="number" min={minZ} max={maxZ} step={0.1} onChange={e => props.onChangeEndZ(e.target.value)} value={props.selectedEndZ}  disabled={zDisabled}/>
+        <span className={"indented stackInfo"}>{selectedStackSubVolumeTileCount}</span>
+      </div>
+
 
       <label className={"dataGroupTitle topTen"}>Match</label>
       <span className={"col2to6"}>&nbsp;</span>
@@ -62,8 +73,8 @@ export const PMEInput = (props) => {
       <Dropdown dropdownName="Select Match Collection" onChange={props.onMatchCollectionSelect}
         values={ matchDisabled ? [] : props.match_collections} value={props.selectedMatchCollection} disabled={matchDisabled}/>
 
-      <button className={"topTen col3"} onClick={e => props.onRenderClick(e.target.value)}>Render Layers</button>
-
+      <label className={"topTen"}>&nbsp;</label>
+      <button className={"col2to6 topTen"} onClick={e => props.onRenderClick(e.target.value)}>Refresh View</button>
 
     </div>
   )

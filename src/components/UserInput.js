@@ -19,19 +19,24 @@ class UserInputs extends Component {
   }
 
   handleChangeStartZ(zValue){
+    this.props.invalidateData("StackSubVolume");
     this.props.updateStartZ(zValue)
   }
 
   handleChangeEndZ(zValue){
+    this.props.invalidateData("StackSubVolume");
     this.props.updateEndZ(zValue)
   }
 
   handleProjectSelect(project){
     this.props.invalidateData("StackMetadata");
+    this.props.invalidateData("StackSubVolume");
     this.props.updateProject(project)
   }
 
   handleStackSelect(stack){
+    this.props.invalidateData("StackMetadata");
+    this.props.invalidateData("StackSubVolume");
     this.props.updateStack(stack)
   }
 
@@ -96,6 +101,7 @@ class UserInputs extends Component {
           selectedProject={UserInput.selectedProject}
           selectedStack={UserInput.selectedStack}
           selectedStackMetadata={APIData.StackMetadata}
+          selectedStackSubVolume={APIData.StackSubVolume}
           stackDetailsViewUrl={stackDetailsViewUrl}
           selectedMatchCollection={UserInput.selectedMatchCollection}
           selectedStackOwner={UserInput.selectedStackOwner}

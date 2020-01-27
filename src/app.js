@@ -158,11 +158,10 @@ class App extends Component {
     )
   }
 
-  componentDidUpdate(){
+  componentDidUpdate() {
+
     const {tileData, PMEVariables} = this.props;
     const {rendered} = PMEVariables;
-
-    // TODO: show number of tiles to highlight nothing found cases
 
     if (! isEmpty(tileData)) {
 
