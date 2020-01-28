@@ -67,7 +67,7 @@ class urlParamStoreMapper {
   mapStoreDataToUrlParams(storeData) {
     let paramData = {};
     for (let storeKey in storeData) {
-      if (this.storeValsToUrlParams.hasOwnProperty(storeKey)) {
+      if (storeData.hasOwnProperty(storeKey) && this.storeValsToUrlParams.hasOwnProperty(storeKey)) {
         paramData[this.storeValsToUrlParams[storeKey]] = storeData[storeKey];
       }
     }
@@ -77,7 +77,7 @@ class urlParamStoreMapper {
   mapUrlParamsToStoreData(paramData) {
     let storeData = {};
     for (let paramKey in paramData) {
-      if (this.urlParamsToStoreVals.hasOwnProperty(paramKey)) {
+      if (paramData.hasOwnProperty(paramKey) && this.urlParamsToStoreVals.hasOwnProperty(paramKey)) {
         storeData[this.urlParamsToStoreVals[paramKey]] = paramData[paramKey];
       }
     }
