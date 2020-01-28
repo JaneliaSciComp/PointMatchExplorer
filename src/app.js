@@ -24,8 +24,8 @@ class App extends Component {
   }
 
   handleRenderClick(){
-    const {selectedProject, selectedStack, selectedMatchCollection, startZ, endZ} = this.props.UserInput;
-    let readyToRender = (selectedProject && selectedStack && selectedMatchCollection && startZ!=="" && endZ!=="" );
+    const {selectedProject, selectedStack, startZ, endZ} = this.props.UserInput;
+    let readyToRender = (selectedProject && selectedStack && startZ!=="" && endZ!=="" );
     const canvas = this.refs.PMEcanvas;
     if (canvas) {
       this.props.updatePMEVariables({rendered: false});
@@ -116,7 +116,12 @@ class App extends Component {
 
   readyToFetchTiles(nextProps){
     const {StackSubVolume, TileBounds, MatchCounts} = nextProps.APIData;
-    return StackSubVolume.Fetched && TileBounds.Fetched && MatchCounts.Fetched && isEmpty(nextProps.tileData);
+
+    // only wait for match data fetch if match collection has been specified ...
+    const {selectedMatchOwner, selectedMatchCollection} = this.props.UserInput;
+    const isMatchDataReady = (! selectedMatchOwner) || (! selectedMatchCollection) || MatchCounts.Fetched;
+    
+    return StackSubVolume.Fetched && TileBounds.Fetched && isMatchDataReady && isEmpty(nextProps.tileData);
   }
 
   render() {

@@ -70,7 +70,11 @@ export const getTileData = function(APIData){
 
     layerData.tileCoordinates = getTranslatedTileCoordinates(z, layerTileBoundsLists[z], translation);
     let pointMatches = {};
-    pointMatches.matchCounts = layerMatchCounts[z];
+    if (z in layerMatchCounts) {
+      pointMatches.matchCounts = layerMatchCounts[z];
+    } else {
+      pointMatches.matchCounts = [];
+    }
     layerData.pointMatches = pointMatches;
     tileData.push(layerData)
   });

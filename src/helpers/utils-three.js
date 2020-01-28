@@ -218,7 +218,7 @@ const drawTiles = function(tileData){
   return Math.max(width, height);
 };
 
-const drawPMLines = function(tileData){
+const drawPMLines = function(tileData) {
   const merged_line_geometry = new THREE.Geometry();
   const materialParameters = {
     color: line_color,
@@ -227,11 +227,11 @@ const drawPMLines = function(tileData){
   const merged_line_material = new THREE.LineBasicMaterial(materialParameters);
 
   //create intra-layer lines
-  _.forEach(tileData, function(layer) {
+  _.forEach(tileData, function (layer) {
 
     let layerPMList = [];
 
-    _.forEach(layer.pointMatches.matchCounts, function(m) {
+    _.forEach(layer.pointMatches.matchCounts, function (m) {
       let matchWeight = getMatchWeight(m);
       if (matchWeight > 0) {
         m.pTile = getTileCoordinates(m.pId, tileData);
@@ -288,9 +288,16 @@ const drawPMLines = function(tileData){
     })
   });
 
-  //merged_line is what is drawn on the canvas (improves performance)
-  merged_line = new THREE.LineSegments(merged_line_geometry, merged_line_material);
-  scene.add(merged_line)
+  // make sure at least one match line was added before adding to scene
+  // (otherwise, Three.js will log a zillion RENDER WARNING messages)
+  if (merged_line_geometry.vertices.length > 0) {
+
+    // merged_line is what is drawn on the canvas (improves performance)
+    merged_line = new THREE.LineSegments(merged_line_geometry, merged_line_material);
+    scene.add(merged_line)
+
+  }
+  
 };
 
 const addPointMatchInfoToTile = function(tile, PMInfo){
@@ -628,9 +635,20 @@ const getSelectedMetadata = function(faceIndex, isShiftDown){
 };
 
 export const disposeThreeScene = function(){
-  function disposeMesh(mesh){
-    mesh.geometry.dispose();
-    mesh.material.dispose()
+  function disposeMesh(mesh) {
+
+    if (mesh) {
+
+      if (mesh.geometry) {
+        mesh.geometry.dispose();
+      }
+
+      if (mesh.material) {
+        mesh.material.dispose();
+      }
+      
+    }
+
   }
 
   cancelAnimationFrame(animateId);

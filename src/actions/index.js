@@ -201,39 +201,58 @@ function fetchData(dataType){
 
     } else if (dataType === "MatchCounts") {
 
-      const urls = [];
-      const subVolume = state.APIData.StackSubVolume.data;
-      const subVolumeSectionIds = Object.keys(subVolume.sectionIdToZ);
-      subVolumeSectionIds.forEach(sectionId => {
-        urls.push(mapDataTypeToURL(getState(), dataType, {groupId: sectionId}))
-      });
+      const { selectedMatchOwner, selectedMatchCollection } = state.UserInput;
 
-      const promises = urls.map(url => fetch(url).then(response => response.json()));
+      if (selectedMatchOwner && selectedMatchCollection) {
+        
+        const urls = [];
+        const subVolume = state.APIData.StackSubVolume.data;
+        const subVolumeSectionIds = Object.keys(subVolume.sectionIdToZ);
+        subVolumeSectionIds.forEach(sectionId => {
+          urls.push(mapDataTypeToURL(getState(), dataType, {groupId: sectionId}))
+        });
 
-      return Promise.all(promises)
-        .then(listOfCanvasMatchesLists  => {
-
-          let matches = {};
-
-          listOfCanvasMatchesLists.forEach(canvasMatchesListForPGroup => {
-            canvasMatchesListForPGroup.forEach(canvasMatches => {
-              const pz = parseFloat(canvasMatches.pGroupId);
-              const qz = parseFloat(canvasMatches.qGroupId);
-              if ((pz in subVolume.zValues) && (qz in subVolume.zValues)) {
-                const minZ = Math.min(pz, qz);
-                if (!(minZ in matches)) {
-                  matches[minZ] = [];
-                }
-                matches[minZ].push(canvasMatches);
+        const promises = urls.map(
+          url => fetch(url)
+            .then(function (response) {
+              let matchList = [];
+              if (response.status === 200) {
+                matchList = response.json();
               }
-            })
+              return matchList;
+            }));
 
-          });
+        return Promise.all(promises)
+          .then(listOfCanvasMatchesLists => {
 
-          return matches;
+            let matches = {};
 
-        })
-        .then(matches => dispatch(receiveData(dataType, matches)));
+            listOfCanvasMatchesLists.forEach(canvasMatchesListForPGroup => {
+              canvasMatchesListForPGroup.forEach(canvasMatches => {
+                const pz = parseFloat(canvasMatches.pGroupId);
+                const qz = parseFloat(canvasMatches.qGroupId);
+                if ((pz in subVolume.zValues) && (qz in subVolume.zValues)) {
+                  const minZ = Math.min(pz, qz);
+                  if (!(minZ in matches)) {
+                    matches[minZ] = [];
+                  }
+                  matches[minZ].push(canvasMatches);
+                }
+              })
+
+            });
+
+            return matches;
+
+          })
+          .then(matches => dispatch(receiveData(dataType, matches)));
+
+      } else {
+
+        const emptyMatches = {};
+        dispatch(receiveData(dataType, emptyMatches))
+
+      }
 
     } else {
 

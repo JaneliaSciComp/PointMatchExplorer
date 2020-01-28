@@ -151,11 +151,12 @@ function APIData(state = APIDataInitialState, action){
       return Object.assign({}, state, {
         "StackIds": dataInitialState,
         "StackMetadata": dataInitialState,
-        "StackSubVolume": dataInitialState,
+        "StackSubVolume": dataInitialState
       });
     case RESET_MATCH_DATA:
       return Object.assign({}, state, {
         "MatchCollections": dataInitialState,
+        "MatchCounts": dataInitialState
       });
     default:
       return state
