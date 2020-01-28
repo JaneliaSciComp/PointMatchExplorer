@@ -6,8 +6,13 @@ import reducers from "./reducers";
 import { Provider } from "react-redux";
 import { createLogger } from "redux-logger";
 import App from "./app"
+import {UPDATE_PME_VARIABLES} from "./actions";
 
-const loggerMiddleware = createLogger();
+const loggerMiddleware = createLogger(
+  {
+    // https://www.npmjs.com/package/redux-logger#log-everything-except-actions-with-certain-type
+    predicate: (getState, action) => action.type !== UPDATE_PME_VARIABLES
+  });
 
 // stolen from https://github.com/jhen0409/react-native-debugger/issues/280
 // noinspection JSUnresolvedVariable
