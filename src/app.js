@@ -128,13 +128,22 @@ class App extends Component {
     let pm_connection_strength_gradient;
     let selected_metadata_display;
     let mouseover_metadata_display;
-    //how many steps to generate the gradient in
-    const pm_connection_strength_gradient_steps = 20;
 
     const {minWeight, maxWeight, mouseoverMetadata, selectedMetadata} = this.props.PMEVariables;
 
-    if (minWeight && maxWeight){
-      pm_connection_strength_gradient = <PMStrengthGradient gradientTitle="Point Match Strength" colorList={pm_connection_strength_gradient_colors} numSteps={pm_connection_strength_gradient_steps} dmin={minWeight} dmax= {maxWeight} />
+    const { MatchCounts } = this.props.APIData;
+    const hasMatchCounts =
+      MatchCounts.Fetched &&
+      ((MatchCounts.data.subVolumePairCount - MatchCounts.data.numberOfPairsWithMissingMatchCounts) > 0);
+
+    if (minWeight && maxWeight && hasMatchCounts) {
+      pm_connection_strength_gradient =
+        <PMStrengthGradient
+          gradientTitle="Point Match Strength"
+          colorList={pm_connection_strength_gradient_colors}
+          numSteps={20}
+          dmin={minWeight}
+          dmax= {maxWeight} />
     }
 
     if (selectedMetadata) {

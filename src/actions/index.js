@@ -258,7 +258,12 @@ function fetchData(dataType){
           .then(listOfCanvasMatchesLists => {
 
             const tileIdToBounds = state.APIData.TileBounds.data.tileIdToBounds;
-            const matchCountsData = { totalPairCount: totalPairCount, subVolumePairCount: 0, zToMatchList: {} };
+            const matchCountsData = {
+              totalPairCount: totalPairCount,
+              subVolumePairCount: 0,
+              numberOfPairsWithMissingMatchCounts: 0,
+              zToMatchList: {}
+            };
 
             listOfCanvasMatchesLists.forEach(canvasMatchesListForPGroup => {
               canvasMatchesListForPGroup.forEach(canvasMatches => {
@@ -277,6 +282,9 @@ function fetchData(dataType){
 
                   matchCountsData.zToMatchList[minZ].push(canvasMatches);
                   matchCountsData.subVolumePairCount++;
+                  if (! canvasMatches.matchCount) {
+                    matchCountsData.numberOfPairsWithMissingMatchCounts++;
+                  }
                 }
               })
 

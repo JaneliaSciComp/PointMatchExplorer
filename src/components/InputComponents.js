@@ -36,8 +36,18 @@ export const PMEInput = (props) => {
   if (props.selectedMatchCounts.Fetched) {
     const matchCountsData = props.selectedMatchCounts.data;
     if (matchCountsData.totalPairCount > 0) {
+
+      let missingCountInfo = "";
+      if (matchCountsData.numberOfPairsWithMissingMatchCounts > 0) {
+        let missingCount = matchCountsData.numberOfPairsWithMissingMatchCounts;
+        if (matchCountsData.numberOfPairsWithMissingMatchCounts === matchCountsData.subVolumePairCount) {
+          missingCount = "all"
+        }
+        missingCountInfo = ", " + missingCount + " with missing counts";
+      }
+
       selectedMatchCountInfo = "(" + matchCountsData.subVolumePairCount.toLocaleString() + " out of " +
-                               matchCountsData.totalPairCount.toLocaleString() + " pairs)";
+                               matchCountsData.totalPairCount.toLocaleString() + " pairs" + missingCountInfo + ")";
     }
   }
 
