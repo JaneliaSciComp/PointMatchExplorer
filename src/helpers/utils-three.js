@@ -35,9 +35,6 @@ let faceIndexToTileInfo = {};
 //merged tiles and merged point match lines
 let merged_tiles, merged_line;
 
-//max and min strength of pm connections
-let maxWeight, minWeight;
-
 //how many steps to generate the gradient in
 let pm_connection_strength_chroma_scale;
 const tile_gradient_colors = ["#fc66ff", "#66fcff"];
@@ -100,7 +97,9 @@ export const generateVisualization = function(canvas, tileData){
   tile_gradient_chroma_scale = chroma.scale(tile_gradient_colors).colors(tileData.length);
 
   const weightRange = calculateWeightRange(tileData);
-  pm_connection_strength_chroma_scale = chroma.scale(pm_connection_strength_gradient_colors).domain([minWeight, maxWeight]);
+  pm_connection_strength_chroma_scale = chroma
+    .scale(pm_connection_strength_gradient_colors)
+    .domain([weightRange.minWeight, weightRange.maxWeight]);
 
   const maxDimensionSize = drawTiles(tileData);
 
@@ -272,7 +271,7 @@ const drawPMLines = function(tileData) {
           endY: m.qTile.yPos - smallerYLen,
           endZ: m.qTile.zPos,
           connection_strength: matchWeight,
-          strength_color: pm_connection_strength_chroma_scale(matchWeight) // TODO: this is not working!
+          strength_color: pm_connection_strength_chroma_scale(matchWeight)
         };
 
         addPointMatchInfoToTile(m.pTile, PMInfo);
