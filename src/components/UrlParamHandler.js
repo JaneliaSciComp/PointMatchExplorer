@@ -44,8 +44,13 @@ class UrlParamHandler extends Component {
   }
 
   updateUrl(searchParams) {
+    const oldUrl = window.location.href;
     const newUrl = window.location.href.split("?")[0] + "?" + searchParams.toString();
-    history.replaceState(null, "", newUrl);
+    // Because of mouse events, this function gets called many thousands of times.
+    // Only invoke the "more costly" replaceState function if parameters have actually changed.
+    if (newUrl !== oldUrl) {
+      history.replaceState(null, "", newUrl);
+    }
   }
 
   render() {
