@@ -29,6 +29,10 @@ button {
     color: blue;
 }
 
+button:disabled {
+    color: gray;
+}
+
 .dataGroupTitle {
     text-decoration: underline;
     font-weight: bold;

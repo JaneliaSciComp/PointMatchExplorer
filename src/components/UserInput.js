@@ -41,6 +41,7 @@ class UserInputs extends Component {
   }
 
   handleMatchCollectionSelect(matchCollection){
+    this.props.resetMatchData();
     this.props.updateMatchCollection(matchCollection)
   }
 
@@ -53,7 +54,7 @@ class UserInputs extends Component {
     this.props.resetMatchData();
     this.props.updateMatchOwner(matchOwner)
   }
-  
+
   componentWillMount(){
     this.props.getData("StackOwners");
     this.props.getData("MatchOwners")

@@ -147,23 +147,37 @@ function fetchData(dataType){
       fetch(mapDataTypeToURL(getState(), "StackZValues"))
         .then(response => response.json())
         .then(zValues => {
-          const urls = [];
-          zValues.forEach(z => {
-            urls.push(mapDataTypeToURL(getState(), dataType, {z:z}))
-          });
-          const promises = urls.map(url => fetch(url).then(response => response.json()));
-          return Promise.all(promises)
-            .then(responses  => {
-              const zToTileBoundsLists = {};
-              for (let i = 0; i < responses.length; i++) {
-                if (responses[i].length > 0) {
-                  const layerZ = responses[i][0].z;
-                  zToTileBoundsLists[layerZ] = responses[i]
+
+          if (zValues.length > 0) {
+
+            const urls = [];
+            zValues.forEach(z => {
+              urls.push(mapDataTypeToURL(getState(), dataType, {z: z}))
+            });
+            const promises = urls.map(url => fetch(url).then(response => response.json()));
+            return Promise.all(promises)
+              .then(responses => {
+
+                const tileBoundsData = {
+                  zToTileBoundsList: {},
+                  tileIdToBounds: {}
+                };
+                
+                for (let i = 0; i < responses.length; i++) {
+                  if (responses[i].length > 0) {
+                    const layerZ = responses[i][0].z;
+                    tileBoundsData.zToTileBoundsList[layerZ] = responses[i];
+                    responses[i].forEach(tileBounds => tileBoundsData.tileIdToBounds[tileBounds.tileId] = tileBounds);
+                  }
                 }
-              }
-              return zToTileBoundsLists;
-            })
-            .then(zToTileBoundsLists => dispatch(receiveData(dataType, zToTileBoundsLists)));
+
+                return tileBoundsData;
+
+              })
+              .then(tileBoundsData => dispatch(receiveData(dataType, tileBoundsData)));
+
+          } // else no layers found in specified sub-volume range
+
         });
 
     } else if (dataType === "StackSubVolume") {
@@ -210,7 +224,7 @@ function fetchData(dataType){
 
       const { selectedMatchOwner, selectedMatchCollection } = state.UserInput;
 
-      if (selectedMatchOwner && selectedMatchCollection) {
+      if (selectedMatchOwner && selectedMatchCollection && state.APIData.MatchCollections.Fetched) {
 
         let totalPairCount = 0;
         const matchCollections = state.APIData.MatchCollections.data;
@@ -243,15 +257,15 @@ function fetchData(dataType){
         return Promise.all(promises)
           .then(listOfCanvasMatchesLists => {
 
+            const tileIdToBounds = state.APIData.TileBounds.data.tileIdToBounds;
             const matchCountsData = { totalPairCount: totalPairCount, subVolumePairCount: 0, zToMatchList: {} };
 
             listOfCanvasMatchesLists.forEach(canvasMatchesListForPGroup => {
               canvasMatchesListForPGroup.forEach(canvasMatches => {
 
-                if ((canvasMatches.pGroupId in subVolume.sectionIdToZ) &&
-                    (canvasMatches.qGroupId in subVolume.sectionIdToZ)) {
-
-                  // TODO: make sure pId and qId are in TileBounds
+                if (tileIdToBounds &&
+                    (canvasMatches.pId in tileIdToBounds) &&
+                    (canvasMatches.qId in tileIdToBounds)) {
 
                   const pz = subVolume.sectionIdToZ[canvasMatches.pGroupId];
                   const qz = subVolume.sectionIdToZ[canvasMatches.qGroupId];

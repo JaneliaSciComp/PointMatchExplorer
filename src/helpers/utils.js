@@ -55,7 +55,7 @@ export const getTileData = function(APIData){
 
   const {MatchCounts, TileBounds, StackSubVolume} = APIData;
   const zToMatchList = MatchCounts.data.zToMatchList;
-  const layerTileBoundsLists = TileBounds.data;
+  const layerTileBoundsLists = TileBounds.data.zToTileBoundsList;
   const subVolume = StackSubVolume.data;
 
   let tileData = [];
