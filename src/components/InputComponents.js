@@ -27,7 +27,14 @@ export const PMEInput = (props) => {
   if (props.selectedStackSubVolume.Fetched) {
     selectedStackSubVolumeTileCount = "(" + props.selectedStackSubVolume.data.tileCount.toLocaleString() + " tiles)";
   }
-  
+
+  let selectedMatchCountInfo = "";
+  if (props.selectedMatchCounts.Fetched) {
+    const matchCountsData = props.selectedMatchCounts.data;
+    selectedMatchCountInfo = "(" + matchCountsData.subVolumePairCount.toLocaleString() + " out of " +
+                             matchCountsData.totalPairCount.toLocaleString() + " pairs)";
+  }
+
   return (
 
     <div id="PMEInput" className="formGrid">
@@ -72,6 +79,11 @@ export const PMEInput = (props) => {
       <label className={"indented"}>Collection:</label>
       <Dropdown dropdownName="Select Match Collection" onChange={props.onMatchCollectionSelect}
         values={ matchDisabled ? [] : props.match_collections} value={props.selectedMatchCollection} disabled={matchDisabled}/>
+
+      <label>&nbsp;</label>
+      <div className={"col2to6"}>
+        <span className={"stackInfo"}>{selectedMatchCountInfo}</span>
+      </div>
 
       <label className={"topTen"}>&nbsp;</label>
       <button className={"col2to6 topTen"} onClick={e => props.onRenderClick(e.target.value)}>Refresh View</button>

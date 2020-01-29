@@ -11,6 +11,7 @@ export const UPDATE_MATCH_OWNER = "UPDATE_MATCH_OWNER";
 export const UPDATE_TILE_DATA = "UPDATE_TILE_DATA";
 export const UPDATE_PME_VARIABLES = "UPDATE_PME_VARIABLES";
 export const RESET_STACK_DATA = "RESET_STACK_DATA";
+export const RESET_SUB_VOLUME_DATA = "RESET_SUB_VOLUME_DATA";
 export const RESET_MATCH_DATA = "RESET_MATCH_DATA";
 export const UPDATE_USER_INPUT = "UPDATE_USER_INPUT";
 
@@ -73,6 +74,12 @@ export function updateMatchOwner(matchOwner){
 export function resetStackData(){
   return {
     type: RESET_STACK_DATA
+  }
+}
+
+export function resetSubVolumeData(){
+  return {
+    type: RESET_SUB_VOLUME_DATA
   }
 }
 
@@ -204,7 +211,18 @@ function fetchData(dataType){
       const { selectedMatchOwner, selectedMatchCollection } = state.UserInput;
 
       if (selectedMatchOwner && selectedMatchCollection) {
-        
+
+        let totalPairCount = 0;
+        const matchCollections = state.APIData.MatchCollections.data;
+
+        matchCollections.some(function(collectionInfo) {
+          if (collectionInfo.collectionId.name === selectedMatchCollection) {
+            totalPairCount = collectionInfo.pairCount;
+            return true;
+          }
+          return false;
+        });
+
         const urls = [];
         const subVolume = state.APIData.StackSubVolume.data;
         const subVolumeSectionIds = Object.keys(subVolume.sectionIdToZ);
@@ -225,32 +243,40 @@ function fetchData(dataType){
         return Promise.all(promises)
           .then(listOfCanvasMatchesLists => {
 
-            let matches = {};
+            const matchCountsData = { totalPairCount: totalPairCount, subVolumePairCount: 0, zToMatchList: {} };
 
             listOfCanvasMatchesLists.forEach(canvasMatchesListForPGroup => {
               canvasMatchesListForPGroup.forEach(canvasMatches => {
-                const pz = parseFloat(canvasMatches.pGroupId);
-                const qz = parseFloat(canvasMatches.qGroupId);
-                if ((pz in subVolume.zValues) && (qz in subVolume.zValues)) {
+
+                if ((canvasMatches.pGroupId in subVolume.sectionIdToZ) &&
+                    (canvasMatches.qGroupId in subVolume.sectionIdToZ)) {
+
+                  // TODO: make sure pId and qId are in TileBounds
+
+                  const pz = subVolume.sectionIdToZ[canvasMatches.pGroupId];
+                  const qz = subVolume.sectionIdToZ[canvasMatches.qGroupId];
+
                   const minZ = Math.min(pz, qz);
-                  if (!(minZ in matches)) {
-                    matches[minZ] = [];
+                  if (! (minZ in matchCountsData.zToMatchList)) {
+                    matchCountsData.zToMatchList[minZ] = [];
                   }
-                  matches[minZ].push(canvasMatches);
+
+                  matchCountsData.zToMatchList[minZ].push(canvasMatches);
+                  matchCountsData.subVolumePairCount++;
                 }
               })
 
             });
 
-            return matches;
+            return matchCountsData;
 
           })
-          .then(matches => dispatch(receiveData(dataType, matches)));
+          .then(matchCountsData => dispatch(receiveData(dataType, matchCountsData)));
 
       } else {
 
-        const emptyMatches = {};
-        dispatch(receiveData(dataType, emptyMatches))
+        const emptyMatchCountsData = { totalPairCount: 0, subVolumePairCount: 0, zToMatchList: {} };
+        dispatch(receiveData(dataType, emptyMatchCountsData))
 
       }
 

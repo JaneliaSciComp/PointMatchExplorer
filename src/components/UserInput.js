@@ -1,7 +1,7 @@
 import React, {Component} from "react"
 import {connect} from "react-redux"
 import {fetchDataIfNeeded, invalidateData, updateMatchCollection, updateStartZ, updateEndZ, updateProject, 
-  updateStack, updateStackOwner, updateMatchOwner, resetStackData, resetMatchData,
+  updateStack, updateStackOwner, updateMatchOwner, resetStackData, resetSubVolumeData, resetMatchData,
   mapDataTypeToURL} from "../actions"
 import {getUserInputSelectLists} from "../helpers/utils.js"
 import {PMEInput} from "./InputComponents.js"
@@ -19,24 +19,24 @@ class UserInputs extends Component {
   }
 
   handleChangeStartZ(zValue){
-    this.props.invalidateData("StackSubVolume");
+    this.props.resetSubVolumeData();
     this.props.updateStartZ(zValue)
   }
 
   handleChangeEndZ(zValue){
-    this.props.invalidateData("StackSubVolume");
+    this.props.resetSubVolumeData();
     this.props.updateEndZ(zValue)
   }
 
   handleProjectSelect(project){
     this.props.invalidateData("StackMetadata");
-    this.props.invalidateData("StackSubVolume");
+    this.props.resetSubVolumeData();
     this.props.updateProject(project)
   }
 
   handleStackSelect(stack){
     this.props.invalidateData("StackMetadata");
-    this.props.invalidateData("StackSubVolume");
+    this.props.resetSubVolumeData();
     this.props.updateStack(stack)
   }
 
@@ -59,25 +59,86 @@ class UserInputs extends Component {
     this.props.getData("MatchOwners")
   }
 
+  isNameValid(name, validNames) {
+    let isValid = false;
+    validNames.some(function(validName) {
+      if (name === validName) {
+        isValid = true;
+        return true;
+      }
+    });
+    return isValid;
+  }
+
+  isStackNameValid(name, validStackIds) {
+    let isValid = false;
+    validStackIds.some(function(stackId) {
+      if (name === stackId.stack) {
+        isValid = true;
+        return true;
+      }
+    });
+    return isValid;
+  }
+
+  isCollectionNameValid(name, collectionDataList) {
+    let isValid = false;
+    collectionDataList.some(function(collectionData) {
+      if (name === collectionData.collectionId.name) {
+        isValid = true;
+        return true;
+      }
+    });
+    return isValid;
+  }
+
   componentWillReceiveProps(nextProps) {
-    const {StackOwners, MatchOwners, StackIds, StackSubVolume} = nextProps.APIData;
-    const {selectedStackOwner, selectedMatchOwner, selectedStack} = nextProps.UserInput;
+
+    const {StackOwners, StackIds, MatchOwners, MatchCollections, StackSubVolume} = nextProps.APIData;
+    const {selectedStackOwner, selectedStack, selectedMatchOwner, selectedMatchCollection} = nextProps.UserInput;
 
     if (StackOwners.Fetched && selectedStackOwner) {
-      nextProps.getData("StackIds");
-    }
 
-    if (MatchOwners.Fetched && selectedMatchOwner) {
-      nextProps.getData("MatchCollections");
+      if (this.isNameValid(selectedStackOwner, StackOwners.data)) {
+        nextProps.getData("StackIds");
+      } else {
+        this.handleStackOwnerSelect(""); // remove invalid selection
+      }
+
     }
 
     if (StackIds.Fetched && selectedStack) {
-      nextProps.getData("StackMetadata");
+
+      if (this.isStackNameValid(selectedStack, StackIds.data)) {
+        nextProps.getData("StackMetadata");
+      } else {
+        this.handleStackSelect(""); // remove invalid selection
+      }
+
+    }
+
+    if (MatchOwners.Fetched && selectedMatchOwner) {
+
+      if (this.isNameValid(selectedMatchOwner, MatchOwners.data)) {
+        nextProps.getData("MatchCollections");
+      } else {
+        this.handleMatchOwnerSelect(""); // remove invalid selection
+      }
+
+    }
+
+    if (MatchCollections.Fetched && selectedMatchCollection) {
+
+      if (! this.isCollectionNameValid(selectedMatchCollection, MatchCollections.data)) {
+        this.handleMatchCollectionSelect(""); // remove invalid selection
+      }
+
     }
 
     if (StackSubVolume.Fetched) {
       nextProps.getData("MatchCounts");
     }
+
   }
 
   render() {
@@ -102,6 +163,7 @@ class UserInputs extends Component {
           selectedStack={UserInput.selectedStack}
           selectedStackMetadata={APIData.StackMetadata}
           selectedStackSubVolume={APIData.StackSubVolume}
+          selectedMatchCounts={APIData.MatchCounts}
           stackDetailsViewUrl={stackDetailsViewUrl}
           selectedMatchCollection={UserInput.selectedMatchCollection}
           selectedStackOwner={UserInput.selectedStackOwner}
@@ -158,6 +220,9 @@ const mapDispatchToProps = function(dispatch) {
     },
     resetStackData: function(){
       dispatch(resetStackData())
+    },
+    resetSubVolumeData: function(){
+      dispatch(resetSubVolumeData())
     },
     resetMatchData: function(){
       dispatch(resetMatchData())

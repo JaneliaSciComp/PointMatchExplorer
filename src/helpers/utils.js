@@ -54,7 +54,7 @@ const getTranslatedTileCoordinates = function(z, tileBounds, translation){
 export const getTileData = function(APIData){
 
   const {MatchCounts, TileBounds, StackSubVolume} = APIData;
-  const layerMatchCounts = MatchCounts.data;
+  const zToMatchList = MatchCounts.data.zToMatchList;
   const layerTileBoundsLists = TileBounds.data;
   const subVolume = StackSubVolume.data;
 
@@ -70,8 +70,8 @@ export const getTileData = function(APIData){
 
     layerData.tileCoordinates = getTranslatedTileCoordinates(z, layerTileBoundsLists[z], translation);
     let pointMatches = {};
-    if (z in layerMatchCounts) {
-      pointMatches.matchCounts = layerMatchCounts[z];
+    if (z in zToMatchList) {
+      pointMatches.matchCounts = zToMatchList[z];
     } else {
       pointMatches.matchCounts = [];
     }

@@ -13,6 +13,7 @@ import {
   UPDATE_TILE_DATA,
   UPDATE_PME_VARIABLES,
   RESET_STACK_DATA,
+  RESET_SUB_VOLUME_DATA,
   RESET_MATCH_DATA,
   UPDATE_USER_INPUT
 } from "../actions"
@@ -151,7 +152,15 @@ function APIData(state = APIDataInitialState, action){
       return Object.assign({}, state, {
         "StackIds": dataInitialState,
         "StackMetadata": dataInitialState,
-        "StackSubVolume": dataInitialState
+        "StackSubVolume": dataInitialState,
+        "TileBounds": dataInitialState,
+        "MatchCounts": dataInitialState
+      });
+    case RESET_SUB_VOLUME_DATA:
+      return Object.assign({}, state, {
+        "StackSubVolume": dataInitialState,
+        "TileBounds": dataInitialState,
+        "MatchCounts": dataInitialState
       });
     case RESET_MATCH_DATA:
       return Object.assign({}, state, {
