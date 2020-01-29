@@ -70,7 +70,7 @@ export const getTileData = function(APIData){
 
     layerData.tileCoordinates = getTranslatedTileCoordinates(z, layerTileBoundsLists[z], translation);
     let pointMatches = {};
-    if (z in zToMatchList) {
+    if (zToMatchList && (z in zToMatchList)) {
       pointMatches.matchCounts = zToMatchList[z];
     } else {
       pointMatches.matchCounts = [];
