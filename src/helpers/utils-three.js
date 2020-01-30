@@ -120,14 +120,27 @@ export const generateVisualization = function(canvas, tileData){
 
 //checks if tile exists, and if so, return the tile coordinate information
 const getTileCoordinates = function(tileId, tileData){
+
   let tileCoordinates = undefined;
-  //loop through all tiles in each layer to find tile
+
+  // Loop through each layer until tile is found (returns undefined if not found).
+  //
+  // Data structure looks like this:
+  // tileData: [
+  //   {
+  //     z: "<z string>",
+  //     tileCoordinates: { "<tileId>": { <bounds> }, ..., "<tileId>": { <bounds> } },
+  //     pointMatches: { matchCounts: [ <pair match data>, ..., <pair match data>] }
+  //   }, ...
+  //]
+
   tileData.some(function(layer) {
     if (tileId in layer.tileCoordinates) {
       tileCoordinates = layer.tileCoordinates[tileId];
     }
     return tileCoordinates;
   });
+
   return tileCoordinates;
 };
 
