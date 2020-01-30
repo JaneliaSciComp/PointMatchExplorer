@@ -95,7 +95,7 @@ class UserInputs extends Component {
 
   componentWillReceiveProps(nextProps) {
 
-    const {StackOwners, StackIds, MatchOwners, MatchCollections, StackSubVolume} = nextProps.APIData;
+    const {StackOwners, StackIds, MatchOwners, MatchCollections, StackSubVolume, TileBounds} = nextProps.APIData;
     const {selectedStackOwner, selectedStack, selectedMatchOwner, selectedMatchCollection} = nextProps.UserInput;
 
     if (StackOwners.Fetched && selectedStackOwner) {
@@ -136,7 +136,7 @@ class UserInputs extends Component {
 
     }
 
-    if (StackSubVolume.Fetched) {
+    if (StackSubVolume.Fetched && TileBounds.Fetched) {
       nextProps.getData("MatchCounts");
     }
 
