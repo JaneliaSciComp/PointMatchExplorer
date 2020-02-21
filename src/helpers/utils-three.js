@@ -6,16 +6,18 @@ import chroma from "chroma-js"
 
 export var camera;
 export var pm_connection_strength_gradient_colors = ["#c33f2e", "#fc9d59", "#fee08b", "#e0f381", "#76c76f", "#3288bd"];
+export var selectX;
+export var selectY;
 
 // flipped gradient with strongest connections marked as red
 //export var pm_connection_strength_gradient_colors = ["#3288bd", "#76c76f", "#e0f381", "#fee08b", "#fc9d59", "#c33f2e"];
 
 let scene, renderer, controls;
-let intersected, selected;
+let intersectedTileObject, selectedTileObject;
 
 let mouse, raycaster;
 let downobj, upobj;
-let downmouseX, upmouseX, downmouseY, upmouseY;
+let downMouseX, upMouseX, downMouseY, upMouseY;
 let animateId;
 
 const size_scale = 0.05;
@@ -184,9 +186,10 @@ const drawTiles = function(tileData){
   };
 
   let faceIndexCounter = 0;
+  let previousZ = undefined;
   _.forEach(tileData, function(layer, index){
     const layer_color = tile_gradient_chroma_scale[index];
-    _.forEach(layer.tileCoordinates, function(c){
+    _.forEach(layer.tileCoordinates, function(c) {
       //adding data needed to draw the tile
       c.width = size_scale * (c.maxXtranslated - c.minXtranslated);
       c.height = size_scale * (c.maxYtranslated - c.minYtranslated);
@@ -218,8 +221,20 @@ const drawTiles = function(tileData){
       tile_mesh.updateMatrix();
       merged_tile_geometry.merge(tile_mesh.geometry, tile_mesh.matrix)
     });
-    z_offset = z_offset - z_spacing
+
+    if (previousZ) {
+      const deltaZ = layer.z - previousZ;
+      if (deltaZ > 1.0) {
+        // add a "gap" if one or more consecutive layers are missing
+        z_offset = z_offset - z_spacing;
+      }
+    }
+
+    previousZ = layer.z;
+
+    z_offset = z_offset - z_spacing;
   });
+  
   //merged_tiles is what is drawn on the canvas (improves performance)
   merged_tiles = new THREE.Mesh(merged_tile_geometry, merged_tile_material);
   scene.add(merged_tiles);
@@ -277,9 +292,11 @@ const drawPMLines = function(tileData) {
         );
 
         const PMInfo = {
+          pId: m.pId,
           startX: m.pTile.xPos + smallerXLen,
           startY: m.pTile.yPos + smallerYLen,
           startZ: m.pTile.zPos,
+          qId: m.qId,
           endX: m.qTile.xPos - smallerXLen,
           endY: m.qTile.yPos - smallerYLen,
           endZ: m.qTile.zPos,
@@ -340,139 +357,85 @@ export const onMouseMove = function(event) {
   event.preventDefault();
   const intersections = getRaycastIntersections(event);
   if (intersections.length > 0) {
-    const intersectedFaceIndex = intersected ? intersected.faceIndex : null;
+    const intersectedFaceIndex = intersectedTileObject ? intersectedTileObject.faceIndex : null;
     //only highlight if the mouse moved to a different tile
     //(if the mouse is moved around in the same tile, don't do anything)
     if (intersectedFaceIndex !== intersections[0].faceIndex) {
-      if (intersected){ //dehighlight previous intersection
-        dehighlight(intersected.faceIndex)
+      if (intersectedTileObject){ //dehighlight previous intersection
+        dehighlight(intersectedTileObject.faceIndex)
       }
-      intersected = intersections[0];
-      highlight(intersected.faceIndex)
+      intersectedTileObject = intersections[0];
+      highlight(intersectedTileObject.faceIndex)
     }
     //get updated metadata text
-    metadataValues = getMouseoverMetadata(intersected.faceIndex)
-  }else if (intersected){ //there are no current intersections, but there was a previous intersection
-    dehighlight(intersected.faceIndex);
-    intersected = null
+    metadataValues = getMouseoverMetadata(intersectedTileObject.faceIndex)
+  }else if (intersectedTileObject){ //there are no current intersections, but there was a previous intersection
+    dehighlight(intersectedTileObject.faceIndex);
+    intersectedTileObject = null
   }
   return metadataValues
 };
 
 export const onMouseDown = function(event){
   event.preventDefault();
+  selectX = event.clientX;
+  selectY = event.clientY;
   const intersections = getRaycastIntersections(event);
   if (intersections.length > 0) {
     downobj = intersections[0]
-  }else{
+  } else {
     //save the position of mousedown
-    downmouseX = mouse.x;
-    downmouseY = mouse.y
+    downMouseX = mouse.x;
+    downMouseY = mouse.y;
   }
 };
 
-export const onMouseUp = function(event, isShiftDown, isCtrlDown, isMetaDown, isPDown, afterMouseUp, userInput, stackResolution) {
+export const onMouseUp = function(event, isShiftDown, afterMouseUp) {
   let metadataValues;
   event.preventDefault();
   const intersections = getRaycastIntersections(event);
   if (intersections.length > 0) {
     upobj = intersections[0]
-  }else{
+  } else {
     //save position of the mouseup
-    upmouseX = mouse.x;
-    upmouseY = mouse.y
+    upMouseX = mouse.x;
+    upMouseY = mouse.y
   }
-  if (downobj && upobj){
+
+  if (downobj && upobj) {
+
     //if the mouse was clicked on the same tile
     if (downobj.faceIndex === upobj.faceIndex){
       //dehighlight already selected tile/layer
-      if (selected){
-        dehighlight(selected.faceIndex, true);
-        if (isPDown) {
-          openTilePair(selected.faceIndex, upobj.faceIndex, userInput)
-        }
+      if (selectedTileObject) {
+        dehighlight(selectedTileObject.faceIndex, true);
       }
-      selected = upobj;
-      if (isCtrlDown){
-        openTileImageWithNeighbors(selected.faceIndex, userInput)
-      }
-      if (isMetaDown){
-        openStackInCatmaid(selected.faceIndex, userInput, stackResolution)
-      }
+      selectedTileObject = upobj;
       //highlight new selected tile
       //can also be downobj since they are the same
-      highlight(selected.faceIndex, true, isShiftDown);
-      metadataValues = getSelectedMetadata(selected.faceIndex, isShiftDown)
+      highlight(selectedTileObject.faceIndex, true, isShiftDown);
+      metadataValues = getSelectedMetadata();
     }
   }
-  if (!downobj && !upobj){ //if the mouse is clicked outside
+
+  if (! downobj && ! upobj) { //if the mouse is clicked outside
+
     //only dehighlight selected tile if mouse was clicked, not when it is dragged for panning
-    if(downmouseX === upmouseX && downmouseY === upmouseY){
-      if (selected){
-        dehighlight(selected.faceIndex, true);
-        selected = null
+    if (downMouseX === upMouseX && downMouseY === upMouseY) {
+      if (selectedTileObject) {
+        dehighlight(selectedTileObject.faceIndex, true);
+        selectedTileObject = null
       }
-    }else if (selected){
+    } else if (selectedTileObject) {
       //do not remove metadata display if the mouse was not clicked
-      metadataValues = getSelectedMetadata(selected.faceIndex, isShiftDown)
+      metadataValues = getSelectedMetadata();
     }
   }
+
   downobj = null;
   upobj = null;
   afterMouseUp();
   return metadataValues
-};
-
-const openTileImageWithNeighbors = function openTileImageWithNeighbors(faceIndex, userInput) {
-
-  const tile = faceIndexToTileInfo[faceIndex];
-
-  const width = tile.maxX - tile.minX + 1;
-  const renderScale = 400.0 / width;
-
-  const url = "http://" + userInput.dynamicRenderHost + "/render-ws/view/tile-with-neighbors.html?tileId=" +
-              tile.tileId +
-              "&renderScale=" + renderScale +
-              "&renderStackOwner=" + userInput.selectedStackOwner +
-              "&renderStackProject=" + userInput.selectedProject +
-              "&renderStack=" + userInput.selectedStack +
-              "&matchOwner=" + userInput.selectedMatchOwner +
-              "&matchCollection=" + userInput.selectedMatchCollection;
-
-  window.open(url)
-};
-
-const openTilePair = function openTilePair(faceIndexA, faceIndexB, userInput) {
-
-  const pTile = faceIndexToTileInfo[faceIndexA];
-  const qTile = faceIndexToTileInfo[faceIndexB];
-
-  const maxWidth = Math.max((pTile.maxX - pTile.minX + 1), (qTile.maxX - qTile.minX + 1));
-  const renderScale = 700.0 / maxWidth;
-
-  const url = "http://" + userInput.dynamicRenderHost + "/render-ws/view/tile-pair.html?pId=" + pTile.tileId +
-              "&qId=" + qTile.tileId +
-              "&renderScale=" + renderScale +
-              "&renderStackOwner=" + userInput.selectedStackOwner +
-              "&renderStackProject=" + userInput.selectedProject +
-              "&renderStack=" + userInput.selectedStack +
-              "&matchOwner=" + userInput.selectedMatchOwner +
-              "&matchCollection=" + userInput.selectedMatchCollection;
-
-  window.open(url)
-};
-
-const openStackInCatmaid = function(faceIndex, userInput, stackResolution){
-  const tileInfo = faceIndexToTileInfo[faceIndex];
-  let url = "http://" + userInput.catmaidHost + "/?";
-  url += "pid=" + userInput.selectedStackOwner + "__" + userInput.selectedProject;
-  url += "&zp=" + tileInfo.tileZ*stackResolution.stackResolutionZ;
-  url += "&yp=" + (tileInfo.minY+tileInfo.maxY)/2*stackResolution.stackResolutionY;
-  url += "&xp=" + (tileInfo.minX+tileInfo.maxX)/2*stackResolution.stackResolutionX;
-  url += "&tool=navigator";
-  url += "&sid0=" + userInput.selectedStack;
-  url += "&s0=1.5";
-  window.open(url)
 };
 
 let highlight = function(faceIndex, isSelected, isShiftDown) {
@@ -597,52 +560,22 @@ const getMouseoverMetadata = function(faceIndex){
   ];
 };
 
-const getSelectedMetadata = function(faceIndex, isShiftDown){
-  const selected = faceIndexToTileInfo[faceIndex];
-  let md;
-  //check if a tile or a layer was selected
-  if (isShiftDown){
-    let pointMatchSetsCount = 0;
-    let tileCount = 0;
-    const zLayer = faceIndexToTileInfo[faceIndex].tileZ;
-    _.forEach(faceIndexToTileInfo, function(tile){
-      if (tile.tileZ === zLayer){
-        tileCount++;
-        pointMatchSetsCount += tile.PMList.length
-      }
-    });
-    //needs to be halved since they each tile has 2 faces and they are counted twice
-    pointMatchSetsCount = pointMatchSetsCount/2;
-    md = [
-      {
-        keyname: "Selected Z",
-        valuename: zLayer
-      },
-      {
-        keyname: "Tile Count",
-        valuename: tileCount
-      },
-      {
-        keyname: "Number of point match sets",
-        valuename: pointMatchSetsCount
-      }
-    ]
-  }else{
-    md = [
-      {
-        keyname: "Selected Tile Z",
-        valuename: selected.tileZ
-      },
-      {
-        keyname: "Selected Tile ID",
-        valuename: selected.tileId
-      },
-      {
-        keyname: "Number of tiles with point matches",
-        valuename: selected.PMList.length
-      }
-    ]
-  }
+const getSelectedMetadata = function() {
+
+  const selectedTileInfo = faceIndexToTileInfo[selectedTileObject.faceIndex];
+
+  const md = [
+    { keyname: "Selected Tile Z" },
+    { keyname: "Selected Tile ID" },
+    { keyname: "Number of tiles with point matches" },
+    { keyname: "PMList" }
+  ];
+
+  md[0]["valuename"] = selectedTileInfo ? selectedTileInfo.tileZ : null;
+  md[1]["valuename"] = selectedTileInfo ? selectedTileInfo.tileId : null;
+  md[2]["valuename"] = selectedTileInfo ? selectedTileInfo.PMList.length : null;
+  md[3]["valuename"] = selectedTileInfo ? selectedTileInfo.PMList : null;
+  
   return md
 };
 
@@ -677,7 +610,19 @@ export const disposeThreeScene = function(){
   camera = null;
   scene = null;
   controls = null;
-  faceIndexToTileInfo = {}
+  faceIndexToTileInfo = {};
+
+  // clear mouse click state too ...
+  selectedTileObject = null;
+  intersectedTileObject = null;
+  selectX = null;
+  selectY = null;
+  downobj = null;
+  upobj = null;
+  downMouseX = null;
+  upMouseX = null;
+  downMouseY = null;
+  upMouseY = null;
 
 };
 

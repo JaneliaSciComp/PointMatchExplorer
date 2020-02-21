@@ -134,23 +134,14 @@ export const PMEInput = (props) => {
 
 export const handleHelpClick = function() {
   let helpMessage = `
+- Click Refresh View button to display sub-volume
+  tiles and match connections
 - Hold down left mouse button and move to rotate
 - Hold down right mouse button and move to pan
 - Scroll to zoom
-- Click on tile to highlight it and its point matches
-
+- Click on a tile to view information about it 
 - Shift click on a tile to highlight all tiles 
-  and point matches of that tile's section
-
-- Command + click on a tile to view its section 
-  in CATMAID, zoomed in on that tile
-
-- Ctrl+click on a tile to view match data for 
-  the tile and its neighboring tiles
-
-- After selecting (clicking) one tile, 
-  hold p key and click second tile 
-  to view match data for the tile pair
+  and connections within the tile's layer
 `;
   alert(helpMessage);
   return false

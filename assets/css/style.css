@@ -157,3 +157,37 @@ button:disabled {
     height: 20px;
     width: 5%;
 }
+
+#view-submenu-button, #Prior-layer-matches-button, #Same-layer-matches-button, #Post-layer-matches-button {
+    width: 200px;
+    text-align: left;
+}
+
+#view-submenu-button::after, #Prior-layer-matches-button::after, #Same-layer-matches-button::after, #Post-layer-matches-button::after {
+    margin-top: .5em;
+    float: right;
+}
+
+.tilePairArrowContainer {
+    display: inline-flex;
+    width: 15px;
+}
+
+.tilePairArrow {
+    flex-grow: 1;
+    height: 1px;
+    background: blueviolet;
+    position: relative;
+}
+
+.tilePairArrow.tilePairOffset:after {
+    position: absolute;
+    content: '';
+    bottom: -4px;
+    right: 0;
+    width: 0;
+    height: 0;
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+    border-left: 4px solid blueviolet;
+}

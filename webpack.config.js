@@ -35,6 +35,24 @@ module.exports = {
           }
         ],
       },
+      // from https://getbootstrap.com/docs/4.0/getting-started/webpack/#importing-compiled-css
+      {
+        test: /\.css$/,
+        use: ['style-loader', 'css-loader']
+      },
+      // from https://www.chriscourses.com/blog/loading-fonts-webpack
+      {
+        test: /\.(woff(2)?|ttf|eot|svg)(\?v=\d+\.\d+\.\d+)?$/,
+        use: [
+          {
+            loader: 'file-loader',
+            options: {
+              name: '[name].[ext]',
+              outputPath: 'fonts/'
+            }
+          }
+        ]
+      }
     ],
   },
 };

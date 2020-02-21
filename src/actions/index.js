@@ -213,7 +213,9 @@ function fetchData(dataType){
             }
           );
 
-          subVolume.orderedZValues = Object.keys(subVolume.zValues).sort();
+          subVolume.orderedZValues = Object.keys(subVolume.zValues)
+            .map(zString => {return parseFloat(zString)})
+            .sort(function(a, b) { return a - b; });
 
           return subVolume;
 
@@ -339,6 +341,12 @@ export function mapDataTypeToURL(state, dataType, params) {
       return `${MATCH_BASE_URL}/matchCollections`;
     case "StackMetadata":
       return `${STACK_BASE_URL}/project/${selectedProject}/stack/${selectedStack}`;
+    case "RenderStack":
+      if (dynamicRenderHost) {
+        return `http://${dynamicRenderHost}/render-ws/v1/owner/${selectedStackOwner}/project/${selectedProject}/stack/${selectedStack}`;
+      } else {
+        return `${STACK_BASE_URL}/project/${selectedProject}/stack/${selectedStack}`;
+      }
     case "StackSubVolume":
       return `${STACK_BASE_URL}/project/${selectedProject}/stack/${selectedStack}/sectionData?minZ=${startZ}&maxZ=${endZ}`;
     case "StackZValues":

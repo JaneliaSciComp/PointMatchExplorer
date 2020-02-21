@@ -3,13 +3,15 @@ import {connect} from "react-redux"
 import UserInputs from "./components/userInput"
 import {PMStrengthGradient} from "./components/PMStrengthGradient"
 import {TileInfo} from "./components/TileInfo"
-import {fetchDataIfNeeded, invalidateData, updateTileData, updatePMEVariables} from "./actions"
+import {fetchDataIfNeeded, invalidateData, mapDataTypeToURL, updateTileData, updatePMEVariables} from "./actions"
 import {getTileData} from "./helpers/utils.js"
-import {camera, pm_connection_strength_gradient_colors, generateVisualization, onMouseMove, onMouseUp, onMouseDown, disposeThreeScene} from "./helpers/utils-three.js"
+import {camera, pm_connection_strength_gradient_colors, selectX, selectY, generateVisualization, onMouseMove, onMouseUp, onMouseDown, disposeThreeScene} from "./helpers/utils-three.js"
 import "whatwg-fetch"
 import isEmpty from "lodash/isEmpty"
 import UrlParamHandler from "./components/UrlParamHandler"
 import {getCanvasArea} from "./helpers/utils-three";
+import {SelectedTileMenu} from "./components/SelectedTileMenu";
+import "bootstrap/dist/css/bootstrap.min.css";
 
 
 class App extends Component {
@@ -76,8 +78,8 @@ class App extends Component {
    * @property {Number} stats.tileCount
    */
   processMouseUp(event){
-    const {isShiftDown, isCtrlDown, isMetaDown, isPDown} = this.props.PMEVariables;
-    const md = onMouseUp(event, isShiftDown, isCtrlDown, isMetaDown, isPDown, this.afterMouseUp, this.props.UserInput, this.props.APIData.StackMetadata.data.currentVersion);
+    const {isShiftDown} = this.props.PMEVariables;
+    const md = onMouseUp(event, isShiftDown, this.afterMouseUp);
     this.props.updatePMEVariables({selectedMetadata: md})
   }
 
@@ -126,12 +128,11 @@ class App extends Component {
 
   render() {
     let pm_connection_strength_gradient;
-    let selected_metadata_display;
+    let selectedTileMenu;
     let mouseover_metadata_display;
 
     const {minWeight, maxWeight, mouseoverMetadata, selectedMetadata} = this.props.PMEVariables;
-
-    const { MatchCounts } = this.props.APIData;
+    const { StackMetadata, StackSubVolume, TileBounds, MatchCounts } = this.props.APIData;
     const hasMatchCounts =
       MatchCounts.Fetched &&
       ((MatchCounts.data.subVolumePairCount - MatchCounts.data.numberOfPairsWithMissingMatchCounts) > 0);
@@ -146,8 +147,31 @@ class App extends Component {
           dmax= {maxWeight} />
     }
 
-    if (selectedMetadata) {
-      selected_metadata_display = <TileInfo context={"Selected"} kvPairs={selectedMetadata}/>
+    if (selectedMetadata && StackMetadata.Fetched && StackSubVolume.Fetched && TileBounds.Fetched) {
+
+      const selectedMetadataTileId = selectedMetadata[1].valuename;
+
+      if (selectedMetadataTileId in TileBounds.data.tileIdToBounds) {
+
+        const dataStackUrl = mapDataTypeToURL(this.props, "StackMetadata");
+        const renderStackUrl = mapDataTypeToURL(this.props, "RenderStack");
+
+        selectedTileMenu =
+          <SelectedTileMenu
+            kvPairs={selectedMetadata}
+            x={selectX}
+            y={selectY}
+            dataStackUrl={dataStackUrl}
+            renderStackUrl={renderStackUrl}
+            stackMetadata={StackMetadata.data}
+            stackSubVolume={StackSubVolume.data}
+            tileBoundsData={TileBounds.data}
+            hasMatchCounts={hasMatchCounts}
+            matchCounts={MatchCounts.data}
+            userInput={this.props.UserInput}/>
+
+      }
+
     }
 
     if (mouseoverMetadata) {
@@ -160,11 +184,11 @@ class App extends Component {
       <div id="PMEAll">
         <div id="PMECanvasArea">
           {canvas_node}
+          {selectedTileMenu}
           {pm_connection_strength_gradient}
         </div>
         <div id="PMEDataArea">
           <UserInputs onRenderClick={this.handleRenderClick.bind(this)}/>
-          {selected_metadata_display}
           {mouseover_metadata_display}
         </div>
         <UrlParamHandler />
