@@ -2,6 +2,7 @@ import React from "react"
 import Dropdown from "react-bootstrap/Dropdown";
 import DropdownButton from "react-bootstrap/DropdownButton";
 import Image from "react-bootstrap/Image";
+import {TilePairMenuItem} from "./TilePairMenuItem";
 
 export const SelectedTileMenu = (props) => {
 
@@ -54,11 +55,6 @@ export const SelectedTileMenu = (props) => {
   // try to fit 2 tiles across in pair view
   const pairViewRenderScale = window.innerWidth / (2 * (fullScaleTileWidth + 10));
 
-  const getTilePairUrl = function (pId, qId) {
-    return renderViewUrl + "/tile-pair.html?pId=" + pId + "&qId=" + qId +
-           "&renderScale=" + pairViewRenderScale + "&" + viewContextParameters;
-  };
-
   const currentVersion = props.stackMetadata.currentVersion;
   const resTileCenterX = ((selectedTileBounds.minX + selectedTileBounds.maxX) / 2) * currentVersion.stackResolutionX;
   const resTileCenterY = ((selectedTileBounds.minY + selectedTileBounds.maxY) / 2) * currentVersion.stackResolutionY;
@@ -71,50 +67,6 @@ export const SelectedTileMenu = (props) => {
            "&zp=" + resTileZ + "&yp=" + resTileCenterY + "&xp=" + resTileCenterX +
            "&tool=navigator" +
            "&s0=" + mipmapLevel;
-  };
-
-  const getRelativePosition = function(fromBounds, toBounds) {
-
-    const deltaX = toBounds.minX - fromBounds.minX;
-    const deltaY = toBounds.minY - fromBounds.minY;
-    const angleRadians = Math.atan2(deltaY, deltaX);
-    const angleDegrees = Math.floor(angleRadians * 180 / Math.PI);
-
-    const pctDeltaX = Math.abs(deltaX / (fromBounds.maxX - fromBounds.minX));
-    const pctDeltaY = Math.abs(deltaY / (fromBounds.maxY - fromBounds.minY));
-    const maxOffsetPercentage = Math.max(pctDeltaX, pctDeltaY) * 100;
-
-    return {
-      angleDegrees: angleDegrees,
-      maxOffsetPercentage: maxOffsetPercentage
-    }
-
-  };
-
-  const getPairItem = function(pId, qId, otherTileBounds, matchCount) {
-    const relativePosition = getRelativePosition(selectedTileBounds, otherTileBounds);
-    const arrowContainerStyle = {
-      transform: "rotate(" + relativePosition.angleDegrees + "deg)"
-    };
-    let arrowStyle;
-    let tilePairClasses = "tilePairArrow";
-    if (relativePosition.maxOffsetPercentage < 10.0) {
-      arrowStyle = {
-        height: "9px",
-        margin: "3px"
-      };
-    } else {
-      tilePairClasses += " tilePairOffset";
-    }
-    const pairLabel = otherTileBounds.tileId + " (" + matchCount + " matches, " + "z " + otherTileBounds.z + ")";
-    return <Dropdown.Item
-      href={getTilePairUrl(pId, qId)}
-      target="_blank">
-      <div className="tilePairArrowContainer" style={arrowContainerStyle}>
-        <span className={tilePairClasses} style={arrowStyle}/>
-      </div>
-      {pairLabel}
-    </Dropdown.Item>;
   };
 
   const getLayerPairsMenu = function(context, layerPairItems) {
@@ -150,7 +102,15 @@ export const SelectedTileMenu = (props) => {
         otherTileBounds = props.tileBoundsData.tileIdToBounds[pmInfo.pId];
       }
 
-      const pairItem = getPairItem(pmInfo.pId, pmInfo.qId, otherTileBounds, pmInfo.connection_strength);
+      const pairItem = <TilePairMenuItem
+        renderViewUrl={renderViewUrl}
+        pId={pmInfo.pId}
+        qId={pmInfo.qId}
+        pairViewRenderScale={pairViewRenderScale}
+        viewContextParameters={viewContextParameters}
+        selectedTileBounds={selectedTileBounds}
+        otherTileBounds={otherTileBounds}
+        matchCount={pmInfo.connection_strength}/>;
 
       if (otherTileBounds.z < selectedTileBounds.z) {
         preLayerPairItems.push(pairItem);
