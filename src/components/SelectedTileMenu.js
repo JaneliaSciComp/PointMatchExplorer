@@ -3,6 +3,7 @@ import Dropdown from "react-bootstrap/Dropdown";
 import DropdownButton from "react-bootstrap/DropdownButton";
 import Image from "react-bootstrap/Image";
 import {TilePairMenuItem} from "./TilePairMenuItem";
+import {TilePairGroupSubMenu} from "./TilePairGroupSubMenu";
 
 export const SelectedTileMenu = (props) => {
 
@@ -33,10 +34,6 @@ export const SelectedTileMenu = (props) => {
     top: props.y
   };
 
-  const subMenuPositionStyle = {
-    paddingLeft: "20px"
-  };
-
   const renderWsIndex = props.renderStackUrl.indexOf("render-ws");
   const renderViewUrl = props.renderStackUrl.substring(0, renderWsIndex) + "render-ws/view";
   const viewContextParameters = "renderStackOwner=" + props.userInput.selectedStackOwner +
@@ -45,15 +42,18 @@ export const SelectedTileMenu = (props) => {
                                 "&matchOwner=" + props.userInput.selectedMatchOwner +
                                 "&matchCollection=" + props.userInput.selectedMatchCollection;
 
-  // try to fit 3 tiles across in neighbors view
-  const neighborsViewRenderScale = window.innerWidth / (3 * (fullScaleTileWidth + 10));
+  const getRenderScale = function(numberOfTiles) {
+    return window.innerWidth / ((numberOfTiles * fullScaleTileWidth) + 500);
+  };
+
+  // try to fit 5 tiles across in neighbors view
+  const neighborsViewRenderScale = getRenderScale(6);
 
   const neighborsUrl = renderViewUrl + "/tile-with-neighbors.html?tileId=" + tileId +
                        "&renderScale=" + neighborsViewRenderScale + "&" + viewContextParameters;
 
-
   // try to fit 2 tiles across in pair view
-  const pairViewRenderScale = window.innerWidth / (2 * (fullScaleTileWidth + 10));
+  const pairViewRenderScale = getRenderScale(2);
 
   const currentVersion = props.stackMetadata.currentVersion;
   const resTileCenterX = ((selectedTileBounds.minX + selectedTileBounds.maxX) / 2) * currentVersion.stackResolutionX;
@@ -69,29 +69,11 @@ export const SelectedTileMenu = (props) => {
            "&s0=" + mipmapLevel;
   };
 
-  const getLayerPairsMenu = function(context, layerPairItems) {
-    let layerPairsMenu = null;
-    if (layerPairItems.length > 0) {
-      const titleSuffix = layerPairItems.length > 1 ? "s" : "";
-      const buttonTitle = layerPairItems.length + " " + context + " Layer Pair" + titleSuffix;
-      const buttonId = context + "-layer-matches-button";
-      layerPairsMenu =
-        <DropdownButton style={subMenuPositionStyle} id={buttonId} title={buttonTitle} drop="right" key="right" variant="light">
-          {layerPairItems}
-        </DropdownButton>;
-    }
-    return layerPairsMenu;
-  };
-
-  let preLayerMatchPairsMenu = null;
-  let sameLayerMatchPairsMenu = null;
-  let postLayerMatchPairsMenu = null;
+  const priorPairMenuItems = [];
+  const samePairMenuItems = [];
+  const postPairMenuItems = [];
 
   if (props.hasMatchCounts) {
-
-    const preLayerPairItems = [];
-    const sameLayerPairItems = [];
-    const postLayerPairItems = [];
 
     pmList.forEach(pmInfo => {
 
@@ -113,20 +95,27 @@ export const SelectedTileMenu = (props) => {
         matchCount={pmInfo.connection_strength}/>;
 
       if (otherTileBounds.z < selectedTileBounds.z) {
-        preLayerPairItems.push(pairItem);
+        priorPairMenuItems.push(pairItem);
       } else if (otherTileBounds.z > selectedTileBounds.z) {
-        postLayerPairItems.push(pairItem);
+        postPairMenuItems.push(pairItem);
       } else {
-        sameLayerPairItems.push(pairItem);
+        samePairMenuItems.push(pairItem);
       }
 
     });
 
-    preLayerMatchPairsMenu = getLayerPairsMenu("Prior", preLayerPairItems);
-    sameLayerMatchPairsMenu = getLayerPairsMenu("Same", sameLayerPairItems);
-    postLayerMatchPairsMenu = getLayerPairsMenu("Post", postLayerPairItems);
   }
 
+  const getPairGroupMenu = function(menuType, menuItems) {
+    return <TilePairGroupSubMenu pairGroupMenuType={menuType} tilePairCount={menuItems.length}>
+      {menuItems}
+    </TilePairGroupSubMenu>
+  };
+
+  const priorLayerMatchPairsMenu = getPairGroupMenu("Prior", priorPairMenuItems);
+  const sameLayerMatchPairsMenu = getPairGroupMenu("Same", samePairMenuItems);
+  const postLayerMatchPairsMenu = getPairGroupMenu("Post", postPairMenuItems);
+  
   const menuTitle = "Tile " + tileId;
   const zInfo = "z: " + selectedTileBounds.z;
   const menuHeader = props.hasMatchCounts ? zInfo : zInfo + " (missing match counts)";
@@ -135,8 +124,8 @@ export const SelectedTileMenu = (props) => {
 
     <Dropdown.Header>{menuHeader}</Dropdown.Header>
 
-    <DropdownButton class="tileSubMenu" style={subMenuPositionStyle} id="view-submenu-button" title={"View"} drop="right" key="right" variant="light">
-      {preLayerMatchPairsMenu}
+    <DropdownButton id="view-submenu-button" title={"View"} drop="right" key="right" variant="light">
+      {priorLayerMatchPairsMenu}
       {sameLayerMatchPairsMenu}
       {postLayerMatchPairsMenu}
       <Dropdown.Item href={tileSpecUrl} target="_blank">Tile Spec</Dropdown.Item>

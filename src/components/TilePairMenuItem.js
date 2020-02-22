@@ -10,14 +10,18 @@ export class TilePairMenuItem extends Component {
 
     super(props);
 
+    const {
+      renderViewUrl, pId, qId, pairViewRenderScale, viewContextParameters,
+      selectedTileBounds, otherTileBounds, matchCount
+    } = props;
+
+    this.pairLabel = otherTileBounds.tileId + " (" + matchCount + " matches, " + "z " + otherTileBounds.z + ")";
     this.tilePairUrl =
-      this.props.renderViewUrl + "/tile-pair.html?pId=" + this.props.pId + "&qId=" + this.props.qId +
-      "&renderScale=" + this.props.pairViewRenderScale + "&" + this.props.viewContextParameters;
+      renderViewUrl + "/tile-pair.html?pId=" + pId + "&qId=" + qId +
+      "&renderScale=" + pairViewRenderScale + "&" + viewContextParameters;
 
-    this.setRelativePositionAttributes(this.props.selectedTileBounds, this.props.otherTileBounds);
+    this.setRelativePositionAttributes(selectedTileBounds, otherTileBounds);
 
-    this.pairLabel = this.props.otherTileBounds.tileId +
-                     " (" + this.props.matchCount + " matches, " + "z " + this.props.otherTileBounds.z + ")";
   }
 
   render() {
