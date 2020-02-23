@@ -6,29 +6,26 @@ import DropdownButton from "react-bootstrap/DropdownButton";
  */
 export class TilePairGroupSubMenu extends Component {
 
+  /**
+   * @param {Object}  props                    component properties
+   * @param {string}  props.pairGroupMenuType  type name for tile pair group (e.g. "Prior", "Same", or "Post")
+   * @param {number}  props.tilePairCount      number of tile pairs in the group
+   */
   constructor(props) {
-
     super(props);
-
-    const { pairGroupMenuType, tilePairCount } = props;
-
-    const titleSuffix = tilePairCount > 1 ? "s" : "";
-
-    this.buttonTitle = pairGroupMenuType + " Layer Pair" + titleSuffix + " (" + tilePairCount + ")";
-    this.buttonId = pairGroupMenuType + "-layer-matches-button";
-
   }
 
   render() {
 
     if (this.props.tilePairCount > 0) {
 
-      // TODO: would be nice if child pair items could be sorted by angle
-      //const children = React.Children.toArray(this.props.children);
+      const titleSuffix = this.props.tilePairCount > 1 ? "s" : "";
+      const title = this.props.pairGroupMenuType + " Layer Pair" + titleSuffix + " (" + this.props.tilePairCount + ")";
+      const buttonId = this.props.pairGroupMenuType + "-layer-matches-button";
 
       return <DropdownButton
-        id={this.buttonId}
-        title={this.buttonTitle}
+        id={buttonId}
+        title={title}
         drop="right"
         key="right"
         variant="light">
