@@ -9,8 +9,8 @@ body {
     float: right;
     vertical-align: top;
     text-align: left;
-    margin: 5px 5px 5px 5px;
-    width: 20%;
+    padding: 5px 5px 5px 5px;
+    width: 400px;
     height: 100%;
 }
 
@@ -21,7 +21,9 @@ body {
     z-index: 0;
     border-right: solid 2px black;
     height: 100%;
-    width: 79%;
+    width: -webkit-calc(100% - 400px);
+    width:    -moz-calc(100% - 400px);
+    width:         calc(100% - 400px);
 }
 
 button {
@@ -86,7 +88,7 @@ button:disabled {
 
     input[type="number"] {
         text-align: right;
-        width: 8em;
+        width: 6em;
     }
 
     input[type="checkbox"], input[type="radio"] {
