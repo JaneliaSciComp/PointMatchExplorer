@@ -23,9 +23,9 @@ export const PMEInput = (props) => {
       maxZ = stackStats.stackBounds.maxZ;
       totalTileCount = stackStats.tileCount;
       selectedStackZRange = "(z: " + minZ.toLocaleString() + " to " + maxZ.toLocaleString() + ")";
-      selectedProjectDashboard = "project dashboard";
+      selectedProjectDashboard = "view project dashboard";
       selectedProjectDashboardUrl = props.stackDetailsViewUrl.replace("stack-details.html", "stacks.html");
-      selectedStackDetails = "stack details";
+      selectedStackDetails = "view stack details";
       selectedStackDetailsUrl = props.stackDetailsViewUrl;
     }
   }
