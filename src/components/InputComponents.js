@@ -134,14 +134,12 @@ export const PMEInput = (props) => {
 
 export const handleHelpClick = function() {
   let helpMessage = `
-- Click Refresh View button to display sub-volume
-  tiles and match connections
+- Click Refresh View button to display sub-volume tiles and matches
 - Hold down left mouse button and move to rotate
 - Hold down right mouse button and move to pan
 - Scroll to zoom
 - Click on a tile to view information about it 
-- Shift click on a tile to highlight all tiles 
-  and connections within the tile's layer
+- Shift click tile to highlight all connections in the tile's layer
 `;
   alert(helpMessage);
   return false
