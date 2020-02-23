@@ -18,7 +18,7 @@ export class TilePairMenuItem extends Component {
    * @param {number}  props.tilePairData.matchCount                 number of match points between the tiles
    * @param {number}  props.tilePairData.degreesBetweenCorners      angle between min corners of the selected tile
    *                                                                and the other tile
-   * @param {number}  props.tilePairData.hasLargeOverlap            indicates whether tiles have a large overlap area
+   * @param {boolean} props.tilePairData.hasLargeOverlap            indicates whether tiles have a large overlap area
    *
    */
   constructor(props) {

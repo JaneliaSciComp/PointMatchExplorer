@@ -17,6 +17,7 @@ export class TileViewSubMenu extends Component {
    * @param {string}  props.renderStackUrl  base render server URL for stack
    * @param {Object}  props.stackMetadata   metadata for selected stack
    * @param {Object}  props.tileBoundsData  tile bounds data for selected sub volume
+   * @param {boolean} props.hasMatchCounts  indicates whether match collection includes match count data
    * @param {Object}  props.matchInfoList   match data for tiles in selected sub volume
    */
   constructor(props) {
@@ -65,8 +66,8 @@ export class TileViewSubMenu extends Component {
   getDerivedState(fromProps) {
 
     const {
-      dataStackUrl, hasMatchCounts, matchInfoList, renderStackUrl,
-      stackMetadata, tileBoundsData, tileId, userInput
+      tileId, userInput, dataStackUrl, renderStackUrl,
+      stackMetadata, tileBoundsData, hasMatchCounts, matchInfoList
     } = fromProps;
 
     const tileBounds = tileBoundsData.tileIdToBounds[tileId];

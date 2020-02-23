@@ -11,7 +11,6 @@ import isEmpty from "lodash/isEmpty"
 import UrlParamHandler from "./components/UrlParamHandler"
 import {getCanvasArea} from "./helpers/utils-three";
 import {SelectedTileMenu} from "./components/SelectedTileMenu";
-import "bootstrap/dist/css/bootstrap.min.css";
 
 
 class App extends Component {
@@ -158,17 +157,16 @@ class App extends Component {
 
         selectedTileMenu =
           <SelectedTileMenu
-            kvPairs={selectedMetadata}
-            x={selectX}
-            y={selectY}
+            tileId={selectedMetadata[1].valuename}
+            clickX={selectX}
+            clickY={selectY}
+            userInput={this.props.UserInput}
             dataStackUrl={dataStackUrl}
             renderStackUrl={renderStackUrl}
             stackMetadata={StackMetadata.data}
-            stackSubVolume={StackSubVolume.data}
             tileBoundsData={TileBounds.data}
             hasMatchCounts={hasMatchCounts}
-            matchCounts={MatchCounts.data}
-            userInput={this.props.UserInput}/>
+            matchInfoList={selectedMetadata[3].valuename} />
 
       }
 
