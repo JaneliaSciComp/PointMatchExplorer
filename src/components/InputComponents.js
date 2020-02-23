@@ -9,6 +9,8 @@ export const PMEInput = (props) => {
   const matchCollectionDisabled = (! props.selectedMatchOwner) || (! props.match_collections);
 
   let selectedStackZRange = "";
+  let selectedProjectDashboard = "";
+  let selectedProjectDashboardUrl = "#";
   let selectedStackDetails = "";
   let selectedStackDetailsUrl = "#";
   let minZ = 1;
@@ -21,6 +23,8 @@ export const PMEInput = (props) => {
       maxZ = stackStats.stackBounds.maxZ;
       totalTileCount = stackStats.tileCount;
       selectedStackZRange = "(z: " + minZ.toLocaleString() + " to " + maxZ.toLocaleString() + ")";
+      selectedProjectDashboard = "project dashboard";
+      selectedProjectDashboardUrl = props.stackDetailsViewUrl.replace("stack-details.html", "stacks.html");
       selectedStackDetails = "stack details";
       selectedStackDetailsUrl = props.stackDetailsViewUrl;
     }
@@ -73,6 +77,11 @@ export const PMEInput = (props) => {
         values={ projectDisabled ? [] : props.projects}
         value={props.selectedProject}
         disabled={projectDisabled}/>
+
+      <label>&nbsp;</label>
+      <div className={"col2to6"}>
+        <a href={selectedProjectDashboardUrl} target={"_blank"}>{selectedProjectDashboard}</a>
+      </div>
 
       <label className={"indented"}>Stack:</label>
       <Dropdown
