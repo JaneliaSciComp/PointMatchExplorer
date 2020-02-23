@@ -414,7 +414,7 @@ export const onMouseUp = function(event, isShiftDown, afterMouseUp) {
       //highlight new selected tile
       //can also be downobj since they are the same
       highlight(selectedTileObject.faceIndex, true, isShiftDown);
-      metadataValues = getSelectedMetadata();
+      metadataValues = getSelectedMetadata(isShiftDown);
     }
   }
 
@@ -428,7 +428,7 @@ export const onMouseUp = function(event, isShiftDown, afterMouseUp) {
       }
     } else if (selectedTileObject) {
       //do not remove metadata display if the mouse was not clicked
-      metadataValues = getSelectedMetadata();
+      metadataValues = getSelectedMetadata(isShiftDown);
     }
   }
 
@@ -560,7 +560,7 @@ const getMouseoverMetadata = function(faceIndex){
   ];
 };
 
-const getSelectedMetadata = function() {
+const getSelectedMetadata = function(isShiftDown) {
 
   const selectedTileInfo = faceIndexToTileInfo[selectedTileObject.faceIndex];
 
@@ -568,7 +568,8 @@ const getSelectedMetadata = function() {
     { keyname: "Selected Tile Z" },
     { keyname: "Selected Tile ID" },
     { keyname: "Number of tiles with point matches" },
-    { keyname: "PMList" }
+    { keyname: "PMList" },
+    { keyname: "isShiftDown", valuename: isShiftDown}
   ];
 
   md[0]["valuename"] = selectedTileInfo ? selectedTileInfo.tileZ : null;

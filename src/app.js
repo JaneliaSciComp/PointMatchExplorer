@@ -146,7 +146,10 @@ class App extends Component {
           dmax= {maxWeight} />
     }
 
-    if (selectedMetadata && StackMetadata.Fetched && StackSubVolume.Fetched && TileBounds.Fetched) {
+    const isSingleTileSelected = selectedMetadata && (! selectedMetadata[4].valuename); // ! isShiftDown
+    const isAllTileDataFetched = StackMetadata.Fetched && StackSubVolume.Fetched && TileBounds.Fetched;
+
+    if (isSingleTileSelected && isAllTileDataFetched) {
 
       const selectedMetadataTileId = selectedMetadata[1].valuename;
 
