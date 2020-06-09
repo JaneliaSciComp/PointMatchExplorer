@@ -22,16 +22,13 @@ export class TileViewSubMenu extends Component {
    */
   constructor(props) {
     super(props);
+    this.state = this.getDerivedState(props);
   }
 
-  componentDidMount() {
-    this.setState(this.getDerivedState(this.props));
-  }
-
-  componentDidUpdate(prevProps) {
+  componentWillReceiveProps(nextProps) {
     // only derive state when a new tile has been selected
-    if (prevProps.tileId !== this.props.tileId) {
-      this.setState(this.getDerivedState(this.props));
+    if (nextProps.tileId !== this.state.derivedTileId) {
+      this.setState(this.getDerivedState(nextProps));
     }
   }
 
@@ -61,6 +58,9 @@ export class TileViewSubMenu extends Component {
       </Dropdown.Item>
       <Dropdown.Item href={this.state.baseCatmaidUrl + "5"} target="_blank">
         Tile in CATMAID (level 5)
+      </Dropdown.Item>
+      <Dropdown.Item href={this.state.clusterViewUrl} target="_blank">
+        Layer Connected Clusters
       </Dropdown.Item>
     </DropdownButton>;
 
@@ -200,6 +200,9 @@ export class TileViewSubMenu extends Component {
                       "&zp=" + resTileZ + "&yp=" + resTileCenterY + "&xp=" + resTileCenterX +
                       "&tool=navigator" +
                       "&s0=",
+      clusterViewUrl: renderViewUrl + "/tile-layer.html?" + viewContextParameters +
+                      "&z=" + tileBounds.z +
+                      "&boxScale=0.3&useStackBounds=true",
       priorPairMenuItems: pairMenuItems[0],
       postPairMenuItems: pairMenuItems[1],
       samePairMenuItems: pairMenuItems[2]
