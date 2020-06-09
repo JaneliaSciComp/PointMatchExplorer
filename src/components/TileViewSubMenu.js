@@ -22,13 +22,16 @@ export class TileViewSubMenu extends Component {
    */
   constructor(props) {
     super(props);
-    this.state = this.getDerivedState(props);
   }
 
-  componentWillReceiveProps(nextProps) {
+  componentDidMount() {
+    this.setState(this.getDerivedState(this.props));
+  }
+
+  componentDidUpdate(prevProps) {
     // only derive state when a new tile has been selected
-    if (nextProps.tileId !== this.state.derivedTileId) {
-      this.setState(this.getDerivedState(nextProps));
+    if (prevProps.tileId !== this.props.tileId) {
+      this.setState(this.getDerivedState(this.props));
     }
   }
 
