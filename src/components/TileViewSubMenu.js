@@ -5,6 +5,15 @@ import {TilePairMenuItem} from "./TilePairMenuItem";
 import {TilePairGroupSubMenu} from "./TilePairGroupSubMenu";
 
 /**
+ * Encodes a fragment string robustly.
+ */
+function encodeFragment(fragment) {
+  return encodeURI(fragment).replace(/[!'()*;,]/g, function(c) {
+    return "%" + c.charCodeAt(0).toString(16).toUpperCase();
+  });
+}
+
+/**
  * View sub menu (button) for the selected tile.
  */
 export class TileViewSubMenu extends Component {
@@ -53,6 +62,9 @@ export class TileViewSubMenu extends Component {
       <Dropdown.Item href={this.state.neighborsUrl} target="_blank">
         Neighbor Matches
       </Dropdown.Item>
+      <Dropdown.Item href={this.state.neuroglancerUrl} target="_blank">
+        Tile in Neuroglancer
+      </Dropdown.Item>
       <Dropdown.Item href={this.state.baseCatmaidUrl + "2"} target="_blank">
         Tile in CATMAID (level 2)
       </Dropdown.Item>
@@ -76,8 +88,10 @@ export class TileViewSubMenu extends Component {
     const tileBounds = tileBoundsData.tileIdToBounds[tileId];
     const fullScaleTileWidth = tileBounds.maxX - tileBounds.minX;
 
-    const renderWsIndex = renderStackUrl.indexOf("render-ws");
-    const renderViewUrl = renderStackUrl.substring(0, renderWsIndex) + "render-ws/view";
+    const renderWsIndex = renderStackUrl.indexOf("/render-ws");
+    const renderBaseDataUrl = renderStackUrl.substring(0, renderWsIndex);
+    const renderViewUrl = renderBaseDataUrl + "/render-ws/view";
+
     const viewContextParameters = "renderStackOwner=" + userInput.selectedStackOwner +
                                   "&renderStackProject=" + userInput.selectedProject +
                                   "&renderStack=" + userInput.selectedStack +
@@ -91,9 +105,40 @@ export class TileViewSubMenu extends Component {
     const pairViewRenderScale = getRenderScale(2);
 
     const currentVersion = stackMetadata.currentVersion;
-    const resTileCenterX = ((tileBounds.minX + tileBounds.maxX) / 2) * currentVersion.stackResolutionX;
-    const resTileCenterY = ((tileBounds.minY + tileBounds.maxY) / 2) * currentVersion.stackResolutionY;
-    const resTileZ = tileBounds.z * currentVersion.stackResolutionZ;
+
+    const tileCenterX = ((tileBounds.minX + tileBounds.maxX) / 2);
+    const tileCenterY = ((tileBounds.minY + tileBounds.maxY) / 2);
+    const tileZ = tileBounds.z;
+
+    const resTileCenterX = tileCenterX * currentVersion.stackResolutionX;
+    const resTileCenterY = tileCenterY * currentVersion.stackResolutionY;
+    const resTileZ = tileZ * currentVersion.stackResolutionZ;
+
+    const stackId = stackMetadata.stackId;
+
+    const tileNeuroglancerState = {
+      "dimensions": {
+        "x": [ currentVersion.stackResolutionX, "nm" ],
+        "y": [ currentVersion.stackResolutionY, "nm" ],
+        "z": [ currentVersion.stackResolutionZ, "nm" ]
+      },
+      "position": [ tileCenterX, tileCenterY, tileZ ],
+      "crossSectionScale": 16, "projectionScale": 32768,
+      "layers": [
+        {
+          "type": "image",
+          "source": {
+            "url": "render://" + renderBaseDataUrl + "/" + stackId.owner + "/" + stackId.project + "/" + stackId.stack,
+            "subsources": { "default": true, "bounds": true }, "enableDefaultSubsources": false
+          },
+          "tab": "source",
+          "name": stackId.stack
+        }
+      ],
+      "selectedLayer": { "layer": stackId.stack },
+      "layout": "xy"
+    }
+    const tileNeuroglancerStateString = encodeFragment(JSON.stringify(tileNeuroglancerState));
 
     const getRelativePositionData = function(fromBounds, toBounds) {
       const deltaX = toBounds.minX - fromBounds.minX;
@@ -200,6 +245,7 @@ export class TileViewSubMenu extends Component {
                       "&zp=" + resTileZ + "&yp=" + resTileCenterY + "&xp=" + resTileCenterX +
                       "&tool=navigator" +
                       "&s0=",
+      neuroglancerUrl: "http://" + userInput.ndvizHost + "/ng/#!" + tileNeuroglancerStateString,
       clusterViewUrl: renderViewUrl + "/tile-layer.html?" + viewContextParameters +
                       "&z=" + tileBounds.z +
                       "&boxScale=0.3&useStackBounds=true",

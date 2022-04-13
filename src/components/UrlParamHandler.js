@@ -101,6 +101,7 @@ let userInputUrlMap = new urlParamStoreMapper(
     renderDataHost: "renderDataHost",
     dynamicRenderHost: "dynamicRenderHost",
     catmaidHost: "catmaidHost",
+    ndvizHost: "ndvizHost",
     mergeCollection: "mergeCollection",
     startZ: "startZ",
     endZ: "endZ"

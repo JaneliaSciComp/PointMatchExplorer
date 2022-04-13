@@ -44,7 +44,8 @@ export const userInputInitialState = {
   selectedMatchOwner: getSafeInitParam("matchOwner"),
   renderDataHost: getSafeInitParam("renderDataHost", window.location.host),
   dynamicRenderHost: getSafeInitParam("dynamicRenderHost", window.location.host),
-  catmaidHost: getSafeInitParam("catmaidHost", "renderer-catmaid:8000"),
+  catmaidHost: getSafeInitParam("catmaidHost", "renderer-catmaid.int.janelia.org:8000"),
+  ndvizHost: getSafeInitParam("ndvizHost", "renderer.int.janelia.org:8080"),
   mergeCollection: getSafeInitParam("mergeCollection"),
   startZ: getSafeInitParam("startZ"),
   endZ: getSafeInitParam("endZ")
