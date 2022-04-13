@@ -55,8 +55,6 @@ const tile_border_width = 2;
 const background_color = 0xffffff;
 
 const camera_view_angle = 50;
-const initial_camera_X = 0;
-const initial_camera_Y = 0;
 
 const control_rotate_speed = 2;
 const control_zoom_speed = 0.5;
@@ -103,13 +101,17 @@ export const generateVisualization = function(canvas, tileData){
     .scale(pm_connection_strength_gradient_colors)
     .domain([weightRange.minWeight, weightRange.maxWeight]);
 
-  const maxDimensionSize = drawTiles(tileData);
+  // const maxDimensionSize =
+  drawTiles(tileData);
 
-  // observed that good size-to-zoom values were: 1200:5000, 21000:20000, 33000:40000
-  // derive magicZoom using parabolic equation ...
-  const magicZoom =  (maxDimensionSize * maxDimensionSize / 34980) + (215 * maxDimensionSize / 1749) + (255000 / 53);
-
-  camera.position.set(initial_camera_X, initial_camera_Y, magicZoom);
+  // camera.position is a Z.Vector3 (x, y, z)
+  if (tileData.length <= 8) {
+    camera.position.set(-600, -3800, 6300);
+  } else if (tileData.length <= 20) {
+    camera.position.set(-1100, -7000, 12200);
+  } else {
+    camera.position.set(-2000, -11000, 48000);
+  }
 
   drawPMLines(tileData);
   animate();
