@@ -8,10 +8,10 @@ export const TileInfo = (props) => {
   const connectionCount = props.kvPairs[2].valuename;
 
   return <div className={"formGrid"}>
-    <label className={"dataGroupTitle topTen"}>{title}</label>  <span className={"emptyArea"}/>
-    <label className={"indented"}>ID:</label>                   <span className={"value"}>{tileId}</span>
-    <label className={"indented"}>Z:</label>                    <span className={"value"}>{z}</span>
-    <label className={"indented"}>Connections:</label>          <span className={"value"}>{connectionCount}</span>
+    <label className={"dataGroupTitle topTen small"}>{title}</label>  <span className={"emptyArea"}/>
+    <label className={"indented small"}>ID:</label>                   <span className={"value small"}>{tileId}</span>
+    <label className={"indented small"}>Z:</label>                    <span className={"value small"}>{z}</span>
+    <label className={"indented small"}>Connects:</label>             <span className={"value small"}>{connectionCount}</span>
   </div>
 
 };
