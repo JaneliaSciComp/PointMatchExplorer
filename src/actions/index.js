@@ -4,6 +4,7 @@ export const RECEIVE_DATA = "RECEIVE_DATA";
 export const UPDATE_START_Z = "UPDATE_START_Z";
 export const UPDATE_END_Z = "UPDATE_END_Z";
 export const UPDATE_PROJECT = "UPDATE_PROJECT";
+export const UPDATE_TILE_ID_PATTERN = "UPDATE_TILE_ID_PATTERN";
 export const UPDATE_STACK = "UPDATE_STACK";
 export const UPDATE_MATCH_COLLECTION = "UPDATE_MATCH_COLLECTION";
 export const UPDATE_STACK_OWNER = "UPDATE_STACK_OWNER";
@@ -33,6 +34,13 @@ export function updateEndZ(zValue){
   return {
     type: UPDATE_END_Z,
     zValue
+  }
+}
+
+export function updateTileIdPattern(tileIdPattern){
+  return {
+    type: UPDATE_TILE_ID_PATTERN,
+    tileIdPattern
   }
 }
 
@@ -316,7 +324,7 @@ function fetchData(dataType){
 
 export function mapDataTypeToURL(state, dataType, params) {
   const {
-    selectedStackOwner, selectedProject, selectedStack, startZ, endZ,
+    selectedStackOwner, selectedProject, selectedStack, startZ, endZ, tileIdPattern,
     selectedMatchOwner, selectedMatchCollection, mergeCollection,
     renderDataHost, dynamicRenderHost, catmaidHost
   } = state.UserInput;
@@ -355,8 +363,13 @@ export function mapDataTypeToURL(state, dataType, params) {
       return `${BASE_URL}/view/stack-details.html` +
              `?renderStackOwner=${selectedStackOwner}&renderStackProject=${selectedProject}&renderStack=${selectedStack}` +
              `&dynamicRenderHost=${dynamicRenderHost}&catmaidHost=${catmaidHost}`;
-    case "TileBounds":
-      return `${STACK_BASE_URL}/project/${selectedProject}/stack/${selectedStack}/z/${params.z}/tileBounds`;
+    case "TileBounds": {
+      let url = `${STACK_BASE_URL}/project/${selectedProject}/stack/${selectedStack}/z/${params.z}/tileBounds`;
+      if (tileIdPattern && tileIdPattern.trim().length > 0) {
+        url += "?tileIdPattern=" + tileIdPattern;
+      }
+      return url;
+    }
     case "MatchCounts":
       return `${MATCH_BASE_URL}/matchCollection/${selectedMatchCollection}/pGroup/${params.groupId}/matchCounts${matchQueryParameters}`;
     default:

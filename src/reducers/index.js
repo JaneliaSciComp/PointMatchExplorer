@@ -15,8 +15,9 @@ import {
   RESET_STACK_DATA,
   RESET_SUB_VOLUME_DATA,
   RESET_MATCH_DATA,
-  UPDATE_USER_INPUT
-} from "../actions"
+  UPDATE_USER_INPUT,
+  UPDATE_TILE_ID_PATTERN
+} from "../actions";
 import URLSearchParams from "url-search-params";
 
 const dataInitialState = {
@@ -48,7 +49,8 @@ export const userInputInitialState = {
   ndvizHost: getSafeInitParam("ndvizHost", "renderer.int.janelia.org:8080"),
   mergeCollection: getSafeInitParam("mergeCollection"),
   startZ: getSafeInitParam("startZ"),
-  endZ: getSafeInitParam("endZ")
+  endZ: getSafeInitParam("endZ"),
+  tileIdPattern: getSafeInitParam("tileIdPattern")
 };
 
 const PMEVariablesInitialState = {
@@ -84,6 +86,10 @@ function UserInput(state = userInputInitialState, action){
     case UPDATE_END_Z:
       return Object.assign({}, state, {
         endZ: action.zValue
+      });
+    case UPDATE_TILE_ID_PATTERN:
+      return Object.assign({}, state, {
+        tileIdPattern: action.tileIdPattern
       });
     case UPDATE_PROJECT:
       return Object.assign({}, state, {

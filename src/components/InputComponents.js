@@ -109,6 +109,11 @@ export const PMEInput = (props) => {
         <span className={"stackInfo"}>{selectedStackSubVolumeTileCount}</span>
       </div>
 
+      <label className={"indented topTen"}>Tile ID Pattern:</label>
+      <div className={"col2to6 topTen"}>
+        <input type="text" size="44" onChange={e => props.onChangeTileIdPattern(e.target.value)} value={props.selectedTileIdPattern} />
+      </div>
+
       <label className={"dataGroupTitle topTen"}>Match</label>
       <span className={"col2to6"}>&nbsp;</span>
       <label className={"indented"}>Owner:</label>

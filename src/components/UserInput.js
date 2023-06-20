@@ -1,8 +1,10 @@
 import React, {Component} from "react"
 import {connect} from "react-redux"
-import {fetchDataIfNeeded, invalidateData, updateMatchCollection, updateStartZ, updateEndZ, updateProject, 
+import {
+  fetchDataIfNeeded, invalidateData, updateMatchCollection, updateStartZ, updateEndZ, updateProject,
   updateStack, updateStackOwner, updateMatchOwner, resetStackData, resetSubVolumeData, resetMatchData,
-  mapDataTypeToURL} from "../actions"
+  mapDataTypeToURL, updateTileIdPattern
+} from "../actions";
 import {getUserInputSelectLists} from "../helpers/utils.js"
 import {PMEInput} from "./InputComponents.js"
 
@@ -11,6 +13,7 @@ class UserInputs extends Component {
     super(props);
     this.handleChangeStartZ = this.handleChangeStartZ.bind(this);
     this.handleChangeEndZ = this.handleChangeEndZ.bind(this);
+    this.handleChangeTileIdPattern = this.handleChangeTileIdPattern.bind(this);
     this.handleProjectSelect = this.handleProjectSelect.bind(this);
     this.handleStackSelect = this.handleStackSelect.bind(this);
     this.handleMatchCollectionSelect = this.handleMatchCollectionSelect.bind(this);
@@ -26,6 +29,11 @@ class UserInputs extends Component {
   handleChangeEndZ(zValue){
     this.props.resetSubVolumeData();
     this.props.updateEndZ(zValue)
+  }
+
+  handleChangeTileIdPattern(tileIdPattern){
+    this.props.resetSubVolumeData();
+    this.props.updateTileIdPattern(tileIdPattern)
   }
 
   handleProjectSelect(project){
@@ -173,7 +181,9 @@ class UserInputs extends Component {
           onChangeStartZ={this.handleChangeStartZ}
           selectedStartZ={UserInput.startZ}
           onChangeEndZ={this.handleChangeEndZ}
-          selectedEndZ={UserInput.endZ}/>
+          selectedEndZ={UserInput.endZ}
+          onChangeTileIdPattern={this.handleChangeTileIdPattern}
+          selectedTileIdPattern={UserInput.tileIdPattern}/>
       )
     } else {
       return "";
@@ -203,6 +213,9 @@ const mapDispatchToProps = function(dispatch) {
     },
     updateEndZ: function(zValue){
       dispatch(updateEndZ(zValue))
+    },
+    updateTileIdPattern: function(tileIdPattern){
+      dispatch(updateTileIdPattern(tileIdPattern))
     },
     updateProject: function(project){
       dispatch(updateProject(project))

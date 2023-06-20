@@ -104,7 +104,8 @@ let userInputUrlMap = new urlParamStoreMapper(
     ndvizHost: "ndvizHost",
     mergeCollection: "mergeCollection",
     startZ: "startZ",
-    endZ: "endZ"
+    endZ: "endZ",
+    tileIdPattern: "tileIdPattern"
   });
 
 const mapStateToProps = function (state) {
