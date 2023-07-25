@@ -37,6 +37,8 @@ class UrlParamHandler extends Component {
     _.each(nextProps.StoreData, function (val, key) {
       if (val.trim().length > 0) {
         paramTracker.set(key, val);
+      } else {
+        paramTracker.delete(key);
       }
     });
     this.updateUrl(paramTracker);
